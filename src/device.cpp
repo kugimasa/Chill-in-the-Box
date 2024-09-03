@@ -1,5 +1,18 @@
 #include "device.hpp"
 
+Device::Device() :
+    m_fenceValueArr(),
+    m_rtvDescSize(0),
+    m_dsvDescSize(0),
+    m_viewport(), 
+    m_scissorRect()
+{
+}
+
+Device::~Device()
+{
+}
+
 bool Device::OnInit()
 {
     HRESULT hr;
@@ -299,4 +312,90 @@ ComPtr<ID3D12Fence1> Device::CreateFence()
         IID_PPV_ARGS(fence1.ReleaseAndGetAddressOf())
     );
     return fence1;
+}
+
+ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType, const wchar_t* name)
+{
+    // ヒーププロパティの設定
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = heapType;
+    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    heapProps.CreationNodeMask = 1;
+    heapProps.VisibleNodeMask = 1;
+
+    // リソースの設定
+    D3D12_RESOURCE_DESC resDesc{};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Alignment = 0;
+    resDesc.Width = size;
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.Format = DXGI_FORMAT_UNKNOWN;
+    resDesc.SampleDesc = { 1, 0 };
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resDesc.Flags = flags;
+
+    // リソースの生成
+    HRESULT hr;
+    ComPtr<ID3D12Resource> resource;
+    hr = m_pD3D12Device5->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        initialState,
+        nullptr,
+        IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+    );
+
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "バッファの作成に失敗しました");
+    }
+    if (resource != nullptr && name != nullptr)
+    {
+        resource->SetName(name);
+    }
+    return resource;
+}
+
+void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize)
+{
+    if (resource == nullptr)
+    {
+        return;
+    }
+    void* mapped = nullptr;
+    D3D12_RANGE range{ 0, dataSize };
+    HRESULT hr = resource->Map(0, &range, &mapped);
+    if (SUCCEEDED(hr))
+    {
+        memcpy(mapped, pData, dataSize);
+        resource->Unmap(0, &range);
+    }
+}
+
+void Device::ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command)
+{
+    ID3D12CommandList* cmdLists[] = {
+        command.Get(),
+    };
+    m_pCmdQueue->ExecuteCommandLists(1, cmdLists);
+}
+
+/// <summary>
+/// コマンドの終了を待機
+/// </summary>
+void Device::WaitForGpu() noexcept
+{
+    if (m_pCmdQueue)
+    {
+        auto cmdList = CreateCommandList();
+        auto waitFence = CreateFence();
+        UINT64 fenceValue = 1;
+        waitFence->SetEventOnCompletion(fenceValue, m_waitEvent);
+        m_pCmdQueue->Signal(waitFence.Get(), fenceValue);
+        WaitForSingleObject(m_waitEvent, INFINITE);
+    }
 }

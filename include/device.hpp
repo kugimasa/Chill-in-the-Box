@@ -24,17 +24,29 @@ using Microsoft::WRL::ComPtr;
 class Device
 {
 public:
+    Device();
+    Device(const Device&) = delete;
+    
+    ~Device();
+
     bool OnInit();
 
     bool CreateSwapChain(UINT width, UINT height, HWND hwnd);
+    ComPtr<ID3D12GraphicsCommandList4> CreateCommandList();
+    ComPtr<ID3D12Fence1> CreateFence();
+    ComPtr<ID3D12Resource> CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType, const wchar_t* name = nullptr);
 
+    void WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize);
+
+    ComPtr<ID3D12Device5> GetDevice() { return m_pD3D12Device5; }
     ComPtr<ID3D12CommandAllocator> GetCurrentCommandAllocator() {
         return m_pCmdAllocatorArr[m_frameIndex];
     }
     UINT GetCurrentFrameIndex() const { return m_frameIndex; }
 
-    ComPtr<ID3D12GraphicsCommandList4> CreateCommandList();
-    ComPtr<ID3D12Fence1> CreateFence();
+    void ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command);
+    void Present(UINT syncInterval);
+    void WaitForGpu() noexcept;
 
 public:
     static const UINT BackBufferCount = 3;
