@@ -51,6 +51,7 @@ private:
     };
 
     ComPtr<ID3D12Resource> m_pVertexBuffer;
+    ComPtr<ID3D12Resource> m_pRTInstanceBuffer;
 
     ComPtr<ID3D12Resource> m_pBLAS;
     ComPtr<ID3D12Resource> m_pTLAS;

@@ -42,6 +42,7 @@ public:
     ComPtr<ID3D12CommandAllocator> GetCurrentCommandAllocator() {
         return m_pCmdAllocatorArr[m_frameIndex];
     }
+    ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return m_pHeap; }
     UINT GetCurrentFrameIndex() const { return m_frameIndex; }
 
     void ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command);
