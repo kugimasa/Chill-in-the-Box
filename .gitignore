@@ -364,3 +364,9 @@ FodyWeavers.xsd
 
 # CMake Preset file
 CMakePresets.json
+
+# Shader Library
+.dxlib
+
+# DLLs & LIBs
+external/libs

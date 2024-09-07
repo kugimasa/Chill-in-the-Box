@@ -1,6 +1,8 @@
 #include "renderer.hpp"
 #include "window.hpp"
 
+#include "utils/shader_compiler.h"
+
 using namespace DirectX;
 
 Renderer::Renderer(UINT width, UINT height, const std::wstring& title) :
@@ -20,6 +22,12 @@ void Renderer::OnInit()
     BuildBLAS();
     // FIXME: BLAS、TLASの構築処理を可能な限りまとめたい
     BuildTLAS();
+
+    // グローバルルートシグネチャの用意
+    CreateGlobalRootSignature();
+
+    // ステートオブジェクトの構築
+    CreateStateObject();
 }
 
 bool Renderer::InitGraphicDevice(HWND hwnd)
@@ -45,7 +53,6 @@ bool Renderer::InitGraphicDevice(HWND hwnd)
 /// </summary>
 void Renderer::BuildBLAS()
 {
-    Print(PrintInfoType::RTCAMP10, "BLAS構築 開始");
     auto d3d12Device = m_pDevice->GetDevice();
 
     // 頂点バッファの用意
@@ -139,7 +146,6 @@ void Renderer::BuildBLAS()
 /// </summary>
 void Renderer::BuildTLAS()
 {
-    Print(PrintInfoType::RTCAMP10, "TLAS構築 開始");
     auto d3d12Device = m_pDevice->GetDevice();
 
     // FIXME: ここで配置で問題ない...?
@@ -228,4 +234,144 @@ void Renderer::BuildTLAS()
     m_pDevice->WaitForGpu();
 
     Print(PrintInfoType::RTCAMP10, "TLAS構築 完了");
+}
+
+/// <summary>
+/// グローバルルートシグネチャの作成
+/// </summary>
+void Renderer::CreateGlobalRootSignature()
+{
+    std::vector<D3D12_ROOT_PARAMETER> rootParamVec{};
+    D3D12_ROOT_PARAMETER rootParam{};
+    rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam.DescriptorTable.NumDescriptorRanges = 1;
+    
+    // TLAS: t0
+    D3D12_DESCRIPTOR_RANGE descRangeTLAS{};
+    descRangeTLAS.BaseShaderRegister = 0;
+    descRangeTLAS.NumDescriptors = 1;
+    descRangeTLAS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    rootParam.DescriptorTable.pDescriptorRanges = &descRangeTLAS;
+    rootParamVec.push_back(rootParam);
+    // UAV: u0
+    D3D12_DESCRIPTOR_RANGE descRangeUAV{};
+    descRangeUAV.BaseShaderRegister = 0;
+    descRangeUAV.NumDescriptors = 1;
+    descRangeUAV.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+    rootParam.DescriptorTable.pDescriptorRanges = &descRangeUAV;
+    rootParamVec.push_back(rootParam);
+
+    D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
+    rootSigDesc.NumParameters = UINT(rootParamVec.size());
+    rootSigDesc.pParameters = rootParamVec.data();
+
+    // グローバルルートシグネチャの作成
+    HRESULT hr;
+    ComPtr<ID3DBlob> pSigBlob;
+    ComPtr<ID3DBlob> pErrBlob;
+    hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pSigBlob, &pErrBlob);
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::RTCAMP10, "グローバルルートシグネチャのシリアライズに失敗");
+    }
+    auto d3d12Device = m_pDevice->GetDevice();
+    d3d12Device->CreateRootSignature(
+        0,
+        pSigBlob->GetBufferPointer(),
+        pSigBlob->GetBufferSize(),
+        IID_PPV_ARGS(m_pGlobalRootSignature.ReleaseAndGetAddressOf())
+    );
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::RTCAMP10, "グローバルルートシグネチャの作成に失敗");
+    }
+    m_pGlobalRootSignature->SetName(L"GlobalRootSignature");
+    Print(PrintInfoType::RTCAMP10, "グローバルルートシグネチャ作成 完了");
+}
+
+/// <summary>
+/// ステートオブジェクトの構築
+/// </summary>
+void Renderer::CreateStateObject()
+{
+    std::vector<char> shaderBin;
+    // シェーダーロード
+#if _DEBUG
+    // シェーダーのランタイムコンパイル
+    shaderBin = CompileShaderLibrary(RESOURCE_DIR L"/shader/path_tracer.hlsl");
+#else
+    shaderBin = LoadPreCompiledShaderLibrary(RESOURCE_DIR L"/shader/path_tracer.dxlib");
+#endif
+
+    // サブオブジェクト
+    std::vector<D3D12_STATE_SUBOBJECT> subObjectVec;
+    subObjectVec.reserve(32);
+
+    // シェーダー関数設定
+    std::vector<D3D12_EXPORT_DESC> exportVec { 
+        { L"mainRayGen", nullptr, D3D12_EXPORT_FLAG_NONE },
+        { L"mainMS",     nullptr, D3D12_EXPORT_FLAG_NONE },
+        { L"mainCHS",    nullptr, D3D12_EXPORT_FLAG_NONE },
+    };
+    D3D12_DXIL_LIBRARY_DESC dxilLibDesc{};
+    dxilLibDesc.DXILLibrary = D3D12_SHADER_BYTECODE{ shaderBin.data(), shaderBin.size() };
+    dxilLibDesc.NumExports = UINT(exportVec.size());
+    dxilLibDesc.pExports = exportVec.data();
+    subObjectVec.emplace_back(
+        D3D12_STATE_SUBOBJECT{
+            D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY,&dxilLibDesc
+        }
+    );
+
+    // ヒットグループ設定
+    D3D12_HIT_GROUP_DESC hitGroupDesc{};
+    hitGroupDesc.Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;
+    hitGroupDesc.ClosestHitShaderImport = L"mainCHS";
+    hitGroupDesc.HitGroupExport = L"DefaultHitGroup";
+    subObjectVec.emplace_back(
+        D3D12_STATE_SUBOBJECT{
+            D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &hitGroupDesc
+        }
+    );
+
+    // グローバルルートシグネチャ設定
+    D3D12_GLOBAL_ROOT_SIGNATURE globalRootSignature{};
+    globalRootSignature.pGlobalRootSignature = m_pGlobalRootSignature.Get();
+    subObjectVec.emplace_back(
+        D3D12_STATE_SUBOBJECT{
+            D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, & globalRootSignature
+        }
+    );
+
+    // シェーダー設定
+    D3D12_RAYTRACING_SHADER_CONFIG rtShaderConfig{};
+    rtShaderConfig.MaxPayloadSizeInBytes = sizeof(XMFLOAT3);
+    rtShaderConfig.MaxAttributeSizeInBytes = sizeof(XMFLOAT2);
+    subObjectVec.emplace_back(
+        D3D12_STATE_SUBOBJECT{
+            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &rtShaderConfig
+        }
+    );
+
+    // パイプライン設定
+    D3D12_RAYTRACING_PIPELINE_CONFIG rtPipelineConfig{};
+    // MEMO: トレースの深さはここで指定する
+    rtPipelineConfig.MaxTraceRecursionDepth = 1;
+    subObjectVec.emplace_back(
+        D3D12_STATE_SUBOBJECT{
+            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &rtPipelineConfig
+        }
+    );
+
+    // ステートオブジェクトの生成
+    D3D12_STATE_OBJECT_DESC stateObjDesc{};
+    stateObjDesc.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE;
+    stateObjDesc.NumSubobjects = UINT(subObjectVec.size());
+    stateObjDesc.pSubobjects = subObjectVec.data();
+
+    auto d3d12Device = m_pDevice->GetDevice();
+    HRESULT hr = d3d12Device->CreateStateObject(
+        &stateObjDesc, IID_PPV_ARGS(m_pRTStateObject.ReleaseAndGetAddressOf())
+    ); 
+    Print(PrintInfoType::RTCAMP10, "ステートオブジェクトの構築 完了");
 }

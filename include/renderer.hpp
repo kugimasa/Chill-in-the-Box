@@ -31,13 +31,16 @@ private:
     // TLASの構築
     void BuildTLAS();
 
-    // レイトレーシング用のStateObjectの構築
+    // グローバルルートシグネチャ生成
+    void CreateGlobalRootSignature();
+
+    // レイトレーシング用のステートオブジェクトの構築
+    void CreateStateObject();
 
     // レイトレーシング結果の書き込み用バッファの生成
 
     // シェーダーテーブルの構築
 
-    // グローバルルートシグネチャ生成
 
 private:
 
@@ -52,9 +55,11 @@ private:
 
     ComPtr<ID3D12Resource> m_pVertexBuffer;
     ComPtr<ID3D12Resource> m_pRTInstanceBuffer;
-
     ComPtr<ID3D12Resource> m_pBLAS;
     ComPtr<ID3D12Resource> m_pTLAS;
+
+    ComPtr<ID3D12RootSignature> m_pGlobalRootSignature;
+    ComPtr<ID3D12StateObject> m_pRTStateObject;
 
 
 };
