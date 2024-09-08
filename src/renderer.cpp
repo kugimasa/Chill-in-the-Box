@@ -28,6 +28,9 @@ void Renderer::OnInit()
 
     // ステートオブジェクトの構築
     CreateStateObject();
+
+    // 出力バッファの作成
+    CreateOutputBuffer();
 }
 
 bool Renderer::InitGraphicDevice(HWND hwnd)
@@ -149,6 +152,7 @@ void Renderer::BuildTLAS()
     auto d3d12Device = m_pDevice->GetDevice();
 
     // FIXME: ここで配置で問題ない...?
+    // MEMO: 複数のインスタンスがある場合は別途拡張が必要になりそう
     D3D12_RAYTRACING_INSTANCE_DESC instanceDesc{};
     XMStoreFloat3x4(
         reinterpret_cast<XMFLOAT3X4*>(&instanceDesc.Transform),
@@ -309,9 +313,9 @@ void Renderer::CreateStateObject()
 
     // シェーダー関数設定
     std::vector<D3D12_EXPORT_DESC> exportVec { 
-        { L"mainRayGen", nullptr, D3D12_EXPORT_FLAG_NONE },
-        { L"mainMS",     nullptr, D3D12_EXPORT_FLAG_NONE },
-        { L"mainCHS",    nullptr, D3D12_EXPORT_FLAG_NONE },
+        { L"RayGen", nullptr, D3D12_EXPORT_FLAG_NONE },
+        { L"Miss",     nullptr, D3D12_EXPORT_FLAG_NONE },
+        { L"ClosestHit",    nullptr, D3D12_EXPORT_FLAG_NONE },
     };
     D3D12_DXIL_LIBRARY_DESC dxilLibDesc{};
     dxilLibDesc.DXILLibrary = D3D12_SHADER_BYTECODE{ shaderBin.data(), shaderBin.size() };
@@ -326,7 +330,7 @@ void Renderer::CreateStateObject()
     // ヒットグループ設定
     D3D12_HIT_GROUP_DESC hitGroupDesc{};
     hitGroupDesc.Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;
-    hitGroupDesc.ClosestHitShaderImport = L"mainCHS";
+    hitGroupDesc.ClosestHitShaderImport = L"ClosestHit";
     hitGroupDesc.HitGroupExport = L"DefaultHitGroup";
     subObjectVec.emplace_back(
         D3D12_STATE_SUBOBJECT{
@@ -345,7 +349,7 @@ void Renderer::CreateStateObject()
 
     // シェーダー設定
     D3D12_RAYTRACING_SHADER_CONFIG rtShaderConfig{};
-    rtShaderConfig.MaxPayloadSizeInBytes = sizeof(XMFLOAT3);
+    rtShaderConfig.MaxPayloadSizeInBytes = sizeof(XMFLOAT4);
     rtShaderConfig.MaxAttributeSizeInBytes = sizeof(XMFLOAT2);
     subObjectVec.emplace_back(
         D3D12_STATE_SUBOBJECT{
@@ -374,4 +378,33 @@ void Renderer::CreateStateObject()
         &stateObjDesc, IID_PPV_ARGS(m_pRTStateObject.ReleaseAndGetAddressOf())
     ); 
     Print(PrintInfoType::RTCAMP10, "ステートオブジェクトの構築 完了");
+}
+
+/// <summary>
+/// レイトレーシング結果の書き込み用バッファの作成
+/// </summary>
+void Renderer::CreateOutputBuffer()
+{
+    auto width = GetWidth();
+    auto height = GetHeight();
+
+    // 書き込み用バッファの作成
+    m_pOutputBuffer = m_pDevice->CreateTexture2D(
+        width, height,
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COPY_SOURCE,
+        D3D12_HEAP_TYPE_DEFAULT
+    );
+
+    // UAVの作成(TLAS 特有)
+    // MEMO: BuildTLAS内でSRVは作成済みなのでハンドル位置をずらす必要がある
+    auto heap = m_pDevice->GetDescriptorHeap();
+    auto uavHandle = heap->GetCPUDescriptorHandleForHeapStart();
+    auto d3d12Device = m_pDevice->GetDevice();
+    uavHandle.ptr += d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+    uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    d3d12Device->CreateUnorderedAccessView(m_pOutputBuffer.Get(), nullptr, &uavDesc, uavHandle);
+    Print(PrintInfoType::RTCAMP10, "出力用バッファ(UAV)の作成 完了");
 }

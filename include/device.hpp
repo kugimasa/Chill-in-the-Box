@@ -35,6 +35,7 @@ public:
     ComPtr<ID3D12GraphicsCommandList4> CreateCommandList();
     ComPtr<ID3D12Fence1> CreateFence();
     ComPtr<ID3D12Resource> CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType, const wchar_t* name = nullptr);
+    ComPtr<ID3D12Resource> CreateTexture2D(UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType);
 
     void WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize);
 

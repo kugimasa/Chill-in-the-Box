@@ -360,6 +360,49 @@ ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS fl
     return resource;
 }
 
+// FIXME: CreateBufferと処理をまとめれそう
+ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType)
+{
+    // ヒーププロパティの設定
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = heapType;
+    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    heapProps.CreationNodeMask = 1;
+    heapProps.VisibleNodeMask = 1;
+
+    // リソースの設定
+    D3D12_RESOURCE_DESC resDesc{};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resDesc.Alignment = 0;
+    resDesc.Width = width;
+    resDesc.Height = height;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.Format = format;
+    resDesc.SampleDesc = { 1, 0 };
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resDesc.Flags = flags;
+
+    // リソースの生成
+    HRESULT hr;
+    ComPtr<ID3D12Resource> resource;
+    hr = m_pD3D12Device5->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        initialState,
+        nullptr,
+        IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
+    );
+
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "Texture2Dの作成に失敗しました");
+    }
+    return resource;
+}
+
 void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize)
 {
     if (resource == nullptr)
