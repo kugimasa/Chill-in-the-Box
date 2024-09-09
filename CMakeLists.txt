@@ -23,11 +23,13 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 
 # シェーダーコンパイルのためのDLLへのパス
 set(DXCOMPILER_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.lib")
-set(DXCOMPILER_DLL_PATH "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.dll")
 target_link_libraries(${PROJECT_NAME} PRIVATE "${DXCOMPILER_LIB_PATH}")
 
 # 実行時にライブラリをコピーする
+set(DXCOMPILER_DLL_PATH "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.dll")
+set(DXIL_DLL_PATH "${CMAKE_SOURCE_DIR}/external/libs/dxil.dll")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${DXCOMPILER_DLL_PATH}"
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+        "${DXIL_DLL_PATH}"
+        "${CMAKE_BINARY_DIR}")

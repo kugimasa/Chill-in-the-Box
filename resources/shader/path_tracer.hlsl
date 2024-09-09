@@ -20,7 +20,7 @@ void RayGen()
     HitInfo payload;
     payload.color = float4(0.1, 0.2, 0.5, 1.0);
     
-    uint2 launchIndex = DispatchRaysIndex();
+    uint2 launchIndex = DispatchRaysIndex().xy;
     
     gOutput[launchIndex] = float4(payload.color.rgb, 1.0);
 }

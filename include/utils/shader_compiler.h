@@ -25,16 +25,15 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
 {
     Print(PrintInfoType::RTCAMP10, "シェーダーコンパイル 開始");
     // シェーダーロード
-    std::ifstream file(hlslFilePath);
+    std::ifstream file(hlslFilePath, std::ifstream::binary);
     if (!file.is_open()) {
         Error(PrintInfoType::RTCAMP10, "シェーダーの読み込みに失敗しました :", hlslFilePath);
     }
-    file.seekg(0, std::ios::end);
-    size_t size = file.tellg();
-    std::string shaderSource(size, ' ');
-    file.seekg(0);
-    file.read(shaderSource.data(), size);
+
     std::wstring fileName = hlslFilePath.filename().wstring();
+    std::stringstream strStream;
+    strStream << file.rdbuf();
+    std::string shaderSource = strStream.str();
 
     ComPtr<IDxcLibrary> pDxcLibrary;
     DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&pDxcLibrary));
@@ -107,15 +106,13 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
 std::vector<char> inline LoadPreCompiledShaderLibrary(const fs::path& shaderLibPath)
 {
     // シェーダーロード
-    std::ifstream file(shaderLibPath);
+    std::ifstream file(shaderLibPath, std::ios::binary);
     if (!file.is_open()) {
         Error(PrintInfoType::RTCAMP10, "シェーダーライブラリの読み込みに失敗しました :", shaderLibPath);
         throw std::runtime_error("");
     }
-    file.seekg(0, std::ios::end);
-    size_t size = file.tellg();
     std::vector<char> shaderSource;
-    file.seekg(0);
-    file.read(shaderSource.data(), size);
+    shaderSource.resize(file.seekg(0, std::ios::end).tellg());
+    file.seekg(0, std::ios::beg).read(shaderSource.data(), shaderSource.size());
     return shaderSource;
 }
