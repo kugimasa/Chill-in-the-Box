@@ -151,6 +151,22 @@ bool Device::OnInit()
     return true;
 }
 
+void Device::OnDestroy()
+{
+    WaitForGpu();
+    CloseHandle(m_fenceEvent);
+    m_fenceEvent = 0;
+    CloseHandle(m_waitEvent);
+    m_waitEvent = 0;
+    for (UINT i = 0; i < BackBufferCount; ++i) {
+        m_pRenderTargets[i].Reset();
+    }
+    m_pDepthStencil.Reset();
+    m_pSwapChain3.Reset();
+    m_pCmdQueue.Reset();
+    m_pD3D12Device5.Reset();
+}
+
 bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
 {
     HRESULT hr;

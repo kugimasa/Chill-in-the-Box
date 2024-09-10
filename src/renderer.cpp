@@ -2,13 +2,15 @@
 #include "window.hpp"
 
 #include "utils/shader_compiler.h"
+#include "utils/math_util.h"
 
 using namespace DirectX;
 
 Renderer::Renderer(UINT width, UINT height, const std::wstring& title) :
     m_width(width),
     m_height(height),
-    m_title(title)
+    m_title(title),
+    m_dispatchRayDesc()
 {
 }
 
@@ -31,6 +33,22 @@ void Renderer::OnInit()
 
     // 出力バッファの作成
     CreateOutputBuffer();
+
+    // シェーダーテーブルの作成
+    CreateShaderTable();
+
+    // コマンドリストの用意
+    m_pCmdList = m_pDevice->CreateCommandList();
+    m_pCmdList->Close();
+}
+
+void Renderer::OnDestroy()
+{
+    if (m_pDevice)
+    {
+        m_pDevice->OnDestroy();
+    }
+    m_pDevice.reset();
 }
 
 bool Renderer::InitGraphicDevice(HWND hwnd)
@@ -249,7 +267,7 @@ void Renderer::CreateGlobalRootSignature()
     D3D12_ROOT_PARAMETER rootParam{};
     rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam.DescriptorTable.NumDescriptorRanges = 1;
-    
+
     // TLAS: t0
     D3D12_DESCRIPTOR_RANGE descRangeTLAS{};
     descRangeTLAS.BaseShaderRegister = 0;
@@ -377,6 +395,10 @@ void Renderer::CreateStateObject()
     HRESULT hr = d3d12Device->CreateStateObject(
         &stateObjDesc, IID_PPV_ARGS(m_pRTStateObject.ReleaseAndGetAddressOf())
     ); 
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::RTCAMP10, "ステートオブジェクトの構築に失敗しました: ", hr);
+    }
     Print(PrintInfoType::RTCAMP10, "ステートオブジェクトの構築 完了");
 }
 
@@ -407,4 +429,120 @@ void Renderer::CreateOutputBuffer()
     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     d3d12Device->CreateUnorderedAccessView(m_pOutputBuffer.Get(), nullptr, &uavDesc, uavHandle);
     Print(PrintInfoType::RTCAMP10, "出力用バッファ(UAV)の作成 完了");
+}
+
+/// <summary>
+/// シェーダーテーブルの構築
+/// </summary>
+void Renderer::CreateShaderTable()
+{
+    // アライメント制約を保ちつつ、レコードサイズを設定
+    UINT recordSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    recordSize = ROUND_UP(recordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+
+    // シェーダーテーブルサイズを計算
+    // FIXME: それぞれ配列で管理すれば良さそう
+    UINT rayGenSize = 1 * recordSize;
+    UINT missSize = 1 * recordSize;
+    UINT hitGroupSize = 1 * recordSize;
+
+    // 各テーブルでの開始位置のアライメント制約
+    auto tableAlign = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+    UINT rayGenEntrySize = ROUND_UP(rayGenSize, tableAlign);
+    UINT missEntrySize = ROUND_UP(missSize, tableAlign);
+    UINT hitGroupEntrySize = ROUND_UP(hitGroupSize, tableAlign);
+    
+    // シェーダーテーブルの確保
+    auto tableSize = rayGenEntrySize + missEntrySize + hitGroupEntrySize;
+    m_pShaderTable = m_pDevice->CreateBuffer(
+        tableSize,
+        D3D12_RESOURCE_FLAG_NONE,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        D3D12_HEAP_TYPE_UPLOAD
+    );
+
+    ComPtr<ID3D12StateObjectProperties> pRTStateObjectProps;
+    if (m_pRTStateObject == nullptr)
+    {
+        Error(PrintInfoType::RTCAMP10, "ステートオブジェクトが存在しません");
+    }
+    m_pRTStateObject.As(&pRTStateObjectProps);
+
+    // 各シェーダーレコードの書き込み
+    void* mapped = nullptr;
+    m_pShaderTable->Map(0, nullptr, &mapped);
+    uint8_t* pStart = static_cast<uint8_t*>(mapped);
+
+    // RayGenシェーダー
+    auto rayGenShaderStart = pStart;
+    {
+        uint8_t* p = rayGenShaderStart;
+        std::wstring exportName = L"RayGen";
+        auto id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
+        if (id == nullptr)
+        {
+            auto message = L"シェーダーIDが見つかりません: " + exportName;
+            Error(PrintInfoType::RTCAMP10, message);
+        }
+        memcpy(p, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        p += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    // Missシェーダー
+    auto missShaderStart = pStart + rayGenEntrySize;
+    {
+        uint8_t* p = missShaderStart;
+        std::wstring exportName = L"Miss";
+        auto id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
+        if (id == nullptr)
+        {
+            auto message = L"シェーダーIDが見つかりません: " + exportName;
+            Error(PrintInfoType::RTCAMP10, message);
+        }
+        memcpy(p, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        p += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    // HitGroup
+    auto hitGroupStart = pStart + rayGenEntrySize + missEntrySize;
+    {
+        uint8_t* p = hitGroupStart;
+        std::wstring exportName = L"DefaultHitGroup";
+        auto id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
+        if (id == nullptr)
+        {
+            auto message = L"シェーダーIDが見つかりません: " + exportName;
+            Error(PrintInfoType::RTCAMP10, message);
+        }
+        memcpy(p, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+        p += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    m_pShaderTable->Unmap(0, nullptr);
+    Print(PrintInfoType::RTCAMP10, "シェーダーテーブル作成 完了");
+
+    // DispatchRays用の情報をセット
+    auto& dispatchRayDesc = m_dispatchRayDesc;
+    auto startAddress = m_pShaderTable->GetGPUVirtualAddress();
+    auto& rayGenShaderRecord = dispatchRayDesc.RayGenerationShaderRecord;
+    rayGenShaderRecord.StartAddress = startAddress;
+    rayGenShaderRecord.SizeInBytes = rayGenSize;
+    startAddress += rayGenEntrySize;
+
+    auto& missShaderTable = dispatchRayDesc.MissShaderTable;
+    missShaderTable.StartAddress = startAddress;
+    missShaderTable.SizeInBytes = missSize;
+    missShaderTable.StrideInBytes = recordSize;
+    startAddress += missEntrySize;
+
+    auto& hitGroupTable = dispatchRayDesc.HitGroupTable;
+    hitGroupTable.StartAddress = startAddress;
+    hitGroupTable.SizeInBytes = hitGroupSize;
+    hitGroupTable.StrideInBytes = recordSize;
+    startAddress += hitGroupEntrySize;
+
+    dispatchRayDesc.Width = GetWidth();
+    dispatchRayDesc.Height = GetHeight();
+    dispatchRayDesc.Depth = 1;
+    Print(PrintInfoType::RTCAMP10, "DispatchRayDesc設定 完了");
 }

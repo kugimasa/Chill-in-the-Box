@@ -30,6 +30,7 @@ public:
     ~Device();
 
     bool OnInit();
+    void OnDestroy();
 
     bool CreateSwapChain(UINT width, UINT height, HWND hwnd);
     ComPtr<ID3D12GraphicsCommandList4> CreateCommandList();

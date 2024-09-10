@@ -41,6 +41,7 @@ private:
     void CreateOutputBuffer();
 
     // シェーダーテーブルの構築
+    void CreateShaderTable();
 
 private:
 
@@ -58,9 +59,11 @@ private:
     ComPtr<ID3D12Resource> m_pBLAS;
     ComPtr<ID3D12Resource> m_pTLAS;
     ComPtr<ID3D12Resource> m_pOutputBuffer;
+    ComPtr<ID3D12Resource> m_pShaderTable;
 
     ComPtr<ID3D12RootSignature> m_pGlobalRootSignature;
     ComPtr<ID3D12StateObject> m_pRTStateObject;
+    ComPtr<ID3D12GraphicsCommandList4> m_pCmdList;
 
-
+    D3D12_DISPATCH_RAYS_DESC m_dispatchRayDesc;
 };
