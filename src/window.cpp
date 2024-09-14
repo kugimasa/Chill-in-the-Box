@@ -55,13 +55,14 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
             }
         }
 
-        // TODO: レンダラーの破棄
-        // renderer->OnDestroy();
+        renderer->OnDestroy();
 
         return EXIT_SUCCESS;
     }
     catch (std::exception& e)
     {
+        renderer->OnDestroy();
+        Error(PrintInfoType::RTCAMP10, "ウィンドウの作成に失敗しました");
         return EXIT_FAILURE;
     }
 }
@@ -77,6 +78,14 @@ LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         {
             auto pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
             SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        }
+        return 0;
+
+    case WM_PAINT:
+        if (renderer)
+        {
+            renderer->OnUpdate();
+            renderer->OnRender();
         }
         return 0;
 

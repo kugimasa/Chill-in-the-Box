@@ -16,6 +16,7 @@ file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 include_directories(include)
+include_directories(external/DirectX-Headers/include/directx)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
                            RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources"

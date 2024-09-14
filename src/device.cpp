@@ -443,6 +443,26 @@ void Device::ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command)
     m_pCmdQueue->ExecuteCommandLists(1, cmdLists);
 }
 
+void Device::Present(UINT syncInterval)
+{
+    if (m_pSwapChain3)
+    {
+        m_pSwapChain3->Present(syncInterval, 0);
+        auto fence1 = m_pFrameFence1Arr[m_frameIndex];
+        auto value = ++m_fenceValueArr[m_frameIndex];
+        m_pCmdQueue->Signal(fence1.Get(), value);
+
+        m_frameIndex = m_pSwapChain3->GetCurrentBackBufferIndex();
+        fence1 = m_pFrameFence1Arr[m_frameIndex];
+        auto endValue = m_fenceValueArr[m_frameIndex];
+        if (fence1->GetCompletedValue() < endValue)
+        {
+            fence1->SetEventOnCompletion(endValue, m_fenceEvent);
+            WaitForSingleObject(m_fenceEvent, INFINITE);
+        }
+    }
+}
+
 /// <summary>
 /// コマンドの終了を待機
 /// </summary>

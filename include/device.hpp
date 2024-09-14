@@ -45,6 +45,8 @@ public:
         return m_pCmdAllocatorArr[m_frameIndex];
     }
     ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return m_pHeap; }
+    ComPtr<ID3D12Resource> GetRenderTarget() { return m_pRenderTargets[m_frameIndex]; }
+    ComPtr<ID3D12Resource> GetDepthStencil() { return m_pDepthStencil; }
     UINT GetCurrentFrameIndex() const { return m_frameIndex; }
 
     void ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command);

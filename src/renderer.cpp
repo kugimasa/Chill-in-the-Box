@@ -4,6 +4,8 @@
 #include "utils/shader_compiler.h"
 #include "utils/math_util.h"
 
+#include <d3dx12.h>
+
 using namespace DirectX;
 
 Renderer::Renderer(UINT width, UINT height, const std::wstring& title) :
@@ -40,6 +42,72 @@ void Renderer::OnInit()
     // コマンドリストの用意
     m_pCmdList = m_pDevice->CreateCommandList();
     m_pCmdList->Close();
+}
+
+void Renderer::OnUpdate()
+{
+}
+
+void Renderer::OnRender()
+{
+    auto d3d12Device = m_pDevice->GetDevice();
+    auto renderTarget = m_pDevice->GetRenderTarget();
+    auto allocator = m_pDevice->GetCurrentCommandAllocator();
+    allocator->Reset();
+    m_pCmdList->Reset(allocator.Get(), nullptr);
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = {
+        m_pDevice->GetDescriptorHeap().Get(),
+    };
+    m_pCmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+    m_pCmdList->SetComputeRootSignature(m_pGlobalRootSignature.Get());
+
+    auto tlasGPUHandle = m_pTLASDescHeap.Get()->GetGPUDescriptorHandleForHeapStart();
+    auto outputBufferGPUHandle = m_pOutputBufferDescHeap.Get()->GetGPUDescriptorHandleForHeapStart();
+    outputBufferGPUHandle.ptr += d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_pCmdList->SetComputeRootDescriptorTable(0, tlasGPUHandle);
+    m_pCmdList->SetComputeRootDescriptorTable(1, outputBufferGPUHandle);
+
+    // レイトレース結果をUAVへ
+    auto barrierToUAV = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_pOutputBuffer.Get(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    );
+    m_pCmdList->ResourceBarrier(1, &barrierToUAV);
+
+    // レイトレース
+    m_pCmdList->SetPipelineState1(m_pRTStateObject.Get());
+    m_pCmdList->DispatchRays(&m_dispatchRayDesc);
+
+    // レイトレース結果をバックバッファへコピー
+    D3D12_RESOURCE_BARRIER barriers[] = {
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            m_pOutputBuffer.Get(),
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COPY_SOURCE
+        ),
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTarget.Get(),
+            D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_COPY_DEST
+        ),
+    };
+    m_pCmdList->ResourceBarrier(_countof(barriers), barriers);
+    m_pCmdList->CopyResource(renderTarget.Get(), m_pOutputBuffer.Get());
+
+    // Present可能なようにバリアをセット
+    auto barrierToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderTarget.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_PRESENT
+    );
+    m_pCmdList->ResourceBarrier(1, &barrierToPresent);
+
+    m_pCmdList->Close();
+
+    m_pDevice->ExecuteCommandList(m_pCmdList);
+    m_pDevice->Present(1);
 }
 
 void Renderer::OnDestroy()
@@ -222,7 +290,7 @@ void Renderer::BuildTLAS()
     {
         Error(PrintInfoType::RTCAMP10, "TLASの構築に失敗しました");
     }
-    m_pBLAS->SetName(L"TLAS");
+    m_pTLAS->SetName(L"TLAS");
 
     // Acceleration Structure 構築.
     buildASDesc.Inputs.InstanceDescs = m_pRTInstanceBuffer->GetGPUVirtualAddress(); // TLAS の場合のみ
@@ -244,8 +312,8 @@ void Renderer::BuildTLAS()
     m_pDevice->ExecuteCommandList(commad);
 
     // SRVの作成(TLAS 特有)
-    auto heap = m_pDevice->GetDescriptorHeap();
-    auto srvHandle = heap->GetCPUDescriptorHandleForHeapStart();
+    m_pTLASDescHeap = m_pDevice->GetDescriptorHeap();
+    auto srvHandle = m_pTLASDescHeap->GetCPUDescriptorHandleForHeapStart();
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -421,8 +489,8 @@ void Renderer::CreateOutputBuffer()
 
     // UAVの作成(TLAS 特有)
     // MEMO: BuildTLAS内でSRVは作成済みなのでハンドル位置をずらす必要がある
-    auto heap = m_pDevice->GetDescriptorHeap();
-    auto uavHandle = heap->GetCPUDescriptorHandleForHeapStart();
+    m_pOutputBufferDescHeap = m_pDevice->GetDescriptorHeap();
+    auto uavHandle = m_pOutputBufferDescHeap->GetCPUDescriptorHandleForHeapStart();
     auto d3d12Device = m_pDevice->GetDevice();
     uavHandle.ptr += d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
