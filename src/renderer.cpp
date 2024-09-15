@@ -481,7 +481,7 @@ void Renderer::CreateOutputBuffer()
     // 書き込み用バッファの作成
     m_pOutputBuffer = m_pDevice->CreateTexture2D(
         width, height,
-        DXGI_FORMAT_B8G8R8A8_UNORM,
+        DXGI_FORMAT_R8G8B8A8_UNORM,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
         D3D12_RESOURCE_STATE_COPY_SOURCE,
         D3D12_HEAP_TYPE_DEFAULT
