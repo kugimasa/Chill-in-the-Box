@@ -45,9 +45,13 @@ public:
         return m_pCmdAllocatorArr[m_frameIndex];
     }
     ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return m_pHeap; }
+    ComPtr<ID3D12DescriptorHeap> GetRTVHeap() { return m_pRtvHeap; }
     ComPtr<ID3D12Resource> GetRenderTarget() { return m_pRenderTargets[m_frameIndex]; }
     ComPtr<ID3D12Resource> GetDepthStencil() { return m_pDepthStencil; }
     UINT GetCurrentFrameIndex() const { return m_frameIndex; }
+    const D3D12_VIEWPORT& GetViewport() const { return m_viewport;  }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDesc();
 
     void ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command);
     void Present(UINT syncInterval);

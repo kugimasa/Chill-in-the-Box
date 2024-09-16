@@ -225,7 +225,6 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
     
     // RTV�̍쐬
     {
-        auto rtvHandle = m_pRtvHeap->GetCPUDescriptorHandleForHeapStart();
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
         rtvDesc.Format = m_backBufferFormat;
         rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
@@ -240,6 +239,8 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
             wchar_t name[25] = {};
             swprintf_s(name, L"Render target %u", i);
             m_pRenderTargets[i]->SetName(name);
+            auto rtvHandle = m_pRtvHeap->GetCPUDescriptorHandleForHeapStart();
+            rtvHandle.ptr += m_rtvDescSize * i;
             m_pD3D12Device5->CreateRenderTargetView(m_pRenderTargets[i].Get(), &rtvDesc, rtvHandle);
         }
     }
@@ -433,6 +434,14 @@ void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, siz
         memcpy(mapped, pData, dataSize);
         resource->Unmap(0, &range);
     }
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE  Device::GetCurrentRTVDesc()
+{
+    auto rtvCPUHandle = m_pRtvHeap->GetCPUDescriptorHandleForHeapStart();
+    auto offset = m_rtvDescSize * m_frameIndex;
+    rtvCPUHandle.ptr += offset;
+    return rtvCPUHandle;
 }
 
 void Device::ExecuteCommandList(ComPtr<ID3D12GraphicsCommandList4> command)
