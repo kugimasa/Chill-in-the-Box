@@ -5,6 +5,11 @@
 #include "utils/math_util.h"
 
 #include <d3dx12.h>
+#ifdef _DEBUG
+#include <imgui.h>
+#include <imgui_impl_dx12.h>
+#include <imgui_impl_win32.h>
+#endif // _DEBUG
 
 using namespace DirectX;
 
@@ -42,10 +47,19 @@ void Renderer::OnInit()
     // コマンドリストの用意
     m_pCmdList = m_pDevice->CreateCommandList();
     m_pCmdList->Close();
+
+#ifdef _DEBUG
+    // ImGuiの初期化
+    InitImGui();
+#endif // _DEBUG
+
 }
 
 void Renderer::OnUpdate()
 {
+#ifdef _DEBUG
+    UpdateImGui();
+#endif // _DEBUG
 }
 
 void Renderer::OnRender()
@@ -96,12 +110,33 @@ void Renderer::OnRender()
     m_pCmdList->ResourceBarrier(_countof(barriers), barriers);
     m_pCmdList->CopyResource(renderTarget.Get(), m_pOutputBuffer.Get());
 
+#ifdef _DEBUG
+    // ImGui描画用の設定
+    auto barrierToRT = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderTarget.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+    m_pCmdList->ResourceBarrier(1, &barrierToRT);
+
+    // ImGuiの描画
+    RenderImGui();
+
+    // レンダーターゲットからPresentする
+    auto barrierToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderTarget.Get(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT
+    );
+#else // _DEBUG
     // Present可能なようにバリアをセット
     auto barrierToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTarget.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
         D3D12_RESOURCE_STATE_PRESENT
     );
+#endif
+
     m_pCmdList->ResourceBarrier(1, &barrierToPresent);
 
     m_pCmdList->Close();
@@ -112,6 +147,10 @@ void Renderer::OnRender()
 
 void Renderer::OnDestroy()
 {
+#ifdef _DEBUG
+    ImGui_ImplDX12_Shutdown();
+#endif // _DEBUG
+
     if (m_pDevice)
     {
         m_pDevice->OnDestroy();
@@ -614,3 +653,47 @@ void Renderer::CreateShaderTable()
     dispatchRayDesc.Depth = 1;
     Print(PrintInfoType::RTCAMP10, "DispatchRayDesc設定 完了");
 }
+
+#ifdef _DEBUG
+void Renderer::InitImGui()
+{
+    auto heap = m_pDevice->GetDescriptorHeap();
+    auto imguiCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
+    auto imguiGPUHandle = heap->GetGPUDescriptorHandleForHeapStart();
+    auto d3d12Device = m_pDevice->GetDevice();
+    auto handleIncrementSize = d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    // SRV/UAV分のオフセット
+    imguiCPUHandle.ptr += handleIncrementSize * 2;
+    imguiGPUHandle.ptr += handleIncrementSize * 2;
+    ImGui_ImplDX12_Init(
+        d3d12Device.Get(),
+        Device::BackBufferCount,
+        DXGI_FORMAT_R8G8B8A8_UNORM,
+        heap.Get(),
+        imguiCPUHandle,
+        imguiGPUHandle
+    );
+}
+void Renderer::UpdateImGui()
+{
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    auto frameRate = ImGui::GetIO().Framerate;
+    ImGui::Begin("Info");
+    ImGui::Text("FPS %.3f ms", 1000.0f / frameRate);
+    ImGui::End();
+}
+
+void Renderer::RenderImGui()
+{
+    auto rtvHandle = m_pDevice->GetCurrentRTVDesc();
+    auto viewport = m_pDevice->GetViewport();
+    m_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    m_pCmdList->RSSetViewports(1, &viewport);
+
+    ImGui::Render();
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_pCmdList.Get());
+}
+#endif // _DEBUG

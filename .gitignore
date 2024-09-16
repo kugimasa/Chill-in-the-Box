@@ -370,3 +370,4 @@ CMakePresets.json
 
 # DLLs & LIBs
 external/libs
+/imgui.ini

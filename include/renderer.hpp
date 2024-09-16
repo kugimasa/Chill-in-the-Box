@@ -43,6 +43,12 @@ private:
     // シェーダーテーブルの構築
     void CreateShaderTable();
 
+#ifdef _DEBUG
+    void InitImGui();
+    void UpdateImGui();
+    void RenderImGui();
+#endif // _DEBUG
+
 private:
 
     UINT m_width;
