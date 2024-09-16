@@ -32,19 +32,56 @@ include_directories(external/DirectX-Headers/include/directx)
 include_directories(${IMGUI_SOURCE_DIR})
 include_directories(${IMGUI_BACKENDS_DIR})
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-                           RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources"
-                           )
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+                               RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources"
+                               )
+    # シェーダーコンパイルのためのDLLへのパス
+    set(DXCOMPILER_LIB_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "${DXCOMPILER_LIB_DIR}")
 
-# シェーダーコンパイルのためのDLLへのパス
-set(DXCOMPILER_LIB_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE "${DXCOMPILER_LIB_DIR}")
-
-# 実行時にライブラリをコピーする
-set(DXCOMPILER_DLL_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.dll")
-set(DXIL_DLL_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxil.dll")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    # 実行時にライブラリをコピーする
+    set(DXCOMPILER_DLL_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.dll")
+    set(DXIL_DLL_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxil.dll")
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${DXCOMPILER_DLL_DIR}"
         "${DXIL_DLL_DIR}"
-        "${CMAKE_BINARY_DIR}")
+        "${CMAKE_BINARY_DIR}"
+    )
+else()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+                               RESOURCE_DIR="${CMAKE_BINARY_DIR}/resources"
+                               )
+
+    message("シェーダーコンパイル")
+    find_program(DXC_COMPILER dxc)
+    if(NOT DXC_COMPILER)
+        message(FATAL_ERROR "DXCコンパイラが見つかりません")
+    endif()
+    function(compile_shader hlsl_file output_file profile)
+        add_custom_command(
+            OUTPUT ${output_file}
+            COMMAND ${DXC_COMPILER} -T ${profile} -E main -Fo ${output_file} ${hlsl_file}
+            DEPENDS ${hlsl_file}
+            COMMENT "HLSLコンパイル: ${hlsl_file}"
+            VERBATIM
+        )
+    endfunction()
+
+    # シェーダーリスト
+    set(SHADER_DIR "${CMAKE_SOURCE_DIR}/resources/shader")
+    set(HLSL_FILES
+        "${SHADER_DIR}/path_tracer.hlsl"
+    )
+
+    foreach(HLSL_FILE ${HLSL_FILES})
+        get_filename_component(SHADER_NAME ${HLSL_FILE} NAME_WE)
+        set(SHADER_OUTPUT "${CMAKE_BINARY_DIR}/resources/shader/${SHADER_NAME}.dxlib")
+        compile_shader(${HLSL_FILE} ${SHADER_OUTPUT} "lib_6_4")
+        add_custom_target(${SHADER_NAME}_shader ALL DEPENDS ${SHADER_OUTPUT})
+        add_dependencies(${PROJECT_NAME} ${SHADER_NAME}_shader)
+    endforeach()
+
+endif()
