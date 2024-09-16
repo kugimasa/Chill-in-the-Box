@@ -15,3 +15,7 @@ public:
 private:
     static HWND m_hWnd;
 };
+
+#ifdef _DEBUG
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+#endif

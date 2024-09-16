@@ -1,11 +1,21 @@
 #include "window.hpp"
 #include "renderer.hpp"
 
+#ifdef _DEBUG
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#endif
+
 HWND Window::m_hWnd = nullptr;
 
 int Window::Run(Renderer* renderer, HINSTANCE hInstance)
 {
     if (!renderer) return EXIT_FAILURE;
+
+#ifdef _DEBUG
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+#endif // _DEBUG
 
     try
     {
@@ -38,6 +48,10 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
             renderer
         );
 
+#ifdef _DEBUG
+        ImGui_ImplWin32_Init(m_hWnd);
+#endif // _DEBUG
+
         // ƒŒƒ“ƒ_ƒ‰[‚Ì‰Šú‰»
         renderer->OnInit();
 
@@ -57,6 +71,11 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
 
         renderer->OnDestroy();
 
+#ifdef _DEBUG
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+#endif // _DEBUG
+
         return EXIT_SUCCESS;
     }
     catch (std::exception& e)
@@ -70,6 +89,13 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
 LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     auto* renderer = (Renderer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+
+#ifdef _DEBUG
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+    {
+        return TRUE;
+    }
+#endif // _DEBUG
 
     switch (message)
     {
