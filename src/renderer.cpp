@@ -13,9 +13,11 @@
 
 using namespace DirectX;
 
-Renderer::Renderer(UINT width, UINT height, const std::wstring& title) :
+Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFrame) :
     m_width(width),
     m_height(height),
+    m_currentFrame(0),
+    m_maxFrame(maxFrame),
     m_title(title),
     m_dispatchRayDesc()
 {
@@ -64,6 +66,21 @@ void Renderer::OnUpdate()
 
 void Renderer::OnRender()
 {
+    // 最後のフレームが描画されたら終了
+    if (m_currentFrame >= m_maxFrame)
+    {
+        // 終了処理
+        Print(PrintInfoType::RTCAMP10, "======================");
+#ifdef _DEBUG
+        auto hwnd = Window::GetHWND();
+        PostMessage(hwnd, WM_QUIT, 0, 0);
+#else // _DEBUG
+        PostQuitMessage(0);
+#endif
+        return;
+    }
+
+    Print(PrintInfoType::RTCAMP10, "Frame: ", m_currentFrame);
     auto d3d12Device = m_pDevice->GetDevice();
     auto renderTarget = m_pDevice->GetRenderTarget();
     auto allocator = m_pDevice->GetCurrentCommandAllocator();
@@ -143,6 +160,10 @@ void Renderer::OnRender()
 
     m_pDevice->ExecuteCommandList(m_pCmdList);
     m_pDevice->Present(1);
+    // コマンドの完了を待機
+    m_pDevice->WaitForGpu();
+    // フレームの更新
+    m_currentFrame++;
 }
 
 void Renderer::OnDestroy()

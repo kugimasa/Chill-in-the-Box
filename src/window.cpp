@@ -55,8 +55,13 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
         // レンダラーの初期化
         renderer->OnInit();
 
-        // TODO: 本番環境ではウィンドウ表示は不要
+#ifdef _DEBUG
         int nCmdShow = SW_SHOWNORMAL;
+#else // _DEBUG
+        // Release版ではウィンドウを出さない
+        int nCmdShow = SW_HIDE;
+#endif
+        
         ShowWindow(m_hWnd, nCmdShow);
 
         // メインループ
@@ -66,6 +71,11 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
             {
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
+            }
+            else
+            {
+                // Release版ではここで描画実行
+                renderer->OnRender();
             }
         }
 

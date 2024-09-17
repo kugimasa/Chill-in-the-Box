@@ -8,8 +8,8 @@ using Vector3 = DirectX::XMFLOAT3;
 class Renderer
 {
 public:
-
-    Renderer(UINT width, UINT height, const std::wstring& title);
+    // maxFrame‚ðŽw’è‚µ‚È‚¢ŒÀ‚è‚Í•`‰æ‚µ‘±‚¯‚é
+    Renderer(UINT width, UINT height, const std::wstring& title, int maxFrame = -1);
 
     void OnInit();
     void OnUpdate();
@@ -53,6 +53,8 @@ private:
 
     UINT m_width;
     UINT m_height;
+    UINT m_currentFrame;
+    UINT m_maxFrame;
     std::wstring m_title;
     std::unique_ptr<Device> m_pDevice;
 
