@@ -9,8 +9,6 @@ endif()
 project("rtcamp10")
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(external/DirectX-Headers)
-
 file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 # ImGui
@@ -25,16 +23,29 @@ set(IMGUI_SOURCES
     ${IMGUI_BACKENDS_DIR}/imgui_impl_win32.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
+# fpng
+set(FPNG_SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/fpng/src")
+set(FPNG_SOURCES
+    "${FPNG_SOURCE_DIR}/fpng.h"
+    "${FPNG_SOURCE_DIR}/fpng.cpp"
+)
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${FPNG_SOURCES})
 
 include_directories(include)
 include_directories(external/DirectX-Headers/include/directx)
+include_directories(external/fpng/src)
 include_directories(${IMGUI_SOURCE_DIR})
 include_directories(${IMGUI_BACKENDS_DIR})
 
+# 出力ディレクトリの定義
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+                            OUTPUT_DIR="${CMAKE_BINARY_DIR}/"
+                            )
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
-                               RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources"
+                               RESOURCE_DIR="${CMAKE_SOURCE_DIR}/resources"
                                )
     # シェーダーコンパイルのためのDLLへのパス
     set(DXCOMPILER_LIB_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.lib")
