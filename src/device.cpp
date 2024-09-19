@@ -420,6 +420,128 @@ ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FOR
     return resource;
 }
 
+ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
+{
+    auto srcDesc = pSource->GetDesc();
+    UINT numRows = 0;
+    UINT64 rowSizeInBytes = 0;
+    UINT64 totalBytes = 0;
+    m_pD3D12Device5->GetCopyableFootprints(
+        &srcDesc,
+        0,
+        1,
+        0,
+        nullptr,
+        &numRows,
+        &rowSizeInBytes,
+        &totalBytes
+    );
+    UINT64 srcPitch = (rowSizeInBytes + 255) & ~0xFFu;
+
+    // Readback用バッファの設定
+    const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
+    D3D12_RESOURCE_DESC bufferDesc = {};
+    bufferDesc.DepthOrArraySize = 1;
+    bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    bufferDesc.Height = 1;
+    bufferDesc.Width = srcPitch * srcDesc.Height;
+    bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    bufferDesc.MipLevels = 1;
+    bufferDesc.SampleDesc.Count = 1;
+
+
+    // Readback用バッファの作成
+    ComPtr<ID3D12Resource> imageBuffer;
+    HRESULT hr;
+    hr = m_pD3D12Device5->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(imageBuffer.ReleaseAndGetAddressOf())
+    );
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "画像バッファの作成に失敗しました");
+    }
+    if (imageBuffer != nullptr)
+    {
+        imageBuffer->SetName(L"Image Buffer");
+    }
+
+    // コマンドリストの作成
+    ComPtr<ID3D12CommandAllocator> pCmdAllocator;
+    hr = m_pD3D12Device5->CreateCommandAllocator(
+        D3D12_COMMAND_LIST_TYPE_DIRECT, 
+        IID_PPV_ARGS(pCmdAllocator.GetAddressOf())
+    );
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "コマンドアロケータの作成に失敗しました");
+    }
+    if (pCmdAllocator != nullptr)
+    {
+        pCmdAllocator->SetName(L"Image Buffer - CommandAllocator");
+    }
+    ComPtr<ID3D12GraphicsCommandList4> pCmdList4;
+    m_pD3D12Device5->CreateCommandList(
+        0,
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        pCmdAllocator.Get(),
+        nullptr,
+        IID_PPV_ARGS(pCmdList4.ReleaseAndGetAddressOf())
+    );
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "コマンドリストの作成に失敗しました");
+    }
+    if (pCmdList4 != nullptr)
+    {
+        pCmdList4->SetName(L"Image Buffer - CommandList");
+    }
+    auto barrierToCopySrc = CD3DX12_RESOURCE_BARRIER::Transition(
+        pSource.Get(),
+        beforeState,
+        D3D12_RESOURCE_STATE_COPY_SOURCE
+    );
+    pCmdList4->ResourceBarrier(1, &barrierToCopySrc);
+
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint = {};
+    bufferFootprint.Footprint.Width = static_cast<UINT>(srcDesc.Width);
+    bufferFootprint.Footprint.Height = srcDesc.Height;
+    bufferFootprint.Footprint.Depth = 1;
+    bufferFootprint.Footprint.RowPitch = static_cast<UINT>(srcPitch);
+    bufferFootprint.Footprint.Format = srcDesc.Format;
+
+    // 画像バッファにテクスチャコピー
+    const CD3DX12_TEXTURE_COPY_LOCATION copyDest(imageBuffer.Get(), bufferFootprint);
+    const CD3DX12_TEXTURE_COPY_LOCATION copySrc(pSource.Get(), 0);
+    pCmdList4->CopyTextureRegion(&copyDest, 0, 0, 0, &copySrc, nullptr);
+
+    auto barrierToAfterState = CD3DX12_RESOURCE_BARRIER::Transition(
+        pSource.Get(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE,
+        afterState
+    );
+    pCmdList4->ResourceBarrier(1, &barrierToAfterState);
+    // コマンド終了
+    pCmdList4->Close();
+    // コマンド実行
+    ExecuteCommandList(pCmdList4);
+
+    // GPU待機
+    auto waitFence = CreateFence();
+    UINT64 fenceValue = 1;
+    waitFence->SetEventOnCompletion(fenceValue, m_waitEvent);
+    m_pCmdQueue->Signal(waitFence.Get(), fenceValue);
+    WaitForSingleObject(m_waitEvent, INFINITE);
+
+    return imageBuffer;
+}
+
 void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize)
 {
     if (resource == nullptr)

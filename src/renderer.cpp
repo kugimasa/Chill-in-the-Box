@@ -4,14 +4,15 @@
 #include "utils/shader_compiler.h"
 #include "utils/math_util.h"
 
-#include <d3dx12.h>
 #ifdef _DEBUG
 #include <imgui.h>
 #include <imgui_impl_dx12.h>
 #include <imgui_impl_win32.h>
 #endif // _DEBUG
+#include <fpng.h>
 
 using namespace DirectX;
+using namespace fpng;
 
 Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFrame) :
     m_width(width),
@@ -54,6 +55,9 @@ void Renderer::OnInit()
     // ImGuiの初期化
     InitImGui();
 #endif // _DEBUG
+
+    // fpngの初期化
+    fpng_init();
 
 }
 
@@ -155,13 +159,27 @@ void Renderer::OnRender()
 #endif
 
     m_pCmdList->ResourceBarrier(1, &barrierToPresent);
-
     m_pCmdList->Close();
 
     m_pDevice->ExecuteCommandList(m_pCmdList);
     m_pDevice->Present(1);
-    // コマンドの完了を待機
-    m_pDevice->WaitForGpu();
+
+    // 画像用のバッファを作成
+    auto imageBuffer = m_pDevice->CreateImageBuffer(
+        renderTarget,
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_PRESENT
+    );
+
+    // CPU側で画像の出力
+    std::ostringstream sout;
+    sout << std::setw(3) << std::setfill('0') << m_currentFrame;
+    std::string filename = OUTPUT_DIR + sout.str() + ".png";
+    void* pixel = nullptr;
+    imageBuffer->Map(0, nullptr, &pixel);
+    fpng_encode_image_to_file(filename.c_str(), pixel, m_width, m_height, 4, 0);
+    imageBuffer->Unmap(0, nullptr);
+
     // フレームの更新
     m_currentFrame++;
 }
