@@ -91,7 +91,7 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
     catch (std::exception& e)
     {
         renderer->OnDestroy();
-        Error(PrintInfoType::RTCAMP10, "ウィンドウの作成に失敗しました");
+        Error(PrintInfoType::RTCAMP10, "ウィンドウの作成に失敗しました", e.what());
         return EXIT_FAILURE;
     }
 }

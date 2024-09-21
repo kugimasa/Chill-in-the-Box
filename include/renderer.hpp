@@ -56,7 +56,7 @@ private:
 
     UINT m_width;
     UINT m_height;
-    UINT m_currentFrame;
+    int m_currentFrame;
     int m_maxFrame;
     std::wstring m_title;
     std::unique_ptr<Device> m_pDevice;

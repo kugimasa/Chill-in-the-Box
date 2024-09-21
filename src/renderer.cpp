@@ -71,7 +71,7 @@ void Renderer::OnUpdate()
 void Renderer::OnRender()
 {
     // 最後のフレームが描画されたら終了
-    if (m_currentFrame >= m_maxFrame)
+    if (m_maxFrame > 0 && m_currentFrame >= m_maxFrame)
     {
         // 終了処理
         Print(PrintInfoType::RTCAMP10, "======================");
@@ -467,75 +467,49 @@ void Renderer::CreateStateObject()
     shaderBin = LoadPreCompiledShaderLibrary(RESOURCE_DIR L"/shader/path_tracer.dxlib");
 #endif
 
-    // サブオブジェクト
-    std::vector<D3D12_STATE_SUBOBJECT> subObjectVec;
-    subObjectVec.reserve(32);
+    // ステートオブジェクト設定
+    CD3DX12_STATE_OBJECT_DESC stateObjDesc;
+    stateObjDesc.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 
-    // シェーダー関数設定
-    std::vector<D3D12_EXPORT_DESC> exportVec { 
-        { L"RayGen", nullptr, D3D12_EXPORT_FLAG_NONE },
-        { L"Miss",     nullptr, D3D12_EXPORT_FLAG_NONE },
-        { L"ClosestHit",    nullptr, D3D12_EXPORT_FLAG_NONE },
-    };
-    D3D12_DXIL_LIBRARY_DESC dxilLibDesc{};
-    dxilLibDesc.DXILLibrary = D3D12_SHADER_BYTECODE{ shaderBin.data(), shaderBin.size() };
-    dxilLibDesc.NumExports = UINT(exportVec.size());
-    dxilLibDesc.pExports = exportVec.data();
-    subObjectVec.emplace_back(
-        D3D12_STATE_SUBOBJECT{
-            D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY,&dxilLibDesc
-        }
-    );
+    // シェーダ登録
+    D3D12_SHADER_BYTECODE shader{ shaderBin.data(), shaderBin.size() };
+    //TODO: シェーダーを分ける
+    auto dxilLib = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+    dxilLib->SetDXILLibrary(&shader);
+    dxilLib->DefineExport(L"RayGen");
+    dxilLib->DefineExport(L"Miss");
+    dxilLib->DefineExport(L"ClosestHit");
 
     // ヒットグループ設定
-    D3D12_HIT_GROUP_DESC hitGroupDesc{};
-    hitGroupDesc.Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;
-    hitGroupDesc.ClosestHitShaderImport = L"ClosestHit";
-    hitGroupDesc.HitGroupExport = L"DefaultHitGroup";
-    subObjectVec.emplace_back(
-        D3D12_STATE_SUBOBJECT{
-            D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &hitGroupDesc
-        }
-    );
+    auto hitGroup = stateObjDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+    hitGroup->SetClosestHitShaderImport(L"ClosestHit");
+    hitGroup->SetHitGroupExport(L"DefaultHitGroup");
 
     // グローバルルートシグネチャ設定
-    D3D12_GLOBAL_ROOT_SIGNATURE globalRootSignature{};
-    globalRootSignature.pGlobalRootSignature = m_pGlobalRootSignature.Get();
-    subObjectVec.emplace_back(
-        D3D12_STATE_SUBOBJECT{
-            D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, & globalRootSignature
-        }
-    );
+    auto globalRootSig = stateObjDesc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+    globalRootSig->SetRootSignature(m_pGlobalRootSignature.Get());
+
+    // TODO: ローカルルートシグネチャ設定
+    //
+
+    // レイトレーシングパイプライン用設定
+    const UINT MaxPayloadSize = sizeof(XMFLOAT4);
+    const UINT MaxAttributeSize = sizeof(XMFLOAT2);
+    const UINT MaxRecursionDepth = 1;
 
     // シェーダー設定
-    D3D12_RAYTRACING_SHADER_CONFIG rtShaderConfig{};
-    rtShaderConfig.MaxPayloadSizeInBytes = sizeof(XMFLOAT4);
-    rtShaderConfig.MaxAttributeSizeInBytes = sizeof(XMFLOAT2);
-    subObjectVec.emplace_back(
-        D3D12_STATE_SUBOBJECT{
-            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &rtShaderConfig
-        }
-    );
+    auto rtShaderConfig = stateObjDesc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+    rtShaderConfig->Config(MaxPayloadSize, MaxAttributeSize);
 
     // パイプライン設定
-    D3D12_RAYTRACING_PIPELINE_CONFIG rtPipelineConfig{};
-    // MEMO: トレースの深さはここで指定する
-    rtPipelineConfig.MaxTraceRecursionDepth = 1;
-    subObjectVec.emplace_back(
-        D3D12_STATE_SUBOBJECT{
-            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &rtPipelineConfig
-        }
-    );
-
-    // ステートオブジェクトの生成
-    D3D12_STATE_OBJECT_DESC stateObjDesc{};
-    stateObjDesc.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE;
-    stateObjDesc.NumSubobjects = UINT(subObjectVec.size());
-    stateObjDesc.pSubobjects = subObjectVec.data();
+    auto rtPipelineConfig = stateObjDesc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+    rtPipelineConfig->Config(MaxRecursionDepth);
 
     auto d3d12Device = m_pDevice->GetDevice();
     HRESULT hr = d3d12Device->CreateStateObject(
-        &stateObjDesc, IID_PPV_ARGS(m_pRTStateObject.ReleaseAndGetAddressOf())
+        stateObjDesc,
+        IID_PPV_ARGS(m_pRTStateObject.ReleaseAndGetAddressOf())
     ); 
     if (FAILED(hr))
     {
