@@ -164,22 +164,18 @@ void Renderer::OnRender()
     m_pDevice->ExecuteCommandList(m_pCmdList);
     m_pDevice->Present(1);
 
-    // 画像用のバッファを作成
-    auto imageBuffer = m_pDevice->CreateImageBuffer(
-        renderTarget,
-        D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_PRESENT
-    );
-
-    // CPU側で画像の出力
-    std::ostringstream sout;
-    sout << std::setw(3) << std::setfill('0') << m_currentFrame;
-    std::string filename = OUTPUT_DIR + sout.str() + ".png";
-    void* pixel = nullptr;
-    imageBuffer->Map(0, nullptr, &pixel);
-    fpng_encode_image_to_file(filename.c_str(), pixel, m_width, m_height, 4, 0);
-    imageBuffer->Unmap(0, nullptr);
-
+    // 最大フレーム指定がある場合にのみ画像出力
+    if (m_maxFrame > 0)
+    {
+        // 画像用のバッファを作成
+        auto imageBuffer = m_pDevice->CreateImageBuffer(
+            renderTarget,
+            D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_PRESENT
+        );
+        // 画像の出力
+        OutputImage(imageBuffer);
+    }
     // フレームの更新
     m_currentFrame++;
 }
@@ -691,6 +687,18 @@ void Renderer::CreateShaderTable()
     dispatchRayDesc.Height = GetHeight();
     dispatchRayDesc.Depth = 1;
     Print(PrintInfoType::RTCAMP10, "DispatchRayDesc設定 完了");
+}
+
+void Renderer::OutputImage(ComPtr<ID3D12Resource> imageBuffer)
+{
+    // CPU側で画像の出力
+    std::ostringstream sout;
+    sout << std::setw(3) << std::setfill('0') << m_currentFrame;
+    std::string filename = OUTPUT_DIR + sout.str() + ".png";
+    void* pixel = nullptr;
+    imageBuffer->Map(0, nullptr, &pixel);
+    fpng_encode_image_to_file(filename.c_str(), pixel, m_width, m_height, 4, 0);
+    imageBuffer->Unmap(0, nullptr);
 }
 
 #ifdef _DEBUG

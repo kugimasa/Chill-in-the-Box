@@ -43,6 +43,9 @@ private:
     // シェーダーテーブルの構築
     void CreateShaderTable();
 
+    // 画像の出力
+    void OutputImage(ComPtr<ID3D12Resource> imageBuffer);
+
 #ifdef _DEBUG
     void InitImGui();
     void UpdateImGui();
@@ -54,7 +57,7 @@ private:
     UINT m_width;
     UINT m_height;
     UINT m_currentFrame;
-    UINT m_maxFrame;
+    int m_maxFrame;
     std::wstring m_title;
     std::unique_ptr<Device> m_pDevice;
 
