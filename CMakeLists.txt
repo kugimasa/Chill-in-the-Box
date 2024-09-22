@@ -84,7 +84,9 @@ else()
     # シェーダーリスト
     set(SHADER_DIR "${CMAKE_SOURCE_DIR}/resources/shader")
     set(HLSL_FILES
-        "${SHADER_DIR}/path_tracer.hlsl"
+        "${SHADER_DIR}/raygen.hlsl"
+        "${SHADER_DIR}/miss.hlsl"
+        "${SHADER_DIR}/ch_tri.hlsl"
     )
 
     foreach(HLSL_FILE ${HLSL_FILES})

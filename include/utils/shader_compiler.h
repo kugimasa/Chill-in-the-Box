@@ -16,6 +16,7 @@
 using Microsoft::WRL::ComPtr;
 namespace fs = std::filesystem;
 
+#ifdef _DEBUG
 /// <summary>
 ///  シェーダーコンパイル
 /// </summary>
@@ -49,9 +50,9 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
 
     // コンパイル時引数
     std::vector<LPCWSTR> args;
-#if _DEBUG
     args.emplace_back(L"/0d");
-#endif
+    args.emplace_back(L"-I");
+    args.emplace_back(RESOURCE_DIR L"/shader/");
     // シェーダーコンパイル
     const auto entryPoint = L"";
     const auto target = L"lib_6_4";
@@ -97,6 +98,7 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
     memcpy(result.data(), pBlob->GetBufferPointer(), blobSize);
     return result;
 }
+#endif // _DEBUG
 
 /// <summary>
 /// コンパイル済みのシェーダーライブラリをロード
@@ -115,4 +117,24 @@ std::vector<char> inline LoadPreCompiledShaderLibrary(const fs::path& shaderLibP
     shaderSource.resize(file.seekg(0, std::ios::end).tellg());
     file.seekg(0, std::ios::beg).read(shaderSource.data(), shaderSource.size());
     return shaderSource;
+}
+
+/// <summary>
+/// シェーダーセットアップ
+/// </summary>
+/// <param name="shaderName">シェーダー名</param>
+/// <returns></returns>
+std::vector<char> inline SetupShader(const std::wstring& shaderName)
+{
+    std::vector<char> shaderBin;
+    // シェーダーロード
+#if _DEBUG
+    const fs::path shaderPath{ RESOURCE_DIR L"/shader/" + shaderName + L".hlsl" };
+    // シェーダーのランタイムコンパイル
+    shaderBin = CompileShaderLibrary(shaderPath);
+#else
+    const fs::path shaderPath{ RESOURCE_DIR L"/shader/" + shaderName + L".dxlib" };
+    shaderBin = LoadPreCompiledShaderLibrary(shaderPath);
+#endif
+    return shaderBin;
 }

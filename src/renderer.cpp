@@ -458,27 +458,29 @@ void Renderer::CreateGlobalRootSignature()
 /// </summary>
 void Renderer::CreateStateObject()
 {
-    std::vector<char> shaderBin;
-    // シェーダーロード
-#if _DEBUG
-    // シェーダーのランタイムコンパイル
-    shaderBin = CompileShaderLibrary(RESOURCE_DIR L"/shader/path_tracer.hlsl");
-#else
-    shaderBin = LoadPreCompiledShaderLibrary(RESOURCE_DIR L"/shader/path_tracer.dxlib");
-#endif
 
     // ステートオブジェクト設定
     CD3DX12_STATE_OBJECT_DESC stateObjDesc;
     stateObjDesc.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 
     // シェーダ登録
-    D3D12_SHADER_BYTECODE shader{ shaderBin.data(), shaderBin.size() };
-    //TODO: シェーダーを分ける
-    auto dxilLib = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-    dxilLib->SetDXILLibrary(&shader);
-    dxilLib->DefineExport(L"RayGen");
-    dxilLib->DefineExport(L"Miss");
-    dxilLib->DefineExport(L"ClosestHit");
+    auto rayGenBin = SetupShader(L"raygen");
+    D3D12_SHADER_BYTECODE raygenShader{ rayGenBin.data(), rayGenBin.size() };
+    auto rayGenDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+    rayGenDXIL->SetDXILLibrary(&raygenShader);
+    rayGenDXIL->DefineExport(L"RayGen");
+
+    auto missBin = SetupShader(L"miss");
+    D3D12_SHADER_BYTECODE missShader{ missBin.data(), missBin.size() };
+    auto missDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+    missDXIL->SetDXILLibrary(&missShader);
+    missDXIL->DefineExport(L"Miss");
+
+    auto closestHitBin = SetupShader(L"ch_tri");
+    D3D12_SHADER_BYTECODE closestHitShader{ closestHitBin.data(), closestHitBin.size() };
+    auto closestHitDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+    closestHitDXIL->SetDXILLibrary(&closestHitShader);
+    closestHitDXIL->DefineExport(L"ClosestHit");
 
     // ヒットグループ設定
     auto hitGroup = stateObjDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
