@@ -75,6 +75,7 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
             else
             {
                 // Release”Å‚Å‚Í‚±‚±‚Å•`‰æŽÀs
+                renderer->OnUpdate();
                 renderer->OnRender();
             }
         }

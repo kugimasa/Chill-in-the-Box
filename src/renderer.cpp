@@ -30,6 +30,9 @@ void Renderer::OnInit()
     // グラフィックデバイスの初期化
     if (!InitGraphicDevice(Window::GetHWND())) return;
 
+    // シーンの構築
+    m_scene.OnInit(*m_pDevice, GetAspect());
+
     // BLASの構築
     BuildBLAS();
     // FIXME: BLAS、TLASの構築処理を可能な限りまとめたい
@@ -63,6 +66,9 @@ void Renderer::OnInit()
 
 void Renderer::OnUpdate()
 {
+    // シーンの更新処理
+    m_scene.OnUpdate(*m_pDevice, m_currentFrame, m_maxFrame);
+
 #ifdef _DEBUG
     UpdateImGui();
 #endif // _DEBUG
@@ -102,6 +108,10 @@ void Renderer::OnRender()
     outputBufferGPUHandle.ptr += d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     m_pCmdList->SetComputeRootDescriptorTable(0, tlasGPUHandle);
     m_pCmdList->SetComputeRootDescriptorTable(1, outputBufferGPUHandle);
+
+    // 定数バッファの設定
+    auto sceneCB = m_scene.GetConstantBuffer(*m_pDevice);
+    m_pCmdList->SetComputeRootConstantBufferView(2, sceneCB->GetGPUVirtualAddress());
 
     // レイトレース結果をUAVへ
     auto barrierToUAV = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -417,13 +427,19 @@ void Renderer::CreateGlobalRootSignature()
     descRangeTLAS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     rootParam.DescriptorTable.pDescriptorRanges = &descRangeTLAS;
     rootParamVec.push_back(rootParam);
-    // UAV: u0
+    // 出力用バッファ(UAV): u0
     D3D12_DESCRIPTOR_RANGE descRangeUAV{};
     descRangeUAV.BaseShaderRegister = 0;
     descRangeUAV.NumDescriptors = 1;
     descRangeUAV.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
     rootParam.DescriptorTable.pDescriptorRanges = &descRangeUAV;
     rootParamVec.push_back(rootParam);
+    // SceneCB: b0
+    D3D12_ROOT_PARAMETER sceneCBParam{};
+    sceneCBParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    sceneCBParam.Descriptor.ShaderRegister = 0;
+    sceneCBParam.Descriptor.RegisterSpace = 0;
+    rootParamVec.push_back(sceneCBParam);
 
     D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
     rootSigDesc.NumParameters = UINT(rootParamVec.size());
@@ -705,7 +721,7 @@ void Renderer::UpdateImGui()
 
     auto frameRate = ImGui::GetIO().Framerate;
     ImGui::Begin("Info");
-    ImGui::Text("FPS %.3f ms", 1000.0f / frameRate);
+    ImGui::Text("Framerate %.3f ms", 1000.0f / frameRate);
     ImGui::End();
 }
 

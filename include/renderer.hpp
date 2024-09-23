@@ -1,9 +1,7 @@
 #pragma once
 
 #include "device.hpp"
-#include <DirectXMath.h>
-
-using Vector3 = DirectX::XMFLOAT3;
+#include "scene/scene.hpp"
 
 class Renderer
 {
@@ -62,8 +60,10 @@ private:
     std::unique_ptr<Device> m_pDevice;
 
     struct Vertex {
-        Vector3 Position;
+        Float3 Position;
     };
+
+    Scene m_scene;
 
     ComPtr<ID3D12Resource> m_pVertexBuffer;
     ComPtr<ID3D12Resource> m_pRTInstanceBuffer;

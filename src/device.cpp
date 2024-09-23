@@ -558,6 +558,31 @@ void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, siz
     }
 }
 
+bool Device::CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources, UINT size, const wchar_t* name)
+{
+    size = ROUND_UP(size, 256);
+    resources.resize(BackBufferCount);
+    for (auto& resource : resources)
+    {
+        resource = CreateBuffer(
+            size,
+            D3D12_RESOURCE_FLAG_NONE,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            D3D12_HEAP_TYPE_UPLOAD
+        );
+        if (resource)
+        {
+            resource->SetName(name);
+        }
+        else
+        {
+            Error(PrintInfoType::D3D12, "定数バッファの作成に失敗しました");
+            return false;
+        }
+    }
+    return true;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE  Device::GetCurrentRTVDesc()
 {
     auto rtvCPUHandle = m_pRtvHeap->GetCPUDescriptorHandleForHeapStart();

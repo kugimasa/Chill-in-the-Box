@@ -16,6 +16,7 @@
 #include <stdexcept>
 
 #include "utils/print_util.h"
+#include "utils/math_util.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -40,6 +41,7 @@ public:
     ComPtr<ID3D12Resource> CreateTexture2D(UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType);
     ComPtr<ID3D12Resource> CreateImageBuffer(ComPtr<ID3D12Resource> pSource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
     void WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize);
+    bool CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources, UINT size, const wchar_t* name);
 
     ComPtr<ID3D12Device5> GetDevice() { return m_pD3D12Device5; }
     ComPtr<ID3D12CommandAllocator> GetCurrentCommandAllocator() {
