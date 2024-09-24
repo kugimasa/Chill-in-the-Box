@@ -7,3 +7,6 @@
 [submodule "external/fpng"]
 	path = external/fpng
 	url = https://github.com/richgel999/fpng.git
+[submodule "external/tinygltf"]
+	path = external/tinygltf
+	url = https://github.com/syoyo/tinygltf.git

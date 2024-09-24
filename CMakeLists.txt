@@ -30,6 +30,9 @@ set(FPNG_SOURCES
     "${FPNG_SOURCE_DIR}/fpng.cpp"
 )
 
+# tinygltf
+add_subdirectory(external/tinygltf)
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${FPNG_SOURCES})
 
 include_directories(include)
@@ -37,6 +40,7 @@ include_directories(external/DirectX-Headers/include/directx)
 include_directories(external/fpng/src)
 include_directories(${IMGUI_SOURCE_DIR})
 include_directories(${IMGUI_BACKENDS_DIR})
+include_directories(external/tinygltf)
 
 # 出力ディレクトリの定義
 target_compile_definitions(${PROJECT_NAME} PRIVATE
