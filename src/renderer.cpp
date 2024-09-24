@@ -31,7 +31,7 @@ void Renderer::OnInit()
     if (!InitGraphicDevice(Window::GetHWND())) return;
 
     // シーンの構築
-    m_scene.OnInit(*m_pDevice, GetAspect());
+    m_scene.OnInit(m_pDevice, GetAspect());
 
     // BLASの構築
     BuildBLAS();
@@ -67,7 +67,7 @@ void Renderer::OnInit()
 void Renderer::OnUpdate()
 {
     // シーンの更新処理
-    m_scene.OnUpdate(*m_pDevice, m_currentFrame, m_maxFrame);
+    m_scene.OnUpdate(m_pDevice, m_currentFrame, m_maxFrame);
 
 #ifdef _DEBUG
     UpdateImGui();
@@ -110,7 +110,7 @@ void Renderer::OnRender()
     m_pCmdList->SetComputeRootDescriptorTable(1, outputBufferGPUHandle);
 
     // 定数バッファの設定
-    auto sceneCB = m_scene.GetConstantBuffer(*m_pDevice);
+    auto sceneCB = m_scene.GetConstantBuffer(m_pDevice);
     m_pCmdList->SetComputeRootConstantBufferView(2, sceneCB->GetGPUVirtualAddress());
 
     // レイトレース結果をUAVへ
