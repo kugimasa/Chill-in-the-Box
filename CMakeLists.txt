@@ -33,6 +33,9 @@ set(FPNG_SOURCES
 # tinygltf
 add_subdirectory(external/tinygltf)
 
+# DirectXTex
+add_subdirectory(external/DirectXTex)
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES} ${FPNG_SOURCES})
 
 include_directories(include)
@@ -41,6 +44,16 @@ include_directories(external/fpng/src)
 include_directories(${IMGUI_SOURCE_DIR})
 include_directories(${IMGUI_BACKENDS_DIR})
 include_directories(external/tinygltf)
+include_directories(external/DirectXTex)
+
+# DirectXTex
+# vcpkgはなぜかリンクエラーが起きるので一旦コメントアウト
+# set(directxtex_DIR ${INSTALLED_LIBS_DIR}/DirectXTex/cmake)
+# set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "vcpkg toolchain file")
+# find_package(directxtex CONFIG REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTex)
+
+# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/DirectXTex/DirectXTex)
 
 # 出力ディレクトリの定義
 target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -53,7 +66,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                                )
     # シェーダーコンパイルのためのDLLへのパス
     set(DXCOMPILER_LIB_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.lib")
-    target_link_libraries(${PROJECT_NAME} PRIVATE "${DXCOMPILER_LIB_DIR}")
 
     # 実行時にライブラリをコピーする
     set(DXCOMPILER_DLL_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.dll")
@@ -64,6 +76,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         "${DXCOMPILER_DLL_DIR}"
         "${DXIL_DLL_DIR}"
         "${CMAKE_BINARY_DIR}"
+    )
+
+    # 外部ライブラリをリンク
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+                          ${DXCOMPILER_LIB_DIR}
+                          DirectXTex
+                          d3d12
+                          dxguid
     )
 else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -101,4 +121,10 @@ else()
         add_dependencies(${PROJECT_NAME} ${SHADER_NAME}_shader)
     endforeach()
 
+        # 外部ライブラリをリンク
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+                          DirectXTex
+                          d3d12
+                          dxguid
+    )
 endif()
