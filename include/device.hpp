@@ -34,6 +34,13 @@ struct DescriptorHeap
     {}
 };
 
+struct ASBuffers
+{
+    ComPtr<ID3D12Resource> scratchBuffer;
+    ComPtr<ID3D12Resource> asBuffer;
+    ComPtr<ID3D12Resource> updateBuffer;
+};
+
 class Device
 {
 public:

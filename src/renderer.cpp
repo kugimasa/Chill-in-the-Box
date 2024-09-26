@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 #include "window.hpp"
 
+#include "utils/dxr_util.h"
 #include "utils/shader_compiler.h"
 #include "utils/math_util.h"
 
@@ -266,31 +267,10 @@ void Renderer::BuildBLAS()
     inputs.NumDescs = 1;
     inputs.pGeometryDescs = &geomDesc;
 
-    // 必要なメモリを算出
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO blasPrebuild{};
-    d3d12Device->GetRaytracingAccelerationStructurePrebuildInfo(
-        &inputs, &blasPrebuild
-    );
-    // スクラッチバッファの確保
-    ComPtr<ID3D12Resource> blasScratch;
-    blasScratch = m_pDevice->CreateBuffer(
-        blasPrebuild.ScratchDataSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        D3D12_HEAP_TYPE_DEFAULT
-    );
-    // BLAS用のバッファを確保
-    m_pBLAS = m_pDevice->CreateBuffer(
-        blasPrebuild.ResultDataMaxSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-        D3D12_HEAP_TYPE_DEFAULT
-    );
-    if (m_pBLAS == nullptr || blasScratch == nullptr)
-    {
-        Error(PrintInfoType::RTCAMP10, "BLASの構築に失敗しました");
-    }
-    m_pBLAS->SetName(L"BLAS");
+    // BLAS関連のバッファを確保
+    auto blas = CreateASBuffers(m_pDevice, buildASDesc, L"BLAS");
+    auto blasScratch = blas.scratchBuffer;
+    m_pBLAS = blas.asBuffer;
 
     // Acceleration Structure を構築
     buildASDesc.ScratchAccelerationStructureData = blasScratch->GetGPUVirtualAddress();
@@ -350,33 +330,12 @@ void Renderer::BuildTLAS()
     inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
     inputs.NumDescs = 1;
 
-    // 必要なメモリを算出
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO tlasPrebuild{};
-    d3d12Device->GetRaytracingAccelerationStructurePrebuildInfo(
-        &inputs, &tlasPrebuild
-    );
-    // スクラッチバッファの確保
-    ComPtr<ID3D12Resource> tlasScratch;
-    tlasScratch = m_pDevice->CreateBuffer(
-        tlasPrebuild.ScratchDataSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        D3D12_HEAP_TYPE_DEFAULT
-    );
-    // TLAS用のバッファを確保
-    m_pTLAS = m_pDevice->CreateBuffer(
-        tlasPrebuild.ResultDataMaxSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-        D3D12_HEAP_TYPE_DEFAULT
-    );
-    if (m_pTLAS == nullptr || tlasScratch == nullptr)
-    {
-        Error(PrintInfoType::RTCAMP10, "TLASの構築に失敗しました");
-    }
-    m_pTLAS->SetName(L"TLAS");
+    // TLAS関連のバッファを確保
+    auto tlas = CreateASBuffers(m_pDevice, buildASDesc, L"TLAS");
+    auto tlasScratch = tlas.scratchBuffer;
+    m_pTLAS = tlas.asBuffer;
 
-    // Acceleration Structure 構築.
+    // Acceleration Structure 構築
     buildASDesc.Inputs.InstanceDescs = m_pRTInstanceBuffer->GetGPUVirtualAddress(); // TLAS の場合のみ
     buildASDesc.ScratchAccelerationStructureData = tlasScratch->GetGPUVirtualAddress();
     buildASDesc.DestAccelerationStructureData = m_pTLAS->GetGPUVirtualAddress();
