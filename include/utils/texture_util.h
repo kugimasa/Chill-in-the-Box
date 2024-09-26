@@ -57,7 +57,6 @@ inline TextureResource LoadTexture(const void* data, UINT64 size, std::unique_pt
     device->ExecuteCommandList(cmd);
 
     // シェーダーリソースビューの作成
-    res.srv = device->AllocateDescriptorHeap();
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = metadata.format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -65,7 +64,7 @@ inline TextureResource LoadTexture(const void* data, UINT64 size, std::unique_pt
     srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.ResourceMinLODClamp = 0;
-    device->GetDevice()->CreateShaderResourceView(res.resource.Get(), &srvDesc, res.srv.cpuHandle);
+    res.srv = device->CreateSRV(res.resource.Get(), &srvDesc);
 
     // 待機
     device->WaitForGpu();

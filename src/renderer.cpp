@@ -355,12 +355,11 @@ void Renderer::BuildTLAS()
     m_pDevice->ExecuteCommandList(commad);
 
     // SRVの作成(TLAS 特有)
-    m_tlasDescHeap = m_pDevice->AllocateDescriptorHeap();
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.RaytracingAccelerationStructure.Location = m_pTLAS->GetGPUVirtualAddress();
-    d3d12Device->CreateShaderResourceView(nullptr, &srvDesc, m_tlasDescHeap.cpuHandle);
+    m_tlasDescHeap = m_pDevice->CreateSRV(nullptr, &srvDesc);
 
     // コマンドの完了を待機
     m_pDevice->WaitForGpu();
@@ -512,11 +511,9 @@ void Renderer::CreateOutputBuffer()
     );
 
     // UAVの作成(TLAS 特有)
-    m_outputBufferDescHeap = m_pDevice->AllocateDescriptorHeap();
-    auto d3d12Device = m_pDevice->GetDevice();
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-    d3d12Device->CreateUnorderedAccessView(m_pOutputBuffer.Get(), nullptr, &uavDesc, m_outputBufferDescHeap.cpuHandle);
+    m_outputBufferDescHeap = m_pDevice->CreateUAV(m_pOutputBuffer.Get(), &uavDesc);
     Print(PrintInfoType::RTCAMP10, "出力用バッファ(UAV)の作成 完了");
 }
 

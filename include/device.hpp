@@ -65,6 +65,8 @@ public:
 
     DescriptorHeap AllocateDescriptorHeap();
     void DeallocateDescriptorHeap(DescriptorHeap& hescHeap);
+    DescriptorHeap CreateSRV(ComPtr<ID3D12Resource> resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc);
+    DescriptorHeap CreateUAV(ComPtr<ID3D12Resource> resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC* uavDesc);
 
     ComPtr<ID3D12Device5> GetDevice() { return m_pD3D12Device5; }
     ComPtr<ID3D12CommandAllocator> GetCurrentCommandAllocator() {

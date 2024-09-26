@@ -718,6 +718,27 @@ void Device::DeallocateDescriptorHeap(DescriptorHeap& hescHeap)
     it->second.push_front(hescHeap);
 }
 
+DescriptorHeap Device::CreateSRV(ComPtr<ID3D12Resource> resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+{
+    auto descriptor = AllocateDescriptorHeap();
+    m_pD3D12Device5->CreateShaderResourceView(
+        resource.Get(),
+        srvDesc,
+        descriptor.cpuHandle);
+    return descriptor;
+}
+
+DescriptorHeap Device::CreateUAV(ComPtr<ID3D12Resource> resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC* uavDesc)
+{
+    auto descriptor = AllocateDescriptorHeap();
+    m_pD3D12Device5->CreateUnorderedAccessView(
+        resource.Get(),
+        nullptr,
+        uavDesc,
+        descriptor.cpuHandle);
+    return descriptor;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE  Device::GetCurrentRTVDesc()
 {
     auto rtvCPUHandle = m_pRtvHeap->GetCPUDescriptorHandleForHeapStart();
