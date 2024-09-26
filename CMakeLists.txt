@@ -46,15 +46,6 @@ include_directories(${IMGUI_BACKENDS_DIR})
 include_directories(external/tinygltf)
 include_directories(external/DirectXTex)
 
-# DirectXTex
-# vcpkgはなぜかリンクエラーが起きるので一旦コメントアウト
-# set(directxtex_DIR ${INSTALLED_LIBS_DIR}/DirectXTex/cmake)
-# set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "vcpkg toolchain file")
-# find_package(directxtex CONFIG REQUIRED)
-# target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTex)
-
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/external/DirectXTex/DirectXTex)
-
 # 出力ディレクトリの定義
 target_compile_definitions(${PROJECT_NAME} PRIVATE
                             OUTPUT_DIR="${CMAKE_BINARY_DIR}/"
