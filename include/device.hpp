@@ -18,9 +18,6 @@
 #include "utils/print_util.h"
 #include "utils/math_util.h"
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
-
 using Microsoft::WRL::ComPtr;
 
 class Device

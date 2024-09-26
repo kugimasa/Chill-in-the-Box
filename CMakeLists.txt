@@ -74,6 +74,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                           ${DXCOMPILER_LIB_DIR}
                           DirectXTex
                           d3d12
+                          dxgi
                           dxguid
     )
 else()
@@ -116,6 +117,7 @@ else()
     target_link_libraries(${PROJECT_NAME} PRIVATE
                           DirectXTex
                           d3d12
+                          dxgi
                           dxguid
     )
 endif()
