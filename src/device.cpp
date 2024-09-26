@@ -4,6 +4,8 @@ Device::Device() :
     m_fenceValueArr(),
     m_rtvDescSize(0),
     m_dsvDescSize(0),
+    m_heapDescSize(0),
+    m_heapAllocateIndex(0),
     m_viewport(), 
     m_scissorRect()
 {
@@ -127,7 +129,7 @@ bool Device::OnInit()
         Error(PrintInfoType::D3D12, "ディスクリプタヒープ(SRV/CBV/UAVなど)の作成に失敗しました");
         return false;
     }
-
+    m_heapDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     // コマンドアロケーターの準備
     for (UINT i = 0; i < BackBufferCount; ++i)
     {
@@ -581,6 +583,49 @@ bool Device::CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources
         }
     }
     return true;
+}
+
+DescriptorHeap Device::AllocateDescriptorHeap()
+{
+    DescriptorHeap descriptorHeap{};
+    auto it = m_heapDescMap.find(1);
+    if (it != m_heapDescMap.end())
+    {
+        if (!it->second.empty())
+        {
+            descriptorHeap = it->second.front();
+            it->second.pop_front();
+            return descriptorHeap;
+        }
+    }
+    auto cpuHandle = m_pHeap->GetCPUDescriptorHandleForHeapStart();
+    auto gpuHandle = m_pHeap->GetGPUDescriptorHandleForHeapStart();
+
+    descriptorHeap = {};
+    auto heapDesc = m_pHeap->GetDesc();
+    if (m_heapAllocateIndex < heapDesc.NumDescriptors)
+    {
+        auto offset = m_heapDescSize * m_heapAllocateIndex;
+        cpuHandle.ptr += offset;
+        gpuHandle.ptr += offset;
+        descriptorHeap.heapBaseOffset = offset;
+        descriptorHeap.cpuHandle = cpuHandle;
+        descriptorHeap.gpuHandle = gpuHandle;
+        descriptorHeap.heapType = heapDesc.Type;
+        m_heapAllocateIndex++;
+    }
+    return descriptorHeap;
+}
+
+void Device::DeallocateDescriptorHeap(DescriptorHeap& hescHeap)
+{
+    auto it = m_heapDescMap.find(1);
+    if (it == m_heapDescMap.end())
+    {
+        m_heapDescMap.insert(std::make_pair(1, std::list<DescriptorHeap>()));
+        it = m_heapDescMap.find(1);
+    }
+    it->second.push_front(hescHeap);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE  Device::GetCurrentRTVDesc()

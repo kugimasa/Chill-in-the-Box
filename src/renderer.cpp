@@ -103,11 +103,8 @@ void Renderer::OnRender()
     m_pCmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
     m_pCmdList->SetComputeRootSignature(m_pGlobalRootSignature.Get());
 
-    auto tlasGPUHandle = m_pTLASDescHeap.Get()->GetGPUDescriptorHandleForHeapStart();
-    auto outputBufferGPUHandle = m_pOutputBufferDescHeap.Get()->GetGPUDescriptorHandleForHeapStart();
-    outputBufferGPUHandle.ptr += d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    m_pCmdList->SetComputeRootDescriptorTable(0, tlasGPUHandle);
-    m_pCmdList->SetComputeRootDescriptorTable(1, outputBufferGPUHandle);
+    m_pCmdList->SetComputeRootDescriptorTable(0, m_tlasDescHeap.gpuHandle);
+    m_pCmdList->SetComputeRootDescriptorTable(1, m_outputBufferDescHeap.gpuHandle);
 
     // 定数バッファの設定
     auto sceneCB = m_scene.GetConstantBuffer(m_pDevice);
@@ -194,10 +191,13 @@ void Renderer::OnDestroy()
 {
 #ifdef _DEBUG
     ImGui_ImplDX12_Shutdown();
+    m_pDevice->DeallocateDescriptorHeap(m_imguiDescHeap);
 #endif // _DEBUG
 
     if (m_pDevice)
     {
+        m_pDevice->DeallocateDescriptorHeap(m_tlasDescHeap);
+        m_pDevice->DeallocateDescriptorHeap(m_outputBufferDescHeap);
         m_pDevice->OnDestroy();
     }
     m_pDevice.reset();
@@ -396,13 +396,12 @@ void Renderer::BuildTLAS()
     m_pDevice->ExecuteCommandList(commad);
 
     // SRVの作成(TLAS 特有)
-    m_pTLASDescHeap = m_pDevice->GetDescriptorHeap();
-    auto srvHandle = m_pTLASDescHeap->GetCPUDescriptorHandleForHeapStart();
+    m_tlasDescHeap = m_pDevice->AllocateDescriptorHeap();
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.RaytracingAccelerationStructure.Location = m_pTLAS->GetGPUVirtualAddress();
-    d3d12Device->CreateShaderResourceView(nullptr, &srvDesc, srvHandle);
+    d3d12Device->CreateShaderResourceView(nullptr, &srvDesc, m_tlasDescHeap.cpuHandle);
 
     // コマンドの完了を待機
     m_pDevice->WaitForGpu();
@@ -554,14 +553,11 @@ void Renderer::CreateOutputBuffer()
     );
 
     // UAVの作成(TLAS 特有)
-    // MEMO: BuildTLAS内でSRVは作成済みなのでハンドル位置をずらす必要がある
-    m_pOutputBufferDescHeap = m_pDevice->GetDescriptorHeap();
-    auto uavHandle = m_pOutputBufferDescHeap->GetCPUDescriptorHandleForHeapStart();
+    m_outputBufferDescHeap = m_pDevice->AllocateDescriptorHeap();
     auto d3d12Device = m_pDevice->GetDevice();
-    uavHandle.ptr += d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-    d3d12Device->CreateUnorderedAccessView(m_pOutputBuffer.Get(), nullptr, &uavDesc, uavHandle);
+    d3d12Device->CreateUnorderedAccessView(m_pOutputBuffer.Get(), nullptr, &uavDesc, m_outputBufferDescHeap.cpuHandle);
     Print(PrintInfoType::RTCAMP10, "出力用バッファ(UAV)の作成 完了");
 }
 
@@ -697,20 +693,15 @@ void Renderer::OutputImage(ComPtr<ID3D12Resource> imageBuffer)
 void Renderer::InitImGui()
 {
     auto heap = m_pDevice->GetDescriptorHeap();
-    auto imguiCPUHandle = heap->GetCPUDescriptorHandleForHeapStart();
-    auto imguiGPUHandle = heap->GetGPUDescriptorHandleForHeapStart();
+    m_imguiDescHeap = m_pDevice->AllocateDescriptorHeap();
     auto d3d12Device = m_pDevice->GetDevice();
-    auto handleIncrementSize = d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    // SRV/UAV分のオフセット
-    imguiCPUHandle.ptr += handleIncrementSize * 2;
-    imguiGPUHandle.ptr += handleIncrementSize * 2;
     ImGui_ImplDX12_Init(
         d3d12Device.Get(),
         Device::BackBufferCount,
         DXGI_FORMAT_R8G8B8A8_UNORM,
         heap.Get(),
-        imguiCPUHandle,
-        imguiGPUHandle
+        m_imguiDescHeap.cpuHandle,
+        m_imguiDescHeap.gpuHandle
     );
 }
 void Renderer::UpdateImGui()

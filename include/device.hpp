@@ -20,6 +20,20 @@
 
 using Microsoft::WRL::ComPtr;
 
+struct DescriptorHeap
+{
+    UINT heapBaseOffset;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
+    D3D12_DESCRIPTOR_HEAP_TYPE heapType;
+    DescriptorHeap() :
+        heapBaseOffset(0),
+        cpuHandle(),
+        gpuHandle(),
+        heapType(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES)
+    {}
+};
+
 class Device
 {
 public:
@@ -39,6 +53,9 @@ public:
     ComPtr<ID3D12Resource> CreateImageBuffer(ComPtr<ID3D12Resource> pSource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
     void WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize);
     bool CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources, UINT size, const wchar_t* name);
+
+    DescriptorHeap AllocateDescriptorHeap();
+    void DeallocateDescriptorHeap(DescriptorHeap& hescHeap);
 
     ComPtr<ID3D12Device5> GetDevice() { return m_pD3D12Device5; }
     ComPtr<ID3D12CommandAllocator> GetCurrentCommandAllocator() {
@@ -76,6 +93,9 @@ private:
     ComPtr<ID3D12DescriptorHeap> m_pDsvHeap;
     UINT m_dsvDescSize;
     ComPtr<ID3D12DescriptorHeap> m_pHeap;
+    UINT m_heapDescSize;
+    UINT m_heapAllocateIndex;
+    std::unordered_map<UINT, std::list<DescriptorHeap>> m_heapDescMap;
 
     HANDLE m_fenceEvent = 0;
     HANDLE m_waitEvent = 0;
