@@ -19,6 +19,14 @@ bool Device::OnInit()
 {
     HRESULT hr;
 
+    // COMの初期化
+    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "COMの初期化に失敗しました");
+        return false;
+    }
+
     UINT dxgiFlags = 0;
 
     // デバッグレイヤーの初期化
@@ -544,6 +552,41 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     return imageBuffer;
 }
 
+ComPtr<ID3D12Resource> Device::InitializeBuffer(size_t size, const void* initData, D3D12_RESOURCE_FLAGS flags, D3D12_HEAP_TYPE heapType, const wchar_t* name)
+{
+    if (size <= 0)
+    {
+        Error(PrintInfoType::D3D12, "バッファサイズが無効です: ", size);
+    }
+    auto initialState = D3D12_RESOURCE_STATE_COPY_DEST;
+    if (heapType == D3D12_HEAP_TYPE_UPLOAD)
+    {
+        initialState = D3D12_RESOURCE_STATE_GENERIC_READ;
+    }
+
+    auto resource = CreateBuffer(
+        size,
+        flags,
+        initialState,
+        heapType,
+        name
+    );
+    if (resource && name != nullptr) {
+        resource->SetName(name);
+    }
+    if (initData != nullptr) {
+        if (heapType == D3D12_HEAP_TYPE_DEFAULT)
+        {
+            WriteResource(resource, initData, size);
+        }
+        if (heapType == D3D12_HEAP_TYPE_UPLOAD)
+        {
+            WriteBuffer(resource, initData, size);
+        }
+    }
+    return resource;
+}
+
 void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize)
 {
     if (resource == nullptr)
@@ -558,6 +601,53 @@ void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, siz
         memcpy(mapped, pData, dataSize);
         resource->Unmap(0, &range);
     }
+}
+
+void Device::WriteResource(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize)
+{
+    if (resource == nullptr)
+    {
+        return;
+    }
+    ComPtr<ID3D12Resource> stagingBuffer;
+    HRESULT hr;
+    const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+    // リソースの設定
+    D3D12_RESOURCE_DESC resDesc{};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Width = dataSize;
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.SampleDesc = { 1, 0 };
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    hr = m_pD3D12Device5->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(stagingBuffer.ReleaseAndGetAddressOf())
+    );
+    if (FAILED(hr))
+    {
+        Error(PrintInfoType::D3D12, "ステージングバッファの作成に失敗しました");
+    }
+    if (stagingBuffer != nullptr)
+    {
+        stagingBuffer->SetName(L"Staging Buffer");
+    }
+    // データをステージングバッファへコピー
+    WriteBuffer(stagingBuffer, pData, dataSize);
+
+    // ステージングバッファの内容をリソースにコピー
+    auto cmd = CreateCommandList();
+    ComPtr<ID3D12Fence> fence = CreateFence();
+    cmd->CopyResource(resource.Get(), stagingBuffer.Get());
+    cmd->Close();
+
+    ExecuteCommandList(cmd);
+    WaitForGpu();
 }
 
 bool Device::CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources, UINT size, const wchar_t* name)

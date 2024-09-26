@@ -29,6 +29,13 @@ std::string inline WStrToStr(const std::wstring& wstr) {
     return str;
 }
 
+std::wstring inline StrToWStr(const std::string& str) {
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
+    std::wstring wstr(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], size_needed);
+    return wstr;
+}
+
 void inline Print(const PrintInfoType info_type, const char* message) {
     std::cout << "[" << GetInfoTypeStr(info_type) << "] " << message << std::endl;
 }
