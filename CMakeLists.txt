@@ -78,6 +78,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                           dxguid
     )
 else()
+    # アセットディレクトリをコピー
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/resources"
+        "${CMAKE_BINARY_DIR}/resources"
+    )
+
     target_compile_definitions(${PROJECT_NAME} PRIVATE
                                RESOURCE_DIR="${CMAKE_BINARY_DIR}/resources"
                                )
