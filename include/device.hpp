@@ -65,6 +65,8 @@ public:
 
     DescriptorHeap AllocateDescriptorHeap();
     void DeallocateDescriptorHeap(DescriptorHeap& hescHeap);
+    DescriptorHeap CreateSRV(ComPtr<ID3D12Resource> resource, UINT numElements, UINT firstElement, DXGI_FORMAT format);
+    DescriptorHeap CreateSRV(ComPtr<ID3D12Resource> resource, UINT numElements, UINT firstElement, UINT stride);
     DescriptorHeap CreateSRV(ComPtr<ID3D12Resource> resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc);
     DescriptorHeap CreateUAV(ComPtr<ID3D12Resource> resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC* uavDesc);
 

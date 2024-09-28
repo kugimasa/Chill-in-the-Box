@@ -378,7 +378,8 @@ ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS fl
 
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "バッファの作成に失敗しました");
+        std::wstring errWstr = L"バッファの作成に失敗しました: " + std::wstring(name);
+        Error(PrintInfoType::D3D12, errWstr);
     }
     if (resource != nullptr && name != nullptr)
     {
@@ -716,6 +717,29 @@ void Device::DeallocateDescriptorHeap(DescriptorHeap& hescHeap)
         it = m_heapDescMap.find(1);
     }
     it->second.push_front(hescHeap);
+}
+
+DescriptorHeap Device::CreateSRV(ComPtr<ID3D12Resource> resource, UINT numElements, UINT firstElement, DXGI_FORMAT format)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srvDesc.Format = format;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Buffer.NumElements = numElements;
+    srvDesc.Buffer.FirstElement = firstElement;
+    return CreateSRV(resource, &srvDesc);
+}
+
+DescriptorHeap Device::CreateSRV(ComPtr<ID3D12Resource> resource, UINT numElements, UINT firstElement, UINT stride)
+{
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Buffer.NumElements = numElements;
+    srvDesc.Buffer.FirstElement = firstElement;
+    srvDesc.Buffer.StructureByteStride = stride;
+    return CreateSRV(resource, &srvDesc);
 }
 
 DescriptorHeap Device::CreateSRV(ComPtr<ID3D12Resource> resource, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc)

@@ -1,4 +1,5 @@
 #include "scene/model.hpp"
+#include "scene/actor.hpp"
 #include "utils/gltf_loader.h"
 
 Model::Model()
@@ -24,7 +25,8 @@ Model::Node::~Node()
 {
 }
 
-Model::Model(const std::wstring& name, std::unique_ptr<Device>& device)
+Model::Model(const std::wstring& name, std::unique_ptr<Device>& device) :
+    m_name(name)
 {
     tinygltf::Model srcModel{};
     if (!LoadGLTF(name, srcModel))
@@ -39,11 +41,109 @@ Model::Model(const std::wstring& name, std::unique_ptr<Device>& device)
     }
 }
 
-std::shared_ptr<Actor> Model::Create(std::unique_ptr<Device>& device)
+std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
 {
-    // TODO: 実装予定
-    std::shared_ptr<Actor> actor(new Actor());
-    return std::shared_ptr<Actor>();
+     std::shared_ptr<Actor> actor(new Actor(device, this));
+     std::vector<std::shared_ptr<Actor::ActorNode>> nodes;
+     nodes.resize(m_nodes.size());
+
+     // ノード設定
+     for (UINT i = 0; i < UINT(m_nodes.size()); ++i)
+     {
+         const auto srcNode = m_nodes[i];
+         auto& node = nodes[i];
+         node = std::make_shared<Actor::ActorNode>();
+         node->m_trans = srcNode->m_trans;
+         node->m_rot = srcNode->m_rot;
+         node->m_scale = srcNode->m_scale;
+         node->m_name = srcNode->m_name;
+
+         // 親子解決
+         for (auto idx : srcNode->m_childIndices)
+         {
+             auto child = nodes[idx];
+             node->m_children.push_back(child);
+             child->m_parent = node;
+         }
+     }
+     for (auto rootNodeIdx : m_rootNodeIndices)
+     {
+         auto rootNode = nodes[rootNodeIdx];
+         actor->m_nodes.push_back(rootNode);
+     }
+
+     // マテリアル生成
+     for (auto srcMat : m_materials)
+     {
+         actor->m_materials.emplace_back(new Actor::ActorMaterial(device, srcMat));
+         auto mat = actor->m_materials.back();
+         auto texIdx = srcMat.m_textureIndex;
+         if (texIdx < 0)
+         {
+             // ダミーテクスチャを使用
+             mat->SetTexture(m_dummyTexture);
+         }
+         else
+         {
+             mat->SetTexture(m_textures[texIdx]);
+         }
+     }
+
+     actor->SetWorldMatrix(IdentityMat());
+     actor->UpdateMatrices();
+
+     // 行列バッファの確保
+     actor->CreateMatrixBufferBLAS(UINT(m_meshes.size()));
+
+     // 頂点属性ごとのSRVえお生成
+     for (UINT i = 0; i < UINT(m_meshes.size()); ++i)
+     {
+         actor->m_meshGroups.emplace_back(Actor::ActorMeshGroup());
+         auto& meshGroup = actor->m_meshGroups.back();
+         meshGroup.m_node = nodes[m_meshes[i].m_nodeIndex];
+         for (auto& srcMesh : m_meshes[i].m_primitives)
+         {
+             meshGroup.m_meshes.emplace_back(Actor::ActorMesh());
+             auto& mesh = meshGroup.m_meshes.back();
+
+             auto vertexStart = srcMesh.m_vertexStart;
+             auto vertexCount = srcMesh.m_vertexCount;
+             auto indexStart = srcMesh.m_indexStart;
+             auto indexCount = srcMesh.m_indexCount;
+             mesh.m_vertexStart = vertexStart;
+             mesh.m_vertexCount = vertexCount;
+             mesh.m_indexStart = indexStart;
+             mesh.m_indexCount = indexCount;
+
+             mesh.m_vbAttrPos = device->CreateSRV(m_vertexAtrrib.Position, vertexCount, vertexStart, DXGI_FORMAT_R32G32B32_FLOAT);
+             mesh.m_vbAttrNorm = device->CreateSRV(m_vertexAtrrib.Normal, vertexCount, vertexStart, DXGI_FORMAT_R32G32B32_FLOAT);
+             mesh.m_vbAttrTexCoord = device->CreateSRV(m_vertexAtrrib.Texcoord, vertexCount, vertexStart, DXGI_FORMAT_R32G32_FLOAT);
+             mesh.m_indexBuffer = device->CreateSRV(m_pIndexBuffer, indexCount, indexStart, DXGI_FORMAT_R32_UINT);
+             mesh.m_material = actor->m_materials[srcMesh.m_materialIndex];
+
+             auto diffuse = m_materials[srcMesh.m_materialIndex].GetDiffuseColor();
+             Actor::ActorMesh::MeshParam meshParam{};
+             meshParam.diffuse = Float4{ diffuse.x, diffuse.y ,diffuse.z, 1 };
+             meshParam.meshGroupIndex = i;
+             // MEMO: バックバッファーの数だけセットであっている...?
+             meshParam.matrixBuffStride = UINT(m_meshes.size() * device->BackBufferCount);
+             std::wstring meshParamCBName = m_name + L":MeshParam";
+             mesh.m_pMeshParamCB = device->InitializeBuffer(
+                 sizeof(meshParam),
+                 &meshParam,
+                 D3D12_RESOURCE_FLAG_NONE,
+                 D3D12_HEAP_TYPE_DEFAULT,
+                 meshParamCBName.c_str()
+             );
+         }
+     }
+
+     // 行列用のバッファを更新
+     actor->UpdateTransform();
+     
+     // BLAS構築
+     actor->CreateBLAS();
+     return actor;
 }
 
 void Model::Destroy(std::unique_ptr<Device>& device)
@@ -59,7 +159,7 @@ bool Model::LoadModel(const tinygltf::Model& srcModel, std::unique_ptr<Device>& 
     VertexAttributeVisitor visitor;
     const auto& scene = srcModel.scenes[0];
     for (const auto& nodeIndex : scene.nodes) {
-        m_rootNodes.push_back(nodeIndex);
+        m_rootNodeIndices.push_back(nodeIndex);
     }
 
     LoadNode(srcModel);
@@ -71,27 +171,16 @@ bool Model::LoadModel(const tinygltf::Model& srcModel, std::unique_ptr<Device>& 
 
     // 頂点バッファの作成
     auto posSize = sizeof(Float3) * visitor.positionBuffer.size();
-    if (posSize > 0)
-    {
-        m_vertexAtrrib.Position = device->InitializeBuffer(posSize, visitor.positionBuffer.data(), flags, heapType, L"PositionBuffer");
-    }
     auto normSize = sizeof(Float3) * visitor.normalBuffer.size();
-    if (normSize > 0)
-    {
-        m_vertexAtrrib.Normal = device->InitializeBuffer(normSize, visitor.normalBuffer.data(), flags, heapType, L"NormalBuffer");
-    }
     auto texSize = sizeof(Float2) * visitor.texcoordBuffer.size();
-    if (texSize > 0)
-    {
-        m_vertexAtrrib.Texcoord = device->InitializeBuffer(texSize, visitor.texcoordBuffer.data(), flags, heapType, L"TexcoordBuffer");
-    }
+    m_vertexAtrrib.Position = device->InitializeBuffer(posSize, visitor.positionBuffer.data(), flags, heapType, L"PositionBuffer");
+    m_vertexAtrrib.Normal = device->InitializeBuffer(normSize, visitor.normalBuffer.data(), flags, heapType, L"NormalBuffer");
+    m_vertexAtrrib.Texcoord = device->InitializeBuffer(texSize, visitor.texcoordBuffer.data(), flags, heapType, L"TexcoordBuffer");
+
 
     // インデックスバッファの作成
     auto idxSize = sizeof(UINT) * visitor.indexBuffer.size();
-    if (idxSize > 0)
-    {
-        m_pIndexBuffer = device->InitializeBuffer(idxSize, visitor.indexBuffer.data(), flags, heapType, L"IndexBuffer");
-    }
+    m_pIndexBuffer = device->InitializeBuffer(idxSize, visitor.indexBuffer.data(), flags, heapType, L"IndexBuffer");
 
     // テクスチャ割り当て
     for (auto& texture : srcModel.textures)
@@ -142,7 +231,7 @@ void Model::LoadNode(const tinygltf::Model& srcModel)
         }
         for (auto& child : srcNode.children)
         {
-            node->m_children.push_back(child);
+            node->m_childIndices.push_back(child);
         }
         node->m_meshIndex = srcNode.mesh;
     }
@@ -207,6 +296,31 @@ void Model::LoadMesh(const tinygltf::Model& srcModel, VertexAttributeVisitor& vi
                 // UVがない場合のゼロ埋め
                 for (UINT i = 0; i < vertexCount; ++i) {
                     texcoordBuffer.push_back(Float2(0.0f, 0.0f));
+                }
+            }
+
+            // インデクスバッファ
+            {
+                auto& acc = srcModel.accessors[srcPrimitive.indices];
+                const auto& view = srcModel.bufferViews[acc.bufferView];
+                const auto& buffer = srcModel.buffers[view.buffer];
+                indexCount = UINT(acc.count);
+                auto offsetBytes = acc.byteOffset + view.byteOffset;
+                if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
+                {
+                    auto src = reinterpret_cast<const uint32_t*>(&(buffer.data[offsetBytes]));
+                    for (size_t idx = 0; idx < acc.count; idx++)
+                    {
+                        indexBuffer.push_back(src[idx]);
+                    }
+                }
+                if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
+                {
+                    auto src = reinterpret_cast<const uint16_t*>(&(buffer.data[offsetBytes]));
+                    for (size_t idx = 0; idx < acc.count; idx++)
+                    {
+                        indexBuffer.push_back(src[idx]);
+                    }
                 }
             }
 

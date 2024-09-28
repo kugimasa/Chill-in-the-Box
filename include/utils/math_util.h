@@ -8,6 +8,9 @@ using Float2 = DirectX::XMFLOAT2;
 using Float3 = DirectX::XMFLOAT3;
 using Float4 = DirectX::XMFLOAT4;
 using Matrix = DirectX::XMMATRIX;
+using Mtx3x4 = DirectX::XMFLOAT3X4;
+using Mtx4x3 = DirectX::XMFLOAT4X3;
+using Mtx4x4 = DirectX::XMFLOAT4X4;
 using Vector = DirectX::XMVECTOR;
 
 static Vector ZeroVector()

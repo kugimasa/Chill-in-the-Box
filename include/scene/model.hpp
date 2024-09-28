@@ -1,12 +1,13 @@
 #pragma once
 
 #include "device.hpp"
-#include "scene/actor.hpp"
 #include "utils/texture_util.h"
 
 namespace tinygltf {
     class Model;
 }
+
+class Actor;
 
 class Model
 {
@@ -15,8 +16,10 @@ public:
     Model(const std::wstring& name, std::unique_ptr<Device>& device);
     ~Model();
 
-    std::shared_ptr<Actor> Create(std::unique_ptr<Device>& device);
+    std::shared_ptr<Actor> InstantiateActor(std::unique_ptr<Device>& device);
     void Destroy(std::unique_ptr<Device>& device);
+
+    std::wstring GetName() const { return m_name; }
 
     // ÉmÅ[ÉhèÓïÒ
     class Node
@@ -32,7 +35,7 @@ public:
         Matrix m_localMtx;
         Matrix m_worldMtx;
         Node* m_parent;
-        std::vector<int> m_children;
+        std::vector<int> m_childIndices;
         int m_meshIndex = -1;
         friend class Model;
     };
@@ -74,6 +77,10 @@ public:
         friend class Model;
     };
 
+    ComPtr<ID3D12Resource> GetPositionBuffer() const { return m_vertexAtrrib.Position; }
+    ComPtr<ID3D12Resource> GetNormalBuffer() const { return m_vertexAtrrib.Normal; }
+    ComPtr<ID3D12Resource> GetIndexBuffer() const { return m_pIndexBuffer; }
+
 private:
     struct VertexAttributeVisitor
     {
@@ -93,12 +100,15 @@ private:
         ComPtr<ID3D12Resource> Normal;
         ComPtr<ID3D12Resource> Texcoord;
     };
+    std::wstring m_name;
     VertexAttribute m_vertexAtrrib;
     ComPtr<ID3D12Resource> m_pIndexBuffer;
     std::vector<TextureResource> m_textures;
     std::vector<Mesh> m_meshes;
     std::vector<Material> m_materials;
     std::vector<std::shared_ptr<Node>> m_nodes;
-    std::vector<int> m_rootNodes;
+    std::vector<int> m_rootNodeIndices;
     TextureResource m_dummyTexture;
+
+    friend class Actor;
 };
