@@ -115,9 +115,9 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
              mesh.m_indexStart = indexStart;
              mesh.m_indexCount = indexCount;
 
-             mesh.m_vbAttrPos = device->CreateSRV(m_vertexAtrrib.Position, vertexCount, vertexStart, DXGI_FORMAT_R32G32B32_FLOAT);
-             mesh.m_vbAttrNorm = device->CreateSRV(m_vertexAtrrib.Normal, vertexCount, vertexStart, DXGI_FORMAT_R32G32B32_FLOAT);
-             mesh.m_vbAttrTexCoord = device->CreateSRV(m_vertexAtrrib.Texcoord, vertexCount, vertexStart, DXGI_FORMAT_R32G32_FLOAT);
+             mesh.m_vbAttrPos = device->CreateSRV(m_vertexAtrrib.position, vertexCount, vertexStart, DXGI_FORMAT_R32G32B32_FLOAT);
+             mesh.m_vbAttrNorm = device->CreateSRV(m_vertexAtrrib.normal, vertexCount, vertexStart, DXGI_FORMAT_R32G32B32_FLOAT);
+             mesh.m_vbAttrTexCoord = device->CreateSRV(m_vertexAtrrib.texcoord, vertexCount, vertexStart, DXGI_FORMAT_R32G32_FLOAT);
              mesh.m_indexBuffer = device->CreateSRV(m_pIndexBuffer, indexCount, indexStart, DXGI_FORMAT_R32_UINT);
              mesh.m_material = actor->m_materials[srcMesh.m_materialIndex];
 
@@ -173,9 +173,9 @@ bool Model::LoadModel(const tinygltf::Model& srcModel, std::unique_ptr<Device>& 
     auto posSize = sizeof(Float3) * visitor.positionBuffer.size();
     auto normSize = sizeof(Float3) * visitor.normalBuffer.size();
     auto texSize = sizeof(Float2) * visitor.texcoordBuffer.size();
-    m_vertexAtrrib.Position = device->InitializeBuffer(posSize, visitor.positionBuffer.data(), flags, heapType, L"PositionBuffer");
-    m_vertexAtrrib.Normal = device->InitializeBuffer(normSize, visitor.normalBuffer.data(), flags, heapType, L"NormalBuffer");
-    m_vertexAtrrib.Texcoord = device->InitializeBuffer(texSize, visitor.texcoordBuffer.data(), flags, heapType, L"TexcoordBuffer");
+    m_vertexAtrrib.position = device->InitializeBuffer(posSize, visitor.positionBuffer.data(), flags, heapType, L"PositionBuffer");
+    m_vertexAtrrib.normal = device->InitializeBuffer(normSize, visitor.normalBuffer.data(), flags, heapType, L"NormalBuffer");
+    m_vertexAtrrib.texcoord = device->InitializeBuffer(texSize, visitor.texcoordBuffer.data(), flags, heapType, L"TexcoordBuffer");
 
 
     // インデックスバッファの作成

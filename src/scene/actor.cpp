@@ -96,6 +96,23 @@ Actor::~Actor()
     m_nodes.clear();
 }
 
+/// <summary>
+/// 回転行列
+/// </summary>
+Matrix Actor::GetRotatedMtx(float deltaTime, float speed, Float3 up)
+{
+    float theta = deltaTime * speed * XM_2PI;
+    return XMMatrixRotationAxis(XMLoadFloat3(&up), theta);
+}
+
+void Actor::SetMaterialHitGroup(const std::wstring& hitGroupName)
+{
+    for (auto& material : m_materials)
+    {
+        material->SetHitGroupStr(hitGroupName.c_str());
+    }
+}
+
 void Actor::UpdateMatrices()
 {
     for (auto& node : m_nodes)
@@ -164,6 +181,36 @@ void Actor::UpdateTransform()
     }
 }
 
+uint8_t* Actor::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize, ComPtr<ID3D12StateObjectProperties> rtStateObjectProps)
+{
+    for (UINT group = 0; group < GetMeshGroupCount(); ++group)
+    {
+        for (UINT meshIdx = 0; meshIdx < GetMeshCount(group); ++meshIdx)
+        {
+            const auto& mesh = GetMesh(group, meshIdx);
+            auto material = mesh.GetMaterial();
+            auto shader = material->GetHitGroupStr();
+            auto id = rtStateObjectProps->GetShaderIdentifier(shader.c_str());
+            if (id == nullptr)
+            {
+                Error(PrintInfoType::RTCAMP10, "ShaderIdが設定されていません");
+            }
+            // MEMO: ローカルルートシグネチャの順番と合わせる
+            auto recordStart = dst;
+            dst += WriteShaderId(dst, id);
+            dst += WriteGPUDescriptorHeap(dst, mesh.GetIndexBuffer());
+            dst += WriteGPUDescriptorHeap(dst, mesh.GetPosition());
+            dst += WriteGPUDescriptorHeap(dst, mesh.GetNormal());
+            dst += WriteGPUDescriptorHeap(dst, mesh.GetTexcoord());
+            dst += WriteGPUDescriptorHeap(dst, GetBLASMatrixDescriptor());
+            dst += WriteGPUDescriptorHeap(dst, material->GetTextureDescriptor());
+            dst += WriteGPUResourceAddress(dst, mesh.GetMeshParamCB());
+            dst = recordStart + hitGroupRecordSize;
+        }
+    }
+    return dst;
+}
+
 UINT Actor::GetMeshGroupCount() const
 {
     return UINT(m_meshGroups.size());
@@ -214,7 +261,6 @@ void Actor::CreateMatrixBufferBLAS(UINT mtxCount)
         L"MatrixBuffer(BLAS)"
     );
     
-    // TODO: シーンに合わせて数値を調整する必要はありそう
     auto numElements = mtxCountAll * 3;
     // SRVの作成
     m_blasMatrixDescriptor = m_pDevice->CreateSRV(m_pBLASMatrices.Get(), numElements, 0, sizeof(Float4));
@@ -226,7 +272,7 @@ void Actor::CreateBLAS()
     CreateRTGeoDesc(rtGeoDesc);
 
     // 動的に更新を行うBLAS
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc;
+    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc{};
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs = buildASDesc.Inputs;
     inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
     inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
@@ -285,7 +331,7 @@ void Actor::CreateRTGeoDesc(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& rtGeoDe
             triangles.VertexBuffer.StartAddress = posBuffer->GetGPUVirtualAddress();
             triangles.VertexBuffer.StartAddress += mesh.GetVertexStart() * sizeof(Float3);
             triangles.VertexCount = mesh.GetVertexCount();
-            // MEMO: 頂点フォーマットを指定する場合はここで
+            triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
             // インデックス情報
             triangles.IndexBuffer = indexBuffer->GetGPUVirtualAddress();
             triangles.IndexBuffer += mesh.GetIndexStart() * sizeof(UINT);

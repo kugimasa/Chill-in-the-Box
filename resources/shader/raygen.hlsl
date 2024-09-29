@@ -30,6 +30,7 @@ void RayGen()
     rayDesc.TMax = 10000;
     
     RAY_FLAG flags = RAY_FLAG_NONE;
+    flags |= RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
     uint rayMask = 0xFF;
     
     // レイトレース

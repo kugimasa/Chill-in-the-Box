@@ -126,12 +126,14 @@ public:
         friend class Model;
         friend class Actor;
     };
-
+    Matrix GetRotatedMtx(float deltaTime, float speed, Float3 up);
     void SetWorldMatrix(Matrix worldMtx) { m_worldMtx = worldMtx; }
+    void SetMaterialHitGroup(const std::wstring& hitGroupName);
     // 各ノードの行列を更新
     void UpdateMatrices();
     void UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList);
     void UpdateTransform();
+    uint8_t* WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize, ComPtr<ID3D12StateObjectProperties> rtStateObjectProps);
 
     Matrix GetWorldMatrix()const { return m_worldMtx; }
     const Model* GetModel() { return m_modelRef; }

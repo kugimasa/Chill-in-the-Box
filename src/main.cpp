@@ -12,6 +12,6 @@ int main(int argc, char *argv[])
             maxFrame = atoi(argv[2]);
         }
     }
-    Renderer renderer(1280, 720, L"Sample", maxFrame);
+    Renderer renderer(1024, 1024, L"rtcamp10", maxFrame);
     return Window::Run(&renderer, 0);
 }

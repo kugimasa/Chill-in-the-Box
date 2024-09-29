@@ -77,8 +77,8 @@ public:
         friend class Model;
     };
 
-    ComPtr<ID3D12Resource> GetPositionBuffer() const { return m_vertexAtrrib.Position; }
-    ComPtr<ID3D12Resource> GetNormalBuffer() const { return m_vertexAtrrib.Normal; }
+    ComPtr<ID3D12Resource> GetPositionBuffer() const { return m_vertexAtrrib.position; }
+    ComPtr<ID3D12Resource> GetNormalBuffer() const { return m_vertexAtrrib.normal; }
     ComPtr<ID3D12Resource> GetIndexBuffer() const { return m_pIndexBuffer; }
 
 private:
@@ -94,14 +94,14 @@ private:
     void LoadMesh(const tinygltf::Model& srcModel, VertexAttributeVisitor& visitor);
     void LoadMaterial(const tinygltf::Model& srcModel);
 
-    struct VertexAttribute
+    struct VertexAttrib
     {
-        ComPtr<ID3D12Resource> Position;
-        ComPtr<ID3D12Resource> Normal;
-        ComPtr<ID3D12Resource> Texcoord;
+        ComPtr<ID3D12Resource> position;
+        ComPtr<ID3D12Resource> normal;
+        ComPtr<ID3D12Resource> texcoord;
     };
     std::wstring m_name;
-    VertexAttribute m_vertexAtrrib;
+    VertexAttrib m_vertexAtrrib;
     ComPtr<ID3D12Resource> m_pIndexBuffer;
     std::vector<TextureResource> m_textures;
     std::vector<Mesh> m_meshes;
