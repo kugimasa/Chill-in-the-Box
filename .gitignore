@@ -371,3 +371,6 @@ CMakePresets.json
 # DLLs & LIBs
 external/libs
 /imgui.ini
+
+# Scene Resources
+resources/scene
