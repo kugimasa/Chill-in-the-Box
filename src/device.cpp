@@ -559,7 +559,7 @@ ComPtr<ID3D12Resource> Device::InitializeBuffer(size_t size, const void* initDat
     {
         Error(PrintInfoType::D3D12, "バッファサイズが無効です: ", size);
     }
-    auto initialState = D3D12_RESOURCE_STATE_COPY_DEST;
+    auto initialState = D3D12_RESOURCE_STATE_COMMON;
     if (heapType == D3D12_HEAP_TYPE_UPLOAD)
     {
         initialState = D3D12_RESOURCE_STATE_GENERIC_READ;
@@ -586,6 +586,33 @@ ComPtr<ID3D12Resource> Device::InitializeBuffer(size_t size, const void* initDat
         }
     }
     return resource;
+}
+
+ComPtr<ID3D12RootSignature> Device::CreateRootSignature(const D3D12_ROOT_SIGNATURE_DESC& rootSigDesc, const wchar_t* name)
+{
+    ComPtr<ID3D12RootSignature> pRootSig;
+    HRESULT hr;
+    ComPtr<ID3DBlob> pSigBlob;
+    ComPtr<ID3DBlob> pErrBlob;
+    hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pSigBlob, &pErrBlob);
+    if (FAILED(hr))
+    {
+        std::wstring errStr = L"ルートシグネチャのシリアライズに失敗しました: " + std::wstring(name);
+        Error(PrintInfoType::RTCAMP10, errStr);
+    }
+    m_pD3D12Device5->CreateRootSignature(
+        0,
+        pSigBlob->GetBufferPointer(),
+        pSigBlob->GetBufferSize(),
+        IID_PPV_ARGS(&pRootSig)
+    );
+    if (FAILED(hr))
+    {
+        std::wstring errStr = L"ルートシグネチャの作成に失敗しました: " + std::wstring(name);
+        Error(PrintInfoType::RTCAMP10, errStr);
+    }
+    pRootSig->SetName(name);
+    return  pRootSig;
 }
 
 void Device::WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize)
