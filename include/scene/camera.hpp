@@ -20,9 +20,11 @@ public:
     Camera(float fovY, float aspect, float nearZ, float farZ, Float3 origin, Float3 target, Float3 up = Float3(0.0f, 1.0f, 0.0f));
     ~Camera();
 
+    void SetPosition(Float3 origin);
     void Rotate(float deltaTime);
     void Translate(float deltaTime);
 
+    Float3 GetPosition() const { return m_param.Origin; }
     Matrix GetViewMatrix() const { return m_viewMtx; }
     Matrix GetProjMatrix() const { return m_projMtx; }
 

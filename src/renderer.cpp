@@ -96,8 +96,10 @@ void Renderer::OnRender()
 #endif
         return;
     }
-
-    Print(PrintInfoType::RTCAMP10, "Frame: ", m_currentFrame);
+    if (m_maxFrame > 0)
+    {
+        Print(PrintInfoType::RTCAMP10, "Frame: ", m_currentFrame);
+    }
     auto d3d12Device = m_pDevice->GetDevice();
     auto renderTarget = m_pDevice->GetRenderTarget();
     auto allocator = m_pDevice->GetCurrentCommandAllocator();
@@ -743,6 +745,8 @@ void Renderer::InitImGui()
         m_imguiDescHeap.cpuHandle,
         m_imguiDescHeap.gpuHandle
     );
+
+    m_imGuiParam.cameraPos = m_pScene->GetCamera()->GetPosition();
 }
 void Renderer::UpdateImGui()
 {
@@ -753,7 +757,15 @@ void Renderer::UpdateImGui()
     auto frameRate = ImGui::GetIO().Framerate;
     ImGui::Begin("Info");
     ImGui::Text("Framerate %.3f ms", 1000.0f / frameRate);
+
+    // カメラパラメータ
+    std::shared_ptr<Camera> pCamera = m_pScene->GetCamera();
+    m_imGuiParam.cameraPos = pCamera->GetPosition();
+    ImGui::SliderFloat3("CameraPos Z", &m_imGuiParam.cameraPos.x, -10.0, 10.0);
     ImGui::End();
+
+    // 更新
+    pCamera->SetPosition(m_imGuiParam.cameraPos);
 }
 
 void Renderer::RenderImGui()

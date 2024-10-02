@@ -89,4 +89,11 @@ private:
     DescriptorHeap m_outputBufferDescHeap;
 
     D3D12_DISPATCH_RAYS_DESC m_dispatchRayDesc;
+
+#ifdef _DEBUG
+    struct ImGuiParam {
+        Float3 cameraPos;
+    };
+    ImGuiParam m_imGuiParam;
+#endif // _DEBUG
 };

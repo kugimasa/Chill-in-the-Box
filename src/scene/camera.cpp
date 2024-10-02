@@ -33,6 +33,16 @@ void Camera::Translate(float deltaTime)
 {
 }
 
+void Camera::SetPosition(Float3 origin)
+{
+    m_param.Origin = origin;
+    m_viewMtx = XMMatrixLookAtRH(
+        XMLoadFloat3(&origin),
+        XMLoadFloat3(&m_param.Target),
+        XMLoadFloat3(&m_param.Up)
+    );
+}
+
 /// <summary>
 /// ÉJÉÅÉâï˚å¸ÇÃçXêV
 /// </summary>
@@ -44,7 +54,11 @@ void Camera::UpdateLookAt(Float3 origin, Float3 target, Float3 up)
     m_param.Origin = origin;
     m_param.Target = target;
     m_param.Up = up;
-    m_viewMtx = XMMatrixLookAtRH(XMLoadFloat3(&origin), XMLoadFloat3(&target), XMLoadFloat3(&up));
+    m_viewMtx = XMMatrixLookAtRH(
+        XMLoadFloat3(&origin),
+        XMLoadFloat3(&target),
+        XMLoadFloat3(&up)
+    );
 }
 
 /// <summary>
