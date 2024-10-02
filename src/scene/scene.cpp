@@ -19,7 +19,7 @@ void Scene::OnInit(float aspect)
     float farZ = 100.0f;
     Float3 origin(0.0f, 0.0f, 1.0f);
     Float3 target(0.0f, 0.0f, -1.0f);
-    m_camera = Camera(fovY, aspect, nearZ, farZ, origin, target);
+    m_camera = std::shared_ptr<Camera>(new Camera(fovY, aspect, nearZ, farZ, origin, target));
     if (m_pDevice->CreateConstantBuffer(m_pConstantBuffers, sizeof(SceneParam), L"SceneCB"))
     {
         UpdateSceneParam();
@@ -48,12 +48,18 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
     // モデルの更新
     auto transMtx = XMMatrixTranslation(0, 0, -3);
     m_modelActor->SetWorldMatrix(transMtx);
-    m_modelActor->UpdateTransform();
+    m_modelActor->UpdateMatrices();
+
+    // テーブル
+    transMtx = XMMatrixTranslation(0, -5, -3);
+    m_tableActor->SetWorldMatrix(transMtx);
+    m_tableActor->UpdateMatrices();
 }
 
 void Scene::OnDestroy()
 {
     m_modelActor.reset();
+    m_tableActor.reset();
     for (auto& sceneCB : m_pConstantBuffers)
     {
         sceneCB.Reset();
@@ -62,12 +68,23 @@ void Scene::OnDestroy()
 
 void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& instanceDescs)
 {
+    // TODO: 若干処理が冗長なのでdxr_utilにまとめたい
     UINT instanceHitGroupOffset = 0;
     // TODO: 背景
     {
     }
-    // TODO: ステージ
+    // テーブル
     {
+        D3D12_RAYTRACING_INSTANCE_DESC desc{};
+        auto mtxTrans = m_tableActor->GetWorldMatrix();
+        XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
+        desc.InstanceID = 0;
+        desc.InstanceMask = 0xFF;
+        desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
+        desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+        desc.AccelerationStructure = m_tableActor->GetBLAS()->GetGPUVirtualAddress();
+        instanceDescs.push_back(desc);
+        instanceHitGroupOffset += m_tableActor->GetTotalMeshCount();
     }
     // TODO: ライト
     {
@@ -92,8 +109,8 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
 /// </summary>
 void Scene::UpdateSceneParam()
 {
-    m_param.viewMtx = m_camera.GetViewMatrix();
-    m_param.projMtx = m_camera.GetProjMatrix();
+    m_param.viewMtx = m_camera->GetViewMatrix();
+    m_param.projMtx = m_camera->GetProjMatrix();
     m_param.invViewMtx = XMMatrixInverse(nullptr, m_param.viewMtx);
     m_param.invProjMtx = XMMatrixInverse(nullptr, m_param.projMtx);
     m_param.frameIndex = m_pDevice->GetCurrentFrameIndex();
@@ -110,6 +127,7 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 {
     ComPtr<ID3D12StateObjectProperties> rtStateObjectProps;
     rtStateObject.As(&rtStateObjectProps);
+    dst = m_tableActor->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
     dst = m_modelActor->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
     return dst;
 }
@@ -120,7 +138,7 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 /// <param name="cmdList"></param>
 void Scene::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
 {
-    for (auto& model : { m_modelActor })
+    for (auto& model : { m_modelActor, m_tableActor })
     {
         model->UpdateMatrices();
         model->UpdateTransform();
@@ -145,7 +163,7 @@ ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
 UINT Scene::GetTotalHitGroupCount()
 {
     UINT hitGroupCount = 0;
-    for (const auto& model : { m_modelActor })
+    for (const auto& model : { m_modelActor, m_tableActor })
     {
         for (UINT groupIdx = 0; groupIdx < model->GetMeshGroupCount(); ++groupIdx)
         {
@@ -163,6 +181,10 @@ void Scene::InitializeActor()
     // モデルデータのロード
     auto model = new Model(L"model.glb", m_pDevice);
     m_modelActor = model->InstantiateActor(m_pDevice);
-    // HitGroup設定
     m_modelActor->SetMaterialHitGroup(L"Model");
+
+    // テーブル
+    auto table = new Model(L"round_table.glb", m_pDevice);
+    m_tableActor = table->InstantiateActor(m_pDevice);
+    m_tableActor->SetMaterialHitGroup(L"Model");
 }
