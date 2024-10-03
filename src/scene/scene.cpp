@@ -47,8 +47,9 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
 
 void Scene::OnDestroy()
 {
-    m_modelActor.reset();
+    m_lightActor.reset();
     m_tableActor.reset();
+    m_modelActor.reset();
     for (auto& sceneCB : m_pConstantBuffers)
     {
         sceneCB.Reset();
@@ -58,6 +59,20 @@ void Scene::OnDestroy()
 void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& instanceDescs)
 {
     UINT instanceHitGroupOffset = 0;
+    // ライト
+    {
+        D3D12_RAYTRACING_INSTANCE_DESC desc{};
+        auto mtxTrans = m_lightActor->GetWorldMatrix();
+        XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
+        desc.InstanceID = 0;
+        desc.InstanceMask = 0xFF;
+        desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
+        desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+        desc.AccelerationStructure = m_lightActor->GetBLAS()->GetGPUVirtualAddress();
+        instanceDescs.push_back(desc);
+        instanceHitGroupOffset += m_lightActor->GetTotalMeshCount();
+
+    }
     // TODO: 背景
     {
     }
@@ -73,9 +88,6 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
         desc.AccelerationStructure = m_tableActor->GetBLAS()->GetGPUVirtualAddress();
         instanceDescs.push_back(desc);
         instanceHitGroupOffset += m_tableActor->GetTotalMeshCount();
-    }
-    // TODO: ライト
-    {
     }
     // オブジェクト
     {
@@ -115,6 +127,7 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 {
     ComPtr<ID3D12StateObjectProperties> rtStateObjectProps;
     rtStateObject.As(&rtStateObjectProps);
+    dst = m_lightActor->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
     dst = m_tableActor->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
     dst = m_modelActor->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
     return dst;
@@ -126,7 +139,7 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 /// <param name="cmdList"></param>
 void Scene::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
 {
-    for (auto& model : { m_modelActor, m_tableActor })
+    for (auto& model : { m_lightActor,m_tableActor, m_modelActor })
     {
         model->UpdateMatrices();
         model->UpdateTransform();
@@ -145,13 +158,14 @@ ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
 }
 
 /// <summary>
-/// 
+/// HitGroup合計の取得
 /// </summary>
 /// <returns></returns>
 UINT Scene::GetTotalHitGroupCount()
 {
+    // TODO: 初期化時にキャッシュしておきたい
     UINT hitGroupCount = 0;
-    for (const auto& model : { m_modelActor, m_tableActor })
+    for (const auto& model : { m_lightActor, m_modelActor, m_tableActor })
     {
         for (UINT groupIdx = 0; groupIdx < model->GetMeshGroupCount(); ++groupIdx)
         {
@@ -166,10 +180,12 @@ UINT Scene::GetTotalHitGroupCount()
 /// </summary>
 void Scene::InitializeActors()
 {
+    // 光源
+    InstantiateActor(m_lightActor, L"teapot.glb", L"Actor", Float3(0, 1, -3));
     // テーブル
-    InstantiateActor(m_tableActor, L"round_table.glb", L"Model", Float3(0, -5, -3));
+    InstantiateActor(m_tableActor, L"round_table.glb", L"Actor", Float3(0, -5, -3));
     // キャラクター
-    InstantiateActor(m_modelActor, L"model.glb", L"Model", Float3(0, 0, -3));
+    InstantiateActor(m_modelActor, L"model.glb", L"Actor", Float3(0, 0, -3));
 }
 
 /// <summary>

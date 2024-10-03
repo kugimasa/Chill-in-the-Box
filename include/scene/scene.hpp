@@ -41,6 +41,8 @@ private:
 private:
     SceneParam m_param;
     std::shared_ptr<Camera> m_camera;
+    // TODO: ‚ä‚­‚ä‚­‚Í•¡”ŒõŒ¹‚É‚µ‚½‚¢
+    std::shared_ptr<Actor> m_lightActor;
     std::shared_ptr<Actor> m_modelActor;
     std::shared_ptr<Actor> m_tableActor;
     std::unique_ptr<Device>& m_pDevice;

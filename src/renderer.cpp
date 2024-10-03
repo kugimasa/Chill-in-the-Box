@@ -510,36 +510,34 @@ void Renderer::CreateStateObject()
     missDXIL->SetDXILLibrary(&missShader);
     missDXIL->DefineExport(L"Miss");
 
-    auto closestHitBin = SetupShader(L"ch_model");
+    auto closestHitBin = SetupShader(L"closesthit");
     D3D12_SHADER_BYTECODE closestHitShader{ closestHitBin.data(), closestHitBin.size() };
     auto closestHitDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
     closestHitDXIL->SetDXILLibrary(&closestHitShader);
     closestHitDXIL->DefineExport(L"ClosestHit");
     // MEMO: 他にClosestHitシェーダーがある場合はこちらで追加
 
-    // ヒットグループ設定 (Model)
-    auto hitGroup = stateObjDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-    hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
-    hitGroup->SetClosestHitShaderImport(L"ClosestHit");
-    hitGroup->SetHitGroupExport(L"Model");
-    // MEMO: 他にHitGroupがある場合はこちらで追加
+    // ヒットグループ設定 (Actor)
+    auto hitGroupModel = stateObjDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+    hitGroupModel->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+    hitGroupModel->SetClosestHitShaderImport(L"ClosestHit");
+    hitGroupModel->SetHitGroupExport(L"Actor");
 
     // グローバルルートシグネチャ設定
     auto globalRootSig = stateObjDesc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
     globalRootSig->SetRootSignature(m_pGlobalRootSignature.Get());
 
-    // ローカルルートシグネチャ設定
+    // ローカルルートシグネチャ設定: RayGen
     auto rayGenLocalRootSig = stateObjDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
     rayGenLocalRootSig->SetRootSignature(m_pRayGenLocalRootSignature.Get());
     auto rgLocalRootSigExpAssoc = stateObjDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
     rgLocalRootSigExpAssoc->AddExport(L"RayGen");
     rgLocalRootSigExpAssoc->SetSubobjectToAssociate(*rayGenLocalRootSig);
-
-    // モデル用
+    // ローカルルートシグネチャ設定: ClosestHit
     auto closesHitLocalRootSig = stateObjDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
     closesHitLocalRootSig->SetRootSignature(m_pClosestHitLocalRootSignature.Get());
     auto chLocalRootSigExpAssoc = stateObjDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-    chLocalRootSigExpAssoc->AddExport(L"Model");
+    chLocalRootSigExpAssoc->AddExport(L"Actor");
     chLocalRootSigExpAssoc->SetSubobjectToAssociate(*closesHitLocalRootSig);
 
     // レイトレーシングパイプライン用設定
