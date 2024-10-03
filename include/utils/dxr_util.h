@@ -72,7 +72,7 @@ inline UINT WriteGPUResourceAddress(void* dst, const ComPtr<ID3D12Resource>& res
     return UINT(sizeof(address));
 }
 
-inline D3D12_ROOT_PARAMETER& CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT shaderRegister, UINT registerSpace, UINT descCount = 1)
+inline D3D12_ROOT_PARAMETER& CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT shaderRegister, UINT registerSpace = 0, UINT descCount = 1)
 {
     auto descRange = new D3D12_DESCRIPTOR_RANGE{};
     descRange->RangeType = rangeType;
@@ -87,7 +87,7 @@ inline D3D12_ROOT_PARAMETER& CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE rangeTy
     return *rootParam;
 }
 
-inline D3D12_ROOT_PARAMETER& CreateRootParam(D3D12_ROOT_PARAMETER_TYPE paramType, UINT shaderRegister, UINT registerSpace)
+inline D3D12_ROOT_PARAMETER& CreateRootParam(D3D12_ROOT_PARAMETER_TYPE paramType, UINT shaderRegister, UINT registerSpace = 0)
 {
     auto rootParam = new D3D12_ROOT_PARAMETER{};
     rootParam->ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;

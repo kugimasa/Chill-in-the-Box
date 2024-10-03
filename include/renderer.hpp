@@ -80,6 +80,7 @@ private:
     ComPtr<ID3D12Resource> m_pShaderTable;
 
     ComPtr<ID3D12RootSignature> m_pGlobalRootSignature;
+    ComPtr<ID3D12RootSignature> m_pRayGenLocalRootSignature;
     ComPtr<ID3D12RootSignature> m_pClosestHitLocalRootSignature;
     ComPtr<ID3D12StateObject> m_pRTStateObject;
     ComPtr<ID3D12GraphicsCommandList4> m_pCmdList;

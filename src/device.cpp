@@ -588,8 +588,15 @@ ComPtr<ID3D12Resource> Device::InitializeBuffer(size_t size, const void* initDat
     return resource;
 }
 
-ComPtr<ID3D12RootSignature> Device::CreateRootSignature(const D3D12_ROOT_SIGNATURE_DESC& rootSigDesc, const wchar_t* name)
+ComPtr<ID3D12RootSignature> Device::CreateRootSignature(const std::vector<D3D12_ROOT_PARAMETER>& rootParams, const wchar_t* name, bool isLocal)
 {
+    D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
+    rootSigDesc.NumParameters = UINT(rootParams.size());
+    rootSigDesc.pParameters = rootParams.data();
+    if (isLocal)
+    {
+        rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+    }
     ComPtr<ID3D12RootSignature> pRootSig;
     HRESULT hr;
     ComPtr<ID3DBlob> pSigBlob;

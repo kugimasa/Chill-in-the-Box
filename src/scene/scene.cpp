@@ -57,7 +57,6 @@ void Scene::OnDestroy()
 
 void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& instanceDescs)
 {
-    // TODO: áŠ±ˆ—‚ªç’·‚È‚Ì‚Ådxr_util‚É‚Ü‚Æ‚ß‚½‚¢
     UINT instanceHitGroupOffset = 0;
     // TODO: ”wŒi
     {

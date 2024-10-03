@@ -21,6 +21,9 @@ Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFr
     m_currentFrame(0),
     m_maxFrame(maxFrame),
     m_title(title),
+#ifdef _DEBUG
+    m_imGuiParam(),
+#endif // _DEBUG
     m_dispatchRayDesc()
 {
 }
@@ -119,10 +122,9 @@ void Renderer::OnRender()
 
     m_pCmdList->SetComputeRootSignature(m_pGlobalRootSignature.Get());
     m_pCmdList->SetComputeRootDescriptorTable(0, m_tlasDescHeap.gpuHandle);
-    m_pCmdList->SetComputeRootDescriptorTable(1, m_outputBufferDescHeap.gpuHandle);
     // 定数バッファの設定
     auto sceneCB = m_pScene->GetConstantBuffer();
-    m_pCmdList->SetComputeRootConstantBufferView(2, sceneCB->GetGPUVirtualAddress());
+    m_pCmdList->SetComputeRootConstantBufferView(1, sceneCB->GetGPUVirtualAddress());
 
     // レイトレース結果をUAVへ
     auto barrierToUAV = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -412,7 +414,7 @@ void Renderer::UpdateTLAS()
 /// </summary>
 void Renderer::CreateGlobalRootSignature()
 {
-    std::vector<D3D12_ROOT_PARAMETER> rootParamVec{};
+    std::vector<D3D12_ROOT_PARAMETER> rootParams{};
     D3D12_ROOT_PARAMETER rootParam{};
     rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam.DescriptorTable.NumDescriptorRanges = 1;
@@ -423,27 +425,16 @@ void Renderer::CreateGlobalRootSignature()
     descRangeTLAS.NumDescriptors = 1;
     descRangeTLAS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     rootParam.DescriptorTable.pDescriptorRanges = &descRangeTLAS;
-    rootParamVec.push_back(rootParam);
-    // 出力用バッファ(UAV): u0
-    D3D12_DESCRIPTOR_RANGE descRangeUAV{};
-    descRangeUAV.BaseShaderRegister = 0;
-    descRangeUAV.NumDescriptors = 1;
-    descRangeUAV.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-    rootParam.DescriptorTable.pDescriptorRanges = &descRangeUAV;
-    rootParamVec.push_back(rootParam);
+    rootParams.push_back(rootParam);
     // SceneCB: b0
     D3D12_ROOT_PARAMETER sceneCBParam{};
     sceneCBParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     sceneCBParam.Descriptor.ShaderRegister = 0;
     sceneCBParam.Descriptor.RegisterSpace = 0;
-    rootParamVec.push_back(sceneCBParam);
-
-    D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
-    rootSigDesc.NumParameters = UINT(rootParamVec.size());
-    rootSigDesc.pParameters = rootParamVec.data();
+    rootParams.push_back(sceneCBParam);
 
     // グローバルルートシグネチャの作成
-    m_pGlobalRootSignature = m_pDevice->CreateRootSignature(rootSigDesc, L"GlobalRootSignature");
+    m_pGlobalRootSignature = m_pDevice->CreateRootSignature(rootParams, L"GlobalRootSignature");
     Print(PrintInfoType::RTCAMP10, "グローバルルートシグネチャ作成 完了");
 }
 
@@ -452,13 +443,21 @@ void Renderer::CreateGlobalRootSignature()
 /// </summary>
 void Renderer::CreateLocalRootSignature()
 {
-    // RayGenシェーダー用のルートシグネチャ
-    // TODO: 後ほどグローバルルートシグネチャから移動予定
-    
-    // ClosestHitシェーダー用のルートシグネチャ
     std::vector<D3D12_ROOT_PARAMETER> rootParams{};
     D3D12_ROOT_PARAMETER rootParam{};
 
+    // RayGenシェーダー用のルートシグネチャ
+    rootParams = {};
+    rootParam = {};
+    // OutputBuffer : u0
+    rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0);
+    rootParams.push_back(rootParam);
+    // ローカルルートシグネチャの作成
+    m_pRayGenLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, L"LocalRootSignature:RayGen", /*isLocal*/ true);
+    
+    // ClosestHitシェーダー用のルートシグネチャ
+    rootParams = {};
+    rootParam = {};
     //// Register Space 1 ///
     // IB: t0
     rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 1);
@@ -483,14 +482,8 @@ void Renderer::CreateLocalRootSignature()
     // MeshParam: b0
     rootParam = CreateRootParam(D3D12_ROOT_PARAMETER_TYPE_CBV, 0, 2);
     rootParams.push_back(rootParam);
-
     // ローカルルートシグネチャの作成
-    D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
-    rootSigDesc.NumParameters = UINT(rootParams.size());
-    rootSigDesc.pParameters = rootParams.data();
-    rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-
-    m_pClosestHitLocalRootSignature = m_pDevice->CreateRootSignature(rootSigDesc, L"LocalRootSignature:ClosestHit");
+    m_pClosestHitLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, L"LocalRootSignature:ClosestHit", /*isLocal*/ true);
 
     Print(PrintInfoType::RTCAMP10, "ローカルルートシグネチャ作成 完了");
 }
@@ -536,7 +529,11 @@ void Renderer::CreateStateObject()
     globalRootSig->SetRootSignature(m_pGlobalRootSignature.Get());
 
     // ローカルルートシグネチャ設定
-    // TODO: RayGenシェーダー用
+    auto rayGenLocalRootSig = stateObjDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+    rayGenLocalRootSig->SetRootSignature(m_pRayGenLocalRootSignature.Get());
+    auto rgLocalRootSigExpAssoc = stateObjDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+    rgLocalRootSigExpAssoc->AddExport(L"RayGen");
+    rgLocalRootSigExpAssoc->SetSubobjectToAssociate(*rayGenLocalRootSig);
 
     // モデル用
     auto closesHitLocalRootSig = stateObjDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -600,9 +597,9 @@ void Renderer::CreateOutputBuffer()
 void Renderer::CreateShaderTable()
 {
     // RayGen: ShaderId
-    // TODO: u0のルートシグネチャ化..?
     UINT rayGenRecordSize = 0;
     rayGenRecordSize += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    rayGenRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // OutputBuffer: u0
     rayGenRecordSize = ROUND_UP(rayGenRecordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 
 
@@ -668,6 +665,8 @@ void Renderer::CreateShaderTable()
             Error(PrintInfoType::RTCAMP10, message);
         }
         p += WriteShaderId(p, id);
+        // OutputBuffer: u0
+        p += WriteGPUDescriptorHeap(p, m_outputBufferDescHeap);
     }
 
     // Missシェーダー
