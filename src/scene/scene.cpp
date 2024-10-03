@@ -26,8 +26,7 @@ void Scene::OnInit(float aspect)
     }
 
     // モデルの初期設定
-    InitializeActor();
-
+    InitializeActors();
 
     Print(PrintInfoType::RTCAMP10, "シーン構築 完了");
 }
@@ -44,16 +43,6 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
     UINT frameIndex = m_pDevice->GetCurrentFrameIndex();
     auto cb = m_pConstantBuffers[frameIndex];
     m_pDevice->WriteBuffer(cb, &m_param, sizeof(SceneParam));
-
-    // モデルの更新
-    auto transMtx = XMMatrixTranslation(0, 0, -3);
-    m_modelActor->SetWorldMatrix(transMtx);
-    m_modelActor->UpdateMatrices();
-
-    // テーブル
-    transMtx = XMMatrixTranslation(0, -5, -3);
-    m_tableActor->SetWorldMatrix(transMtx);
-    m_tableActor->UpdateMatrices();
 }
 
 void Scene::OnDestroy()
@@ -176,15 +165,29 @@ UINT Scene::GetTotalHitGroupCount()
 /// <summary>
 /// オブジェクトのセットアップ
 /// </summary>
-void Scene::InitializeActor()
+void Scene::InitializeActors()
 {
-    // モデルデータのロード
-    auto model = new Model(L"model.glb", m_pDevice);
-    m_modelActor = model->InstantiateActor(m_pDevice);
-    m_modelActor->SetMaterialHitGroup(L"Model");
-
     // テーブル
-    auto table = new Model(L"round_table.glb", m_pDevice);
-    m_tableActor = table->InstantiateActor(m_pDevice);
-    m_tableActor->SetMaterialHitGroup(L"Model");
+    InstantiateActor(m_tableActor, L"round_table.glb", L"Model", Float3(0, -5, -3));
+    // キャラクター
+    InstantiateActor(m_modelActor, L"model.glb", L"Model", Float3(0, 0, -3));
+}
+
+/// <summary>
+/// オブジェクトのインスタンス化
+/// </summary>
+/// <param name="actor"></param>
+/// <param name="fileName"></param>
+/// <param name="hitGroup"></param>
+/// <param name="pos"></param>
+void Scene::InstantiateActor(std::shared_ptr<Actor>& actor, const std::wstring fileName, const std::wstring hitGroup, Float3 pos)
+{
+    // モデルのロード
+    auto model = new Model(fileName, m_pDevice);
+    actor = model->InstantiateActor(m_pDevice);
+    actor->SetMaterialHitGroup(hitGroup);
+    // 初期位置設定
+    auto transMtx = XMMatrixTranslation(pos.x, pos.y, pos.z);
+    actor->SetWorldMatrix(transMtx);
+    actor->UpdateMatrices();
 }

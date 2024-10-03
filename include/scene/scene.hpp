@@ -35,7 +35,8 @@ public:
     };
 
 private:
-    void InitializeActor();
+    void InitializeActors();
+    void InstantiateActor(std::shared_ptr<Actor>& actor, const std::wstring name, const std::wstring hitGroup, Float3 pos);
 
 private:
     SceneParam m_param;
