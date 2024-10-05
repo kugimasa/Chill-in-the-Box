@@ -88,7 +88,9 @@ private:
         Float3 hitPos;
         Float3 reflectDir;
         Float3 color;
+        Float3 attenuation;
         UINT rayDepth;
+        UINT seed;
     };
 
     std::chrono::system_clock::time_point m_startTime;
@@ -98,6 +100,7 @@ private:
     struct ImGuiParam {
         Float3 cameraPos;
         int maxPathDepth;
+        int maxSPP;
     };
     ImGuiParam m_imGuiParam;
 #endif // _DEBUG

@@ -4,7 +4,8 @@ Scene::Scene(std::unique_ptr<Device>& device) :
     m_pDevice(device),
     m_camera(),
     m_param(),
-    m_maxPathDepth(1)
+    m_maxPathDepth(10),
+    m_maxSPP(50)
 {
 }
 
@@ -23,7 +24,7 @@ void Scene::OnInit(float aspect)
     m_camera = std::shared_ptr<Camera>(new Camera(fovY, aspect, nearZ, farZ, origin, target));
     if (m_pDevice->CreateConstantBuffer(m_pConstantBuffers, sizeof(SceneParam), L"SceneCB"))
     {
-        UpdateSceneParam();
+        UpdateSceneParam(0);
     }
 
     // モデルの初期設定
@@ -41,7 +42,7 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
     float deltaTime = float(currentFrame % fps) / float(fps);
 
     // カメラの更新
-    UpdateSceneParam();
+    UpdateSceneParam(currentFrame);
 
     // シーンバッファの書き込み
     UINT frameIndex = m_pDevice->GetCurrentFrameIndex();
@@ -49,7 +50,7 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
     m_pDevice->WriteBuffer(cb, &m_param, sizeof(SceneParam));
 
     // モデルの回転
-    m_modelActor->Rotate(deltaTime, 2.0f, Float3(0, 1, 0));
+    // m_modelActor->Rotate(deltaTime, 2.0f, Float3(0, 1, 0));
 }
 
 void Scene::OnDestroy()
@@ -114,14 +115,16 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
 /// <summary>
 /// シーンパラメータの更新
 /// </summary>
-void Scene::UpdateSceneParam()
+void Scene::UpdateSceneParam(UINT currentFrame)
 {
     m_param.viewMtx = m_camera->GetViewMatrix();
     m_param.projMtx = m_camera->GetProjMatrix();
     m_param.invViewMtx = XMMatrixInverse(nullptr, m_param.viewMtx);
     m_param.invProjMtx = XMMatrixInverse(nullptr, m_param.projMtx);
     m_param.frameIndex = m_pDevice->GetCurrentFrameIndex();
+    m_param.currentFrameNum = currentFrame;
     m_param.maxPathDepth = m_maxPathDepth;
+    m_param.maxSPP = m_maxSPP;
 }
 
 /// <summary>

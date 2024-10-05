@@ -15,13 +15,15 @@ public:
     void OnDestroy();
 
     void CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& instanceDescs);
-    void UpdateSceneParam();
+    void UpdateSceneParam(UINT currentFrame);
     uint8_t* WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize, ComPtr<ID3D12StateObject>& rtStateObject);
     void UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList);
 
     void SetMaxPathDepth(UINT maxPathDepth) { m_maxPathDepth = maxPathDepth;  }
+    void SetMaxSPP(UINT maxSPP) { m_maxSPP = maxSPP; }
 
     UINT GetMaxPathDepth() { return m_maxPathDepth; }
+    UINT GetMaxSPP() { return m_maxSPP; }
     Camera::CameraParam GetCameraParam() { return m_camera->GetParam(); }
     std::shared_ptr<Camera> GetCamera() { return m_camera; }
     ComPtr<ID3D12Resource> GetConstantBuffer();
@@ -36,7 +38,9 @@ public:
         Matrix invViewMtx;
         Matrix invProjMtx;
         UINT frameIndex;
+        UINT currentFrameNum;
         UINT maxPathDepth;
+        UINT maxSPP;
     };
 
 private:
@@ -46,6 +50,7 @@ private:
 private:
     SceneParam m_param;
     UINT m_maxPathDepth;
+    UINT m_maxSPP;
 
     std::shared_ptr<Camera> m_camera;
     // TODO: Ç‰Ç≠Ç‰Ç≠ÇÕï°êîåıåπÇ…ÇµÇΩÇ¢

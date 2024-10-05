@@ -693,6 +693,7 @@ void Renderer::InitImGui()
 
     m_imGuiParam.cameraPos = m_pScene->GetCamera()->GetPosition();
     m_imGuiParam.maxPathDepth = m_pScene->GetMaxPathDepth();
+    m_imGuiParam.maxSPP = m_pScene->GetMaxSPP();
 }
 void Renderer::UpdateImGui()
 {
@@ -712,11 +713,16 @@ void Renderer::UpdateImGui()
     // ”½ŽË‰ñ”
     m_imGuiParam.maxPathDepth = m_pScene->GetMaxPathDepth();
     ImGui::SliderInt("Max Path Depth", &m_imGuiParam.maxPathDepth, 1, 32);
+
+    // SPP
+    m_imGuiParam.maxSPP = m_pScene->GetMaxSPP();
+    ImGui::SliderInt("Max SPP", &m_imGuiParam.maxSPP, 1, 100);
     ImGui::End();
 
     // XV
     pCamera->SetPosition(m_imGuiParam.cameraPos);
     m_pScene->SetMaxPathDepth(m_imGuiParam.maxPathDepth);
+    m_pScene->SetMaxSPP(m_imGuiParam.maxSPP);
 }
 
 void Renderer::RenderImGui()

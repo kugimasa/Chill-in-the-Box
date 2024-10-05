@@ -95,22 +95,22 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     float3 worldPos = mul(float4(vtx.position, 1), worldMtx).xyz;
     float3 worldNorm = normalize(mul(vtx.normal, (float3x3) worldMtx));
-    
     payload.hitPos = worldPos;
-    payload.reflectDir = worldNorm;
     
     // TODO: テスト用ライト判定(ゆくゆくはMeshParamCBから取得)
     uint instanceID = InstanceID();
     if (instanceID == 1)
     {
-        // TODO: 光源にヒット、トレースを終了し輝度計算
-        payload.color *= float3(1, 1, 1);
+        // 光源にヒット、トレースを終了
+        payload.color += float3(1, 1, 1);
         payload.pathDepth = gSceneParam.maxPathDepth;
     }
     else
     {
-        // TODO: 再帰的にレイをトレース
-        float3 reflectance = GetAlbedo(vtx.texcoord);
-        payload.color *= reflectance;
+        float3 sampleDir = SampleHemisphereCos(payload.seed);
+        float3 reflectDir = normalize(ApplyZToN(sampleDir, worldNorm));
+        payload.reflectDir = reflectDir;
+        float3 reflectance = GetAlbedo(vtx.texcoord) * SampleBrdf(reflectDir, worldNorm);
+        payload.attenuation = reflectance / HemispherCosPdf(reflectDir, worldNorm);
     }
 }
