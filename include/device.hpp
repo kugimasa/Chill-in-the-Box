@@ -59,7 +59,7 @@ public:
     ComPtr<ID3D12Resource> CreateTexture2D(UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType);
     ComPtr<ID3D12Resource> CreateImageBuffer(ComPtr<ID3D12Resource> pSource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
     ComPtr<ID3D12Resource> InitializeBuffer(size_t size, const void* initData, D3D12_RESOURCE_FLAGS flags, D3D12_HEAP_TYPE heapType, const wchar_t* name = nullptr);
-    ComPtr<ID3D12RootSignature> CreateRootSignature(const std::vector<D3D12_ROOT_PARAMETER>& rootParams, const wchar_t* name = nullptr, const bool isLocal = false);
+    ComPtr<ID3D12RootSignature> CreateRootSignature(const std::vector<D3D12_ROOT_PARAMETER>& rootParams, const std::vector<D3D12_STATIC_SAMPLER_DESC>& samplerDesc, const wchar_t* name = nullptr, const bool isLocal = false);
     void WriteBuffer(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize);
     void WriteResource(ComPtr<ID3D12Resource> resource, const void* pData, size_t dataSize);
     bool CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources, UINT size, const wchar_t* name);

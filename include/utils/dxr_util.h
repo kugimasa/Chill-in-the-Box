@@ -96,3 +96,18 @@ inline D3D12_ROOT_PARAMETER& CreateRootParam(D3D12_ROOT_PARAMETER_TYPE paramType
     rootParam->Descriptor.RegisterSpace = registerSpace;
     return *rootParam;
 }
+
+inline CD3DX12_STATIC_SAMPLER_DESC& CreateStaticSamplerDesc(D3D12_FILTER filter, UINT shaderRegister, UINT registerSpace = 0)
+{
+    auto staticSamplerDesc = new CD3DX12_STATIC_SAMPLER_DESC{};
+    staticSamplerDesc->Init(
+        shaderRegister,
+        filter,
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP
+    );
+    staticSamplerDesc->RegisterSpace = registerSpace;
+    return *staticSamplerDesc;
+}
+

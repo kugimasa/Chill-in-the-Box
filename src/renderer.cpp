@@ -239,77 +239,6 @@ bool Renderer::InitGraphicDevice(HWND hwnd)
 }
 
 /// <summary>
-/// BLASの構築
-/// </summary>
-void Renderer::BuildBLAS()
-{
-    auto d3d12Device = m_pDevice->GetDevice();
-
-    // 頂点バッファの用意
-    Vertex vertices[] = {
-        XMFLOAT3(-0.5f, -0.5f, 0.0f),
-        XMFLOAT3(0.5f, -0.5f, 0.0f),
-        XMFLOAT3(0.0f, 0.75f, 0.0f),
-    };
-
-    // 頂点バッファの生成
-    auto vbSize = sizeof(vertices);
-    m_pVertexBuffer = m_pDevice->CreateBuffer(
-        vbSize,
-        D3D12_RESOURCE_FLAG_NONE,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        D3D12_HEAP_TYPE_UPLOAD
-    );
-    if (m_pVertexBuffer == nullptr)
-    {
-        Error(PrintInfoType::RTCAMP10, "頂点バッファの作成に失敗しました");
-    }
-    m_pDevice->WriteBuffer(m_pVertexBuffer, vertices, vbSize);
-
-    // BLASを作成
-    D3D12_RAYTRACING_GEOMETRY_DESC geomDesc{};
-    geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-    geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
-    geomDesc.Triangles.VertexBuffer.StartAddress = m_pVertexBuffer->GetGPUVirtualAddress();
-    geomDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
-    geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-    geomDesc.Triangles.VertexCount = _countof(vertices);
-
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc{};
-    auto& inputs = buildASDesc.Inputs; // D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
-    inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-    inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-    inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
-    inputs.NumDescs = 1;
-    inputs.pGeometryDescs = &geomDesc;
-
-    // BLAS関連のバッファを確保
-    auto blas = CreateASBuffers(m_pDevice, buildASDesc, L"BLAS");
-    auto blasScratch = blas.scratchBuffer;
-    m_pBLAS = blas.asBuffer;
-
-    // Acceleration Structure を構築
-    buildASDesc.ScratchAccelerationStructureData = blasScratch->GetGPUVirtualAddress();
-    buildASDesc.DestAccelerationStructureData = m_pBLAS->GetGPUVirtualAddress();
-    // コマンドを準備
-    auto commad = m_pDevice->CreateCommandList();
-    commad->BuildRaytracingAccelerationStructure(
-        &buildASDesc, 0, nullptr
-    );
-    // リソースバリアの設定
-    D3D12_RESOURCE_BARRIER uavBarrier{};
-    uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-    uavBarrier.UAV.pResource = m_pBLAS.Get();
-    commad->ResourceBarrier(1, &uavBarrier);
-    commad->Close();
-    // コマンドを実行 - BLAS構築
-    m_pDevice->ExecuteCommandList(commad);
-    // コマンドの完了を待機
-    m_pDevice->WaitForGpu();
-    Print(PrintInfoType::RTCAMP10, "BLAS構築 完了");
-}
-
-/// <summary>
 /// TLASの構築
 /// </summary>
 void Renderer::BuildTLAS()
@@ -416,25 +345,21 @@ void Renderer::CreateGlobalRootSignature()
 {
     std::vector<D3D12_ROOT_PARAMETER> rootParams{};
     D3D12_ROOT_PARAMETER rootParam{};
-    rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam.DescriptorTable.NumDescriptorRanges = 1;
+    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescs{};
+    D3D12_STATIC_SAMPLER_DESC samplerDesc{};
 
     // TLAS: t0
-    D3D12_DESCRIPTOR_RANGE descRangeTLAS{};
-    descRangeTLAS.BaseShaderRegister = 0;
-    descRangeTLAS.NumDescriptors = 1;
-    descRangeTLAS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    rootParam.DescriptorTable.pDescriptorRanges = &descRangeTLAS;
+    rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0);
     rootParams.push_back(rootParam);
     // SceneCB: b0
-    D3D12_ROOT_PARAMETER sceneCBParam{};
-    sceneCBParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    sceneCBParam.Descriptor.ShaderRegister = 0;
-    sceneCBParam.Descriptor.RegisterSpace = 0;
-    rootParams.push_back(sceneCBParam);
+    rootParam = CreateRootParam(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);
+    rootParams.push_back(rootParam);
+    // Sampler: s0
+    samplerDesc = CreateStaticSamplerDesc(D3D12_FILTER_MIN_MAG_MIP_LINEAR, 0);
+    samplerDescs.push_back(samplerDesc);
 
     // グローバルルートシグネチャの作成
-    m_pGlobalRootSignature = m_pDevice->CreateRootSignature(rootParams, L"GlobalRootSignature");
+    m_pGlobalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"GlobalRootSignature");
     Print(PrintInfoType::RTCAMP10, "グローバルルートシグネチャ作成 完了");
 }
 
@@ -445,19 +370,22 @@ void Renderer::CreateLocalRootSignature()
 {
     std::vector<D3D12_ROOT_PARAMETER> rootParams{};
     D3D12_ROOT_PARAMETER rootParam{};
+    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescs{};
 
     // RayGenシェーダー用のルートシグネチャ
     rootParams = {};
     rootParam = {};
+    samplerDescs = {};
     // OutputBuffer : u0
     rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0);
     rootParams.push_back(rootParam);
     // ローカルルートシグネチャの作成
-    m_pRayGenLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, L"LocalRootSignature:RayGen", /*isLocal*/ true);
+    m_pRayGenLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"LocalRootSignature:RayGen", /*isLocal*/ true);
     
     // ClosestHitシェーダー用のルートシグネチャ
     rootParams = {};
     rootParam = {};
+    samplerDescs = {};
     //// Register Space 1 ///
     // IB: t0
     rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 1);
@@ -477,13 +405,13 @@ void Renderer::CreateLocalRootSignature()
 
     /// Register Space 2 ///
     // DiffuseTex: t0
-    rootParam = CreateRootParam(D3D12_ROOT_PARAMETER_TYPE_SRV, 0, 2);
+    rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 2);
     rootParams.push_back(rootParam);
     // MeshParam: b0
     rootParam = CreateRootParam(D3D12_ROOT_PARAMETER_TYPE_CBV, 0, 2);
     rootParams.push_back(rootParam);
     // ローカルルートシグネチャの作成
-    m_pClosestHitLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, L"LocalRootSignature:ClosestHit", /*isLocal*/ true);
+    m_pClosestHitLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"LocalRootSignature:ClosestHit", /*isLocal*/ true);
 
     Print(PrintInfoType::RTCAMP10, "ローカルルートシグネチャ作成 完了");
 }
@@ -614,8 +542,8 @@ void Renderer::CreateShaderTable()
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // VB(POS): t1
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // VB(NORM): t2
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // VB(TEXCOORD): t3
-    //hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // BLAS UpdateBuffer: t4 ... ??
-    //hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // MaterialDiffuse: t0 ... ??
+    // hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // BLAS UpdateBuffer: t4 ... ??
+    // hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // MaterialDiffuse: t0 ... ??
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // CB: b0
     hitGroupRecordSize = ROUND_UP(hitGroupRecordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 

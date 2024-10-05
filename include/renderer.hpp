@@ -23,9 +23,6 @@ private:
     // デバイスの初期化関数
     bool InitGraphicDevice(HWND hwnd);
 
-    // BLASの構築
-    void BuildBLAS();
-
     // TLASの構築
     void BuildTLAS();
 
@@ -64,10 +61,6 @@ private:
     int m_maxFrame;
     std::wstring m_title;
     std::unique_ptr<Device> m_pDevice;
-
-    struct Vertex {
-        Float3 Position;
-    };
 
     std::shared_ptr<Scene> m_pScene;
 

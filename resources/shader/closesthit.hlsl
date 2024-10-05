@@ -55,6 +55,13 @@ float4x4 GetTLASMtx4x4()
     return tlasMtx;
 }
 
+float3 GetAlbedo(float2 uv)
+{
+    float3 diffuse = m_pMeshParamCB.diffuse.rgb;
+    diffuse *= m_textures.SampleLevel(gSampler, uv, 0).rgb;
+    return diffuse;
+}
+
 VertexAttrib GetHitVertexAttrib(Attributes attrib)
 {
     VertexAttrib v = (VertexAttrib) 0;
@@ -103,7 +110,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     else
     {
         // TODO: 再帰的にレイをトレース
-        float3 reflectance = float3(0.0, 0.3, 0.6) * m_pMeshParamCB.diffuse.xyz;
+        float3 reflectance = GetAlbedo(vtx.texcoord);
         payload.color *= reflectance * INV_PI;
     }
 }

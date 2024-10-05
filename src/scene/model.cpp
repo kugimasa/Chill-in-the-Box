@@ -281,7 +281,7 @@ void Model::LoadMesh(const tinygltf::Model& srcModel, VertexAttributeVisitor& vi
             }
 
             // UV0
-            if (auto attr = srcPrimitive.attributes.find("NORMAL"); attr != empty) {
+            if (auto attr = srcPrimitive.attributes.find("TEXCOORD_0"); attr != empty) {
                 auto& acc = srcModel.accessors[attr->second];
                 auto& view = srcModel.bufferViews[acc.bufferView];
                 auto offsetBytes = acc.byteOffset + view.byteOffset;

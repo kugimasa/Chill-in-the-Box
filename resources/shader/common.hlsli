@@ -26,6 +26,7 @@ struct SceneCB {
 // グローバルルートシグネチャ
 RaytracingAccelerationStructure gSceneBVH : register(t0);
 ConstantBuffer<SceneCB> gSceneParam : register(b0);
+SamplerState gSampler : register(s0);
 
 #define PI 3.14159265359
 #define INV_PI 0.318309886184
