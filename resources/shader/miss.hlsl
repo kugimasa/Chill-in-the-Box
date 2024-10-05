@@ -3,5 +3,6 @@
 [shader("miss")]
 void Miss(inout HitInfo payload)
 {
-    payload.color = float4(0.2, 0.2, 0.2, -1.0);
+    payload.color = float3(0.2, 0.2, 0.2);
+    payload.pathDepth = gSceneParam.maxPathDepth;
 }

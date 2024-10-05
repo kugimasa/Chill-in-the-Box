@@ -125,7 +125,6 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
              Actor::ActorMesh::MeshParam meshParam{};
              meshParam.diffuse = Float4{ diffuse.x, diffuse.y ,diffuse.z, 1 };
              meshParam.meshGroupIndex = i;
-             // MEMO: バックバッファーの数だけセットであっている...?
              meshParam.matrixBuffStride = UINT(m_meshes.size() * device->BackBufferCount);
              std::wstring meshParamCBName = m_name + L":MeshParam";
              mesh.m_pMeshParamCB = device->InitializeBuffer(

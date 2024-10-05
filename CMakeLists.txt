@@ -110,7 +110,7 @@ else()
     set(HLSL_FILES
         "${SHADER_DIR}/raygen.hlsl"
         "${SHADER_DIR}/miss.hlsl"
-        "${SHADER_DIR}/closethit.hlsl"
+        "${SHADER_DIR}/closesthit.hlsl"
     )
 
     foreach(HLSL_FILE ${HLSL_FILES})

@@ -19,6 +19,9 @@ public:
     uint8_t* WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize, ComPtr<ID3D12StateObject>& rtStateObject);
     void UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList);
 
+    void SetMaxPathDepth(UINT maxPathDepth) { m_maxPathDepth = maxPathDepth;  }
+
+    UINT GetMaxPathDepth() { return m_maxPathDepth; }
     Camera::CameraParam GetCameraParam() { return m_camera->GetParam(); }
     std::shared_ptr<Camera> GetCamera() { return m_camera; }
     ComPtr<ID3D12Resource> GetConstantBuffer();
@@ -32,6 +35,7 @@ public:
         Matrix invViewMtx;
         Matrix invProjMtx;
         UINT frameIndex;
+        UINT maxPathDepth;
     };
 
 private:
@@ -40,6 +44,8 @@ private:
 
 private:
     SceneParam m_param;
+    UINT m_maxPathDepth;
+
     std::shared_ptr<Camera> m_camera;
     // TODO: Ç‰Ç≠Ç‰Ç≠ÇÕï°êîåıåπÇ…ÇµÇΩÇ¢
     std::shared_ptr<Actor> m_lightActor;

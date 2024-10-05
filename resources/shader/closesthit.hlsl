@@ -80,11 +80,6 @@ VertexAttrib GetHitVertexAttrib(Attributes attrib)
 [shader("closesthit")]
 void ClosestHit(inout HitInfo payload, Attributes attrib)
 {
-    // TODO: 再起処理
-    //if (IsMaxRayDepth(payload))
-    //{
-    //    return;
-    //}
     VertexAttrib vtx = GetHitVertexAttrib(attrib);
     
     float4x4 blasMtx = GetBLASMtx4x4();
@@ -93,7 +88,22 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     float3 worldPos = mul(float4(vtx.position, 1), worldMtx).xyz;
     float3 worldNorm = normalize(mul(vtx.normal, (float3x3) worldMtx));
-
-    // ワールド法線を出力
-    payload.color = float4(worldNorm, 1.0);
+    
+    payload.hitPos = worldPos;
+    payload.reflectDir = worldNorm;
+    
+    // TODO: テスト用ライト判定(ゆくゆくはMeshParamCBから取得)
+    uint instanceID = InstanceID();
+    if (instanceID == 1)
+    {
+        // TODO: 光源にヒット、トレースを終了し輝度計算
+        payload.color *= float3(1, 1, 1);
+        payload.pathDepth = gSceneParam.maxPathDepth;
+    }
+    else
+    {
+        // TODO: 再帰的にレイをトレース
+        float3 reflectance = float3(0.0, 0.3, 0.6) * m_pMeshParamCB.diffuse.xyz;
+        payload.color *= reflectance * INV_PI;
+    }
 }

@@ -1,8 +1,10 @@
 // ペイロード
 struct HitInfo
 {
-    float4 color;
-    int rayDepth;
+    float3 hitPos;
+    float3 reflectDir;
+    float3 color;
+    uint pathDepth;
 };
 
 // レイヒット時のアトリビュート
@@ -13,33 +15,20 @@ struct Attributes
 
 // シーンパラメーター
 struct SceneCB {
-    matrix viewMtx; // ビュー行列
-    matrix projMtx; // プロジェクション行列
+    matrix viewMtx;    // ビュー行列
+    matrix projMtx;    // プロジェクション行列
     matrix invViewMtx; // ビュー逆行列
     matrix invProjMtx; // プロジェクション逆行列
-    uint frameIndex;
+    uint frameIndex;   // 描画中のフレームインデックス
+    uint maxPathDepth; // 最大反射回数
 };
 
 // グローバルルートシグネチャ
 RaytracingAccelerationStructure gSceneBVH : register(t0);
 ConstantBuffer<SceneCB> gSceneParam : register(b0);
 
-// TODO: コンパイル時定数として扱いたい
-//const int kMaxRayDepth = 15;
-//const float4 kBlackColor = float4(0, 0, 0, 1);
-//const float4 kWhiteColor = float4(1, 1, 1, 1);
-
-// 反射上限のチェック
-inline bool IsMaxRayDepth(inout HitInfo payload)
-{
-    payload.rayDepth++;
-    if (payload.rayDepth >= 15)
-    {
-        payload.color = float4(0, 0, 0, 1);
-        return true;
-    }
-    return false;
-}
+#define PI 3.14159265359
+#define INV_PI 0.318309886184
 
 inline float3 CalcHitAttrib(float3 vtxAttr[3], float2 bary)
 {

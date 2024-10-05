@@ -91,9 +91,17 @@ private:
 
     D3D12_DISPATCH_RAYS_DESC m_dispatchRayDesc;
 
+    struct HitInfo {
+        Float3 hitPos;
+        Float3 reflectDir;
+        Float3 color;
+        UINT rayDepth;
+    };
+
 #ifdef _DEBUG
     struct ImGuiParam {
         Float3 cameraPos;
+        int maxPathDepth;
     };
     ImGuiParam m_imGuiParam;
 #endif // _DEBUG

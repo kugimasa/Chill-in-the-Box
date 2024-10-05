@@ -3,7 +3,8 @@
 Scene::Scene(std::unique_ptr<Device>& device) :
     m_pDevice(device),
     m_camera(),
-    m_param()
+    m_param(),
+    m_maxPathDepth(1)
 {
 }
 
@@ -64,7 +65,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
         D3D12_RAYTRACING_INSTANCE_DESC desc{};
         auto mtxTrans = m_lightActor->GetWorldMatrix();
         XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
-        desc.InstanceID = 0;
+        desc.InstanceID = 1;
         desc.InstanceMask = 0xFF;
         desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
         desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
@@ -114,6 +115,7 @@ void Scene::UpdateSceneParam()
     m_param.invViewMtx = XMMatrixInverse(nullptr, m_param.viewMtx);
     m_param.invProjMtx = XMMatrixInverse(nullptr, m_param.projMtx);
     m_param.frameIndex = m_pDevice->GetCurrentFrameIndex();
+    m_param.maxPathDepth = m_maxPathDepth;
 }
 
 /// <summary>

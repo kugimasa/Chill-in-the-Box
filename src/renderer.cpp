@@ -541,9 +541,10 @@ void Renderer::CreateStateObject()
     chLocalRootSigExpAssoc->SetSubobjectToAssociate(*closesHitLocalRootSig);
 
     // レイトレーシングパイプライン用設定
-    const UINT MaxPayloadSize = sizeof(XMFLOAT4) + sizeof(UINT); // color(float4) / rayDepth(int)
-    const UINT MaxAttributeSize = sizeof(XMFLOAT2);              // bary(float2)
-    const UINT MaxRecursionDepth = 16;
+    // common.hlsliと揃える
+    const UINT MaxPayloadSize = sizeof(HitInfo);
+    const UINT MaxAttributeSize = sizeof(XMFLOAT2);
+    const UINT MaxRecursionDepth = 1; // 最大再帰段数
 
     // シェーダー設定
     auto rtShaderConfig = stateObjDesc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
@@ -744,6 +745,7 @@ void Renderer::InitImGui()
     );
 
     m_imGuiParam.cameraPos = m_pScene->GetCamera()->GetPosition();
+    m_imGuiParam.maxPathDepth = m_pScene->GetMaxPathDepth();
 }
 void Renderer::UpdateImGui()
 {
@@ -759,10 +761,15 @@ void Renderer::UpdateImGui()
     std::shared_ptr<Camera> pCamera = m_pScene->GetCamera();
     m_imGuiParam.cameraPos = pCamera->GetPosition();
     ImGui::SliderFloat3("CameraPos Z", &m_imGuiParam.cameraPos.x, -10.0, 10.0);
+
+    // 反射回数
+    m_imGuiParam.maxPathDepth = m_pScene->GetMaxPathDepth();
+    ImGui::SliderInt("Max Path Depth", &m_imGuiParam.maxPathDepth, 1, 32);
     ImGui::End();
 
     // 更新
     pCamera->SetPosition(m_imGuiParam.cameraPos);
+    m_pScene->SetMaxPathDepth(m_imGuiParam.maxPathDepth);
 }
 
 void Renderer::RenderImGui()
