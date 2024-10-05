@@ -374,3 +374,4 @@ external/libs
 
 # Scene Resources
 resources/scene
+resources/texture/*.hdr

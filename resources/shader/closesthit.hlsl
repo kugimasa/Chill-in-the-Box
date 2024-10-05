@@ -111,6 +111,6 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     {
         // TODO: 再帰的にレイをトレース
         float3 reflectance = GetAlbedo(vtx.texcoord);
-        payload.color *= reflectance * INV_PI;
+        payload.color *= reflectance;
     }
 }

@@ -122,9 +122,10 @@ void Renderer::OnRender()
 
     m_pCmdList->SetComputeRootSignature(m_pGlobalRootSignature.Get());
     m_pCmdList->SetComputeRootDescriptorTable(0, m_tlasDescHeap.gpuHandle);
+    // 背景テクスチャ
+    m_pCmdList->SetComputeRootDescriptorTable(1, m_pScene->GetBackgroundTex().srv.gpuHandle);
     // 定数バッファの設定
-    auto sceneCB = m_pScene->GetConstantBuffer();
-    m_pCmdList->SetComputeRootConstantBufferView(1, sceneCB->GetGPUVirtualAddress());
+    m_pCmdList->SetComputeRootConstantBufferView(2, m_pScene->GetConstantBuffer()->GetGPUVirtualAddress());
 
     // レイトレース結果をUAVへ
     auto barrierToUAV = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -350,6 +351,9 @@ void Renderer::CreateGlobalRootSignature()
 
     // TLAS: t0
     rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0);
+    rootParams.push_back(rootParam);
+    // BgTex: t1
+    rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1);
     rootParams.push_back(rootParam);
     // SceneCB: b0
     rootParam = CreateRootParam(D3D12_ROOT_PARAMETER_TYPE_CBV, 0);

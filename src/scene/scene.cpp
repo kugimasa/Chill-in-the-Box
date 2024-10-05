@@ -29,6 +29,9 @@ void Scene::OnInit(float aspect)
     // モデルの初期設定
     InitializeActors();
 
+    // 背景テクスチャのロード
+    m_bgTex = LoadHDRTexture(L"studio_small_09_4k.hdr", m_pDevice);
+
     Print(PrintInfoType::RTCAMP10, "シーン構築 完了");
 }
 

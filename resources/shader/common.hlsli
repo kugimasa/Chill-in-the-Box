@@ -14,7 +14,7 @@ struct Attributes
 };
 
 // シーンパラメーター
-struct SceneCB {
+struct SceneParam {
     matrix viewMtx;    // ビュー行列
     matrix projMtx;    // プロジェクション行列
     matrix invViewMtx; // ビュー逆行列
@@ -25,7 +25,8 @@ struct SceneCB {
 
 // グローバルルートシグネチャ
 RaytracingAccelerationStructure gSceneBVH : register(t0);
-ConstantBuffer<SceneCB> gSceneParam : register(b0);
+Texture2D<float4> gBgTex : register(t1);
+ConstantBuffer<SceneParam> gSceneParam : register(b0);
 SamplerState gSampler : register(s0);
 
 #define PI 3.14159265359
@@ -40,3 +41,12 @@ inline float3 CalcHitAttrib(float3 vtxAttr[3], float2 bary)
     return ret;
 }
 
+inline float2 CalcSphereUV(float3 dir)
+{
+    dir = normalize(dir);
+    float theta = atan2(dir.z, dir.x);
+    float phi = acos(dir.y);
+    float u = (theta + PI) * INV_PI * 0.5;
+    float v = phi * INV_PI;
+    return float2(u, v);
+}

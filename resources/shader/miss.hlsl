@@ -3,6 +3,7 @@
 [shader("miss")]
 void Miss(inout HitInfo payload)
 {
-    payload.color = float3(0.2, 0.2, 0.2);
+    float2 uv = CalcSphereUV(WorldRayDirection());
+    payload.color = gBgTex.SampleLevel(gSampler, uv, 0).rgb;
     payload.pathDepth = gSceneParam.maxPathDepth;
 }

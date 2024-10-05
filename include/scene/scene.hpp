@@ -25,6 +25,7 @@ public:
     Camera::CameraParam GetCameraParam() { return m_camera->GetParam(); }
     std::shared_ptr<Camera> GetCamera() { return m_camera; }
     ComPtr<ID3D12Resource> GetConstantBuffer();
+    TextureResource GetBackgroundTex() { return m_bgTex; }
     UINT GetTotalHitGroupCount();
 
 
@@ -52,6 +53,8 @@ private:
     std::shared_ptr<Actor> m_modelActor;
     std::shared_ptr<Actor> m_tableActor;
     std::unique_ptr<Device>& m_pDevice;
+
+    TextureResource m_bgTex;
 
     std::vector<ComPtr<ID3D12Resource>> m_pConstantBuffers;
 };
