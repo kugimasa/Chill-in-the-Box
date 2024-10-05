@@ -47,6 +47,9 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
     UINT frameIndex = m_pDevice->GetCurrentFrameIndex();
     auto cb = m_pConstantBuffers[frameIndex];
     m_pDevice->WriteBuffer(cb, &m_param, sizeof(SceneParam));
+
+    // ƒ‚ƒfƒ‹‚Ì‰ñ“]
+    m_modelActor->Rotate(deltaTime, 2.0f, Float3(0, 1, 0));
 }
 
 void Scene::OnDestroy()
@@ -207,7 +210,6 @@ void Scene::InstantiateActor(std::shared_ptr<Actor>& actor, const std::wstring f
     actor = model->InstantiateActor(m_pDevice);
     actor->SetMaterialHitGroup(hitGroup);
     // ‰ŠúˆÊ’uÝ’è
-    auto transMtx = XMMatrixTranslation(pos.x, pos.y, pos.z);
-    actor->SetWorldMatrix(transMtx);
+    actor->SetWorldPos(pos);
     actor->UpdateMatrices();
 }

@@ -47,7 +47,7 @@ static Vector DoubleToVector4(const double* v)
     return XMLoadFloat4(&vec4);
 }
 
-static Matrix IdentityMat()
+static Matrix IdentityMtx()
 {
     return XMMatrixIdentity();
 }

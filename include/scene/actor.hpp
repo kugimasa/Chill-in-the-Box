@@ -126,7 +126,8 @@ public:
         friend class Model;
         friend class Actor;
     };
-    Matrix GetRotatedMtx(float deltaTime, float speed, Float3 up);
+    void Rotate(float deltaTime, float speed, Float3 up);
+    void SetWorldPos(Float3 worldPos);
     void SetWorldMatrix(Matrix worldMtx) { m_worldMtx = worldMtx; }
     void SetMaterialHitGroup(const std::wstring& hitGroupName);
     // 各ノードの行列を更新
@@ -154,6 +155,7 @@ private:
     void CreateBLAS();
     void CreateRTGeoDesc(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& rtGeoDesc);
     
+    Float3 m_worldPos;
     Matrix m_worldMtx;
     const Model* m_modelRef;
     std::vector<std::shared_ptr<ActorNode>> m_nodes;

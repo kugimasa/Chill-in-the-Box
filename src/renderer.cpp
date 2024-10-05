@@ -31,11 +31,11 @@ Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFr
 void Renderer::OnInit()
 {
     Print(PrintInfoType::RTCAMP10, "=======RTCAMP10=======");
+    // アプリケーションの時間計測開始
+    m_startTime = std::chrono::system_clock::now();
+
     // グラフィックデバイスの初期化
     if (!InitGraphicDevice(Window::GetHWND())) return;
-
-    // BLASの構築
-    // BuildBLAS();
 
     // シーンの初期化
     // 初期化関数内でBLASの構築
@@ -89,6 +89,13 @@ void Renderer::OnRender()
     // 最後のフレームが描画されたら終了
     if (m_maxFrame > 0 && m_currentFrame >= m_maxFrame)
     {
+        // アプリケーションの時間計測開始
+        m_endTime = std::chrono::system_clock::now();
+        // 経過時間の算出
+        double elapsed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(m_endTime - m_startTime).count();
+        std::wstringstream timeWSS;
+        timeWSS << L"Total time: " << elapsed * 0.001 << L"(sec)";
+        Print(PrintInfoType::RTCAMP10, timeWSS.str());
         // 終了処理
         Print(PrintInfoType::RTCAMP10, "======================");
 #ifdef _DEBUG
@@ -99,10 +106,11 @@ void Renderer::OnRender()
 #endif
         return;
     }
-    if (m_maxFrame > 0)
-    {
-        Print(PrintInfoType::RTCAMP10, "Frame: ", m_currentFrame);
-    }
+    // chrono変数
+    std::chrono::system_clock::time_point start, end;
+    // 時間計測開始
+    start = std::chrono::system_clock::now();
+
     auto d3d12Device = m_pDevice->GetDevice();
     auto renderTarget = m_pDevice->GetRenderTarget();
     auto allocator = m_pDevice->GetCurrentCommandAllocator();
@@ -200,6 +208,13 @@ void Renderer::OnRender()
         // 画像の出力
         OutputImage(imageBuffer);
     }
+    // 時間計測終了
+    end = std::chrono::system_clock::now();
+    // 経過時間の算出
+    double elapsed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::ostringstream timeOSS;
+    timeOSS << "Frame: " << std::setw(3) << std::setfill('0') << m_currentFrame << " | " << elapsed * 0.001 << "(sec)";
+    Print(PrintInfoType::RTCAMP10, timeOSS.str().c_str());
     // フレームの更新
     m_currentFrame++;
 }

@@ -15,8 +15,8 @@ m_name(L""),
 m_trans(ZeroVector()),
 m_scale(Vector4(1.0f, 1.0f, 1.0f, 0.0f)),
 m_rot(IdentityQuat()),
-m_localMtx(IdentityMat()),
-m_worldMtx(IdentityMat()),
+m_localMtx(IdentityMtx()),
+m_worldMtx(IdentityMtx()),
 m_parent(nullptr)
 {
 }
@@ -89,7 +89,7 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
          }
      }
 
-     actor->SetWorldMatrix(IdentityMat());
+     actor->SetWorldMatrix(IdentityMtx());
      actor->UpdateMatrices();
 
      // 行列バッファの確保

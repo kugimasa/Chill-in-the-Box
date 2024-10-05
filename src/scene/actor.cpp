@@ -6,8 +6,8 @@ Actor::ActorNode::ActorNode()
     m_trans = ZeroVector();
     m_rot = IdentityQuat();
     m_scale = ZeroVector();
-    m_localMtx = IdentityMat();
-    m_worldMtx = IdentityMat();
+    m_localMtx = IdentityMtx();
+    m_worldMtx = IdentityMtx();
 }
 
 Actor::ActorNode::~ActorNode()
@@ -85,10 +85,11 @@ void Actor::ActorMaterial::SetTexture(TextureResource& texRes)
 }
 
 Actor::Actor(std::unique_ptr<Device>& device, const Model* model) :
-    m_pDevice(device)
+    m_pDevice(device),
+    m_modelRef(model),
+    m_worldMtx(IdentityMtx()),
+    m_worldPos(Float3(0, 0, 0))
 {
-    m_worldMtx = IdentityMat();
-    m_modelRef = model;
 }
 
 Actor::~Actor()
@@ -97,12 +98,21 @@ Actor::~Actor()
 }
 
 /// <summary>
-/// âÒì]çsóÒ
+/// âÒì]èàóù
 /// </summary>
-Matrix Actor::GetRotatedMtx(float deltaTime, float speed, Float3 up)
+void Actor::Rotate(float deltaTime, float speed, Float3 up)
 {
     float theta = deltaTime * speed * XM_2PI;
-    return XMMatrixRotationAxis(XMLoadFloat3(&up), theta);
+    auto rotMtx = XMMatrixRotationAxis(XMLoadFloat3(&up), theta);
+    auto transMtx = XMMatrixTranslation(m_worldPos.x, m_worldPos.y, m_worldPos.z);;
+    m_worldMtx = rotMtx * transMtx;
+}
+
+void Actor::SetWorldPos(Float3 worldPos)
+{
+    m_worldPos = worldPos;
+    auto transMtx = XMMatrixTranslation(m_worldPos.x, m_worldPos.y, m_worldPos.z);
+    m_worldMtx = transMtx;
 }
 
 void Actor::SetMaterialHitGroup(const std::wstring& hitGroupName)

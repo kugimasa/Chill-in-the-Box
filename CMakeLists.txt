@@ -48,7 +48,7 @@ include_directories(external/DirectXTex)
 
 # 出力ディレクトリの定義
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-                            OUTPUT_DIR="${CMAKE_BINARY_DIR}/"
+                            OUTPUT_DIR="./"
                             )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

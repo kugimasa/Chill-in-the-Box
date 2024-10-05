@@ -91,6 +91,9 @@ private:
         UINT rayDepth;
     };
 
+    std::chrono::system_clock::time_point m_startTime;
+    std::chrono::system_clock::time_point m_endTime;
+
 #ifdef _DEBUG
     struct ImGuiParam {
         Float3 cameraPos;
