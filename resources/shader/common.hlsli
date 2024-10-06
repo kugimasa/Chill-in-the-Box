@@ -55,28 +55,15 @@ inline float2 CalcSphereUV(float3 dir)
     return float2(u, v);
 }
 
-// (c) 2014 M.E. O'Neill / pcg-random.org
-// Licensed under Apache License 2.0
-inline uint PCGRandom(inout uint seed)
-{
-    uint oldstate = seed;
-    seed = oldstate * 6364136223846793005u + 3u;
-    uint xorshifted = uint((oldstate >> 18u) ^ oldstate >> 27u);
-    uint rot = oldstate >> 59u;
-    return (xorshifted >> rot) | (xorshifted << ((-rot) & 31u));
-}
-
-inline void InitPCG(inout uint seed)
-{
-    uint initState = 0u;
-    PCGRandom(initState);
-    seed += seed;
-    PCGRandom(seed);
-}
-
+// https://en.wikipedia.org/wiki/Xorshift
 inline float Rand(inout uint seed)
 {
-    return float(PCGRandom(seed)) / 4294967296.0;
+    uint rnd = seed;
+    rnd ^= rnd << 13;
+    rnd ^= rnd >> 7;
+    rnd ^= rnd << 5;
+    seed = rnd;
+    return (float) (rnd & 0x00FFFFFF) / (float) 0x01000000;
 }
 
 inline float3 SampleHemisphereCos(in uint seed)
