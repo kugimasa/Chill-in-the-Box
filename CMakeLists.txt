@@ -87,7 +87,7 @@ else()
     )
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE
-                               RESOURCE_DIR="${CMAKE_BINARY_DIR}/resources"
+                               RESOURCE_DIR="./resources"
                                )
 
     message("シェーダーコンパイル")

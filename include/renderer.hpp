@@ -14,6 +14,7 @@ public:
     void OnRender();
     void OnDestroy();
 
+    bool GetIsRunning() const{ return m_isRunning; }
     UINT GetWidth() const { return m_width; }
     UINT GetHeight() const { return m_height; }
     float GetAspect() const { return float(m_width) / float(m_height); }
@@ -55,6 +56,7 @@ private:
 
 private:
 
+    bool m_isRunning;
     UINT m_width;
     UINT m_height;
     int m_currentFrame;

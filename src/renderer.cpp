@@ -16,6 +16,7 @@ using namespace DirectX;
 using namespace fpng;
 
 Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFrame) :
+    m_isRunning(false),
     m_width(width),
     m_height(height),
     m_currentFrame(0),
@@ -31,6 +32,7 @@ Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFr
 void Renderer::OnInit()
 {
     Print(PrintInfoType::RTCAMP10, "=======RTCAMP10=======");
+    m_isRunning = true;
     // アプリケーションの時間計測開始
     m_startTime = std::chrono::system_clock::now();
 
@@ -234,6 +236,7 @@ void Renderer::OnDestroy()
         m_pDevice->OnDestroy();
     }
     m_pDevice.reset();
+    m_isRunning = false;
 }
 
 bool Renderer::InitGraphicDevice(HWND hwnd)
@@ -251,6 +254,7 @@ bool Renderer::InitGraphicDevice(HWND hwnd)
         Error(PrintInfoType::RTCAMP10, "スワップチェインの作成に失敗しました");
         return false;
     }
+    Print(PrintInfoType::RTCAMP10, "デバイスの初期化 完了");
     return true;
 }
 
