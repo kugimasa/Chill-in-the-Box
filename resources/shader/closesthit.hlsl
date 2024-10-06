@@ -141,8 +141,8 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     // 光源サンプリング
     SampledLightInfo lightInfo = SampleLightInfo(payload.seed);
     float3 lightDir = normalize(lightInfo.pos - worldPos);
-    float lightDist = length(worldPos - lightInfo.pos);
-    // 光源方向へレイトレースして、光源と接続できた場合
+    float lightDist = length(lightInfo.pos - worldPos);
+    // 光源方向へレイトレースして、光源と接続できた場合に寄与の計算
     if (!TraceShadowRay(worldPos, lightDir, lightDist, payload.seed))
     {
         // 幾何項の計算
@@ -151,18 +151,16 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         float G = (cos1 * cos2) / (lightDist * lightDist);
         float3 wi = normalize(ApplyZToN(-WorldRayDirection(), worldNorm));
         float3 wo = normalize(ApplyZToN(lightDir, worldNorm));
-        payload.color += (payload.attenuation * SampleBrdf(wi, wo) * G * lightInfo.intensity) / LightSamplingPdf();
+        payload.color += (payload.attenuation * CalcCos(wi, wo) * G / LightSamplingPdf()) * lightInfo.intensity;
         payload.pathDepth = gSceneParam.maxPathDepth;
     }
-    // 寄与の計算
     else
     {
         // 方向をサンプリング
         float3 sampleDir = SampleHemisphereCos(payload.seed);
-        float3 wi = normalize(ApplyZToN(-WorldRayDirection(), worldNorm));
-        float3 wo = normalize(ApplyZToN(sampleDir, worldNorm));
-        payload.reflectDir = wo;
-        float3 reflectance = GetAlbedo(vtx.texcoord) * SampleBrdf(wi, wo);
-        payload.attenuation *= (reflectance / HemispherCosPdf(wo, worldNorm));
+        float3 reflectDir= normalize(ApplyZToN(sampleDir, worldNorm));
+        payload.reflectDir = reflectDir;
+        float3 reflectance = GetAlbedo(vtx.texcoord) * CalcCos(worldNorm, reflectDir);
+        payload.attenuation *= (reflectance / HemisphereCosPdf(worldNorm, reflectDir));
     }
 }

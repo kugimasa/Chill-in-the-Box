@@ -152,13 +152,13 @@ inline SampledLightInfo SampleLightInfo(in uint seed)
 }
 
 // TODO: ƒ}ƒeƒŠƒAƒ‹‚ÌŽÀ‘•
-inline float SampleBrdf(float3 inDir, float3 outDir)
+inline float CalcCos(float3 inDir, float3 outDir)
 {
     float cos = dot(inDir, outDir);
     return (cos < 0.0) ? 0 : INV_PI * cos;
 }
 
-inline float HemispherCosPdf(float3 dir, float3 norm)
+inline float HemisphereCosPdf(float3 dir, float3 norm)
 {
     float cos = dot(normalize(dir), norm);
     return (cos <= 0.0) ? 1 : INV_PI * cos;
