@@ -1,1 +1,1 @@
-.\rtcamp10.exe --frame 300
+.\rtcamp10.exe --frame 600
