@@ -30,6 +30,14 @@ public:
     TextureResource GetBackgroundTex() { return m_bgTex; }
     UINT GetTotalHitGroupCount() { return m_totalHitGroupCount; }
 
+    struct SphereLightParam
+    {
+        Float3 center;
+        float radius;
+        Float3 color;
+        float intensity;
+    };
+
     struct SceneParam
     {
         Matrix viewMtx;
@@ -40,6 +48,9 @@ public:
         UINT currentFrameNum;
         UINT maxPathDepth;
         UINT maxSPP;
+        SphereLightParam light1;
+        SphereLightParam light2;
+        SphereLightParam light3;
     };
 
 private:
@@ -55,7 +66,14 @@ private:
 
     std::shared_ptr<Camera> m_camera;
     std::shared_ptr<Actor> m_sphereLight1;
+    std::shared_ptr<Actor> m_sphereLight2;
+    std::shared_ptr<Actor> m_sphereLight3;
     std::shared_ptr<Actor> m_planeBottom;
+    std::shared_ptr<Actor> m_planeTop;
+    std::shared_ptr<Actor> m_planeRight;
+    std::shared_ptr<Actor> m_planeLeft;
+    std::shared_ptr<Actor> m_planeFront;
+    std::shared_ptr<Actor> m_planeBack;
     std::shared_ptr<Actor> m_modelActor;
     std::shared_ptr<Actor> m_tableActor;
     std::unique_ptr<Device>& m_pDevice;

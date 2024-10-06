@@ -104,7 +104,15 @@ void Actor::Rotate(float deltaTime, float speed, Float3 up)
 {
     float theta = deltaTime * speed * XM_2PI;
     auto rotMtx = XMMatrixRotationAxis(XMLoadFloat3(&up), theta);
-    auto transMtx = XMMatrixTranslation(m_worldPos.x, m_worldPos.y, m_worldPos.z);;
+    auto transMtx = XMMatrixTranslation(m_worldPos.x, m_worldPos.y, m_worldPos.z);
+    m_worldMtx = rotMtx * transMtx;
+}
+
+void Actor::SetRotaion(float degree, Float3 up)
+{
+    float radian = XMConvertToRadians(degree);
+    auto rotMtx = XMMatrixRotationAxis(XMLoadFloat3(&up), radian);
+    auto transMtx = XMMatrixTranslation(m_worldPos.x, m_worldPos.y, m_worldPos.z);
     m_worldMtx = rotMtx * transMtx;
 }
 

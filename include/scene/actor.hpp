@@ -127,6 +127,7 @@ public:
         friend class Actor;
     };
     void Rotate(float deltaTime, float speed, Float3 up);
+    void SetRotaion(float degree, Float3 up);
     void SetWorldPos(Float3 worldPos);
     void SetWorldMatrix(Matrix worldMtx) { m_worldMtx = worldMtx; }
     void SetMaterialHitGroup(const std::wstring& hitGroupName);

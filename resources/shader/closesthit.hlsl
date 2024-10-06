@@ -98,11 +98,21 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     payload.hitPos = worldPos;
     
     // TODO: テスト用ライト判定(ゆくゆくはMeshParamCBから取得)
+    // 光源にヒット、トレースを終了
     uint instanceID = InstanceID();
     if (instanceID == 1)
     {
-        // 光源にヒット、トレースを終了
-        payload.color += float3(1, 1, 1);
+        payload.color += gSceneParam.light1.color * gSceneParam.light1.intensity;
+        payload.pathDepth = gSceneParam.maxPathDepth;
+    }
+    else if (instanceID == 2)
+    {
+        payload.color += gSceneParam.light2.color * gSceneParam.light2.intensity;
+        payload.pathDepth = gSceneParam.maxPathDepth;
+    }
+    else if (instanceID == 3)
+    {
+        payload.color += gSceneParam.light3.color * gSceneParam.light3.intensity;
         payload.pathDepth = gSceneParam.maxPathDepth;
     }
     else

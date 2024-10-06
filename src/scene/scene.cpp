@@ -5,7 +5,7 @@ Scene::Scene(std::unique_ptr<Device>& device) :
     m_camera(),
     m_param(),
     m_maxPathDepth(10),
-    m_maxSPP(500),
+    m_maxSPP(1),
     m_totalHitGroupCount(0)
 {
 }
@@ -72,29 +72,49 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
     UINT instanceHitGroupOffset = 0;
     // ライト
     {
-        D3D12_RAYTRACING_INSTANCE_DESC desc{};
-        auto mtxTrans = m_sphereLight1->GetWorldMatrix();
-        XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
-        desc.InstanceID = 1;
-        desc.InstanceMask = 0xFF;
-        desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
-        desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-        desc.AccelerationStructure = m_sphereLight1->GetBLAS()->GetGPUVirtualAddress();
-        instanceDescs.push_back(desc);
-        instanceHitGroupOffset += m_sphereLight1->GetTotalMeshCount();
+        auto lights =
+        {
+            m_sphereLight1,
+            m_sphereLight2,
+            m_sphereLight3
+        };
+        UINT lightInstanceID = 1;
+        for (auto& light : lights)
+        {
+            D3D12_RAYTRACING_INSTANCE_DESC desc{};
+            auto mtxTrans = light->GetWorldMatrix();
+            XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
+            desc.InstanceID = lightInstanceID;
+            desc.InstanceMask = 0xFF;
+            desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
+            desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+            desc.AccelerationStructure = light->GetBLAS()->GetGPUVirtualAddress();
+            instanceDescs.push_back(desc);
+            instanceHitGroupOffset += light->GetTotalMeshCount();
+            lightInstanceID++;
+        }
     }
     // 背景
     {
-        D3D12_RAYTRACING_INSTANCE_DESC desc{};
-        auto mtxTrans = m_planeBottom->GetWorldMatrix();
-        XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
-        desc.InstanceID = 0;
-        desc.InstanceMask = 0xFF;
-        desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
-        desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-        desc.AccelerationStructure = m_planeBottom->GetBLAS()->GetGPUVirtualAddress();
-        instanceDescs.push_back(desc);
-        instanceHitGroupOffset += m_planeBottom->GetTotalMeshCount();
+        auto planes =
+        { 
+            m_planeBottom, m_planeTop,
+            m_planeRight, m_planeLeft,
+            m_planeFront, m_planeBack
+        };
+        for (auto& plane : planes)
+        {
+            D3D12_RAYTRACING_INSTANCE_DESC desc{};
+            auto mtxTrans = plane->GetWorldMatrix();
+            XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
+            desc.InstanceID = 0;
+            desc.InstanceMask = 0xFF;
+            desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
+            desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+            desc.AccelerationStructure = plane->GetBLAS()->GetGPUVirtualAddress();
+            instanceDescs.push_back(desc);
+            instanceHitGroupOffset += plane->GetTotalMeshCount();
+        }
     }
     // テーブル
     {
@@ -186,12 +206,47 @@ ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
 /// </summary>
 void Scene::InitializeActors()
 {
-    // 光源
-    InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", Float3(-1, 6, 0));
+    // ライト1 赤
+    Float3 light1Pos = Float3(-2, 6, 0);
+    Float3 light1Color = Float3(1, 0, 0);
+    SphereLightParam light1Param(light1Pos, 0.2, light1Color, 10.0);
+    m_param.light1 = light1Param;
+    InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", light1Pos);
     m_actors.push_back(m_sphereLight1);
+    // ライト2 青
+    Float3 light2Pos = Float3(2, 6, 0);
+    Float3 light2Color = Float3(0, 1, 0);
+    SphereLightParam light2Param(light2Pos, 0.2, light2Color, 10.0);
+    m_param.light2 = light2Param;
+    InstantiateActor(m_sphereLight2, L"sphere.glb", L"Actor", light2Pos);
+    m_actors.push_back(m_sphereLight2);
+    // ライト3 緑
+    Float3 light3Pos = Float3(0, 6, 3);
+    Float3 light3Color = Float3(0, 0, 1);
+    SphereLightParam light3Param(light3Pos, 0.2, light3Color, 10.0);
+    m_param.light3 = light3Param;
+    InstantiateActor(m_sphereLight3, L"sphere.glb", L"Actor", light3Pos);
+    m_actors.push_back(m_sphereLight3);
+
     // 背景
     InstantiateActor(m_planeBottom, L"plane.glb", L"Actor", Float3(0, 0, 0));
     m_actors.push_back(m_planeBottom);
+    InstantiateActor(m_planeTop, L"plane.glb", L"Actor", Float3(0, 10, 0));
+    m_planeTop->SetRotaion(180, Float3(1, 0, 0));
+    m_actors.push_back(m_planeTop);
+    InstantiateActor(m_planeRight, L"plane.glb", L"Actor", Float3(5, 5, 0));
+    m_planeRight->SetRotaion(90, Float3(0, 0, 1));
+    m_actors.push_back(m_planeRight);
+    InstantiateActor(m_planeLeft, L"plane.glb", L"Actor", Float3(-5, 5, 0));
+    m_planeLeft->SetRotaion(-90, Float3(0, 0, 1));
+    m_actors.push_back(m_planeLeft);
+    InstantiateActor(m_planeFront, L"plane.glb", L"Actor", Float3(0, 5, -5));
+    m_planeFront->SetRotaion(90, Float3(1, 0, 0));
+    m_actors.push_back(m_planeFront);
+    InstantiateActor(m_planeBack, L"plane.glb", L"Actor", Float3(0, 5, 5));
+    m_planeBack->SetRotaion(-90, Float3(1, 0, 0));
+    m_actors.push_back(m_planeBack);
+
     // テーブル
     InstantiateActor(m_tableActor, L"round_table.glb", L"Actor", Float3(0, 0, 0));
     m_actors.push_back(m_tableActor);
