@@ -92,7 +92,8 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
     catch (std::exception& e)
     {
         renderer->OnDestroy();
-        Error(PrintInfoType::RTCAMP10, "ウィンドウの作成に失敗しました", e.what());
+        std::wstring err = L"エラー終了: " + StrToWStr(std::string(e.what()));
+        Error(PrintInfoType::RTCAMP10, err);
         return EXIT_FAILURE;
     }
 }

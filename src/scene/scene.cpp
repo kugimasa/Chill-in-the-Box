@@ -33,7 +33,7 @@ void Scene::OnInit(float aspect)
     // 背景テクスチャのロード
     m_bgTex = LoadHDRTexture(L"studio_small_09_4k.hdr", m_pDevice);
 
-    Print(PrintInfoType::RTCAMP10, "シーン構築 完了");
+    Print(PrintInfoType::RTCAMP10, L"シーン構築 完了");
 }
 
 void Scene::OnUpdate(int currentFrame, int maxFrame)

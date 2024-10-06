@@ -31,7 +31,7 @@ Renderer::Renderer(UINT width, UINT height, const std::wstring& title, int maxFr
 
 void Renderer::OnInit()
 {
-    Print(PrintInfoType::RTCAMP10, "=======RTCAMP10=======");
+    Print(PrintInfoType::RTCAMP10, L"=======RTCAMP10=======");
     m_isRunning = true;
     // アプリケーションの時間計測開始
     m_startTime = std::chrono::system_clock::now();
@@ -99,7 +99,7 @@ void Renderer::OnRender()
         timeWSS << L"Total time: " << elapsed * 0.001 << L"(sec)";
         Print(PrintInfoType::RTCAMP10, timeWSS.str());
         // 終了処理
-        Print(PrintInfoType::RTCAMP10, "======================");
+        Print(PrintInfoType::RTCAMP10, L"======================");
 #ifdef _DEBUG
         auto hwnd = Window::GetHWND();
         PostMessage(hwnd, WM_QUIT, 0, 0);
@@ -216,7 +216,7 @@ void Renderer::OnRender()
     double elapsed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::ostringstream timeOSS;
     timeOSS << "Frame: " << std::setw(3) << std::setfill('0') << m_currentFrame << " | " << elapsed * 0.001 << "(sec)";
-    Print(PrintInfoType::RTCAMP10, timeOSS.str().c_str());
+    Print(PrintInfoType::RTCAMP10, StrToWStr(timeOSS.str()).c_str());
     // フレームの更新
     m_currentFrame++;
 }
@@ -245,16 +245,16 @@ bool Renderer::InitGraphicDevice(HWND hwnd)
     // グラフィックデバイスの初期化
     if (!m_pDevice->OnInit())
     {
-        Error(PrintInfoType::RTCAMP10, "グラフィックデバイスの初期化に失敗しました");
+        Error(PrintInfoType::RTCAMP10, L"グラフィックデバイスの初期化に失敗しました");
         return false;
     }
     // スワップチェインの作成
     if (!m_pDevice->CreateSwapChain(GetWidth(), GetHeight(), hwnd))
     {
-        Error(PrintInfoType::RTCAMP10, "スワップチェインの作成に失敗しました");
+        Error(PrintInfoType::RTCAMP10, L"スワップチェインの作成に失敗しました");
         return false;
     }
-    Print(PrintInfoType::RTCAMP10, "デバイスの初期化 完了");
+    Print(PrintInfoType::RTCAMP10, L"デバイスの初期化 完了");
     return true;
 }
 
@@ -321,7 +321,7 @@ void Renderer::BuildTLAS()
     // コマンドの完了を待機
     m_pDevice->WaitForGpu();
 
-    Print(PrintInfoType::RTCAMP10, "TLAS構築 完了");
+    Print(PrintInfoType::RTCAMP10, L"TLAS構築 完了");
 }
 
 void Renderer::UpdateTLAS()
@@ -383,7 +383,7 @@ void Renderer::CreateGlobalRootSignature()
 
     // グローバルルートシグネチャの作成
     m_pGlobalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"GlobalRootSignature");
-    Print(PrintInfoType::RTCAMP10, "グローバルルートシグネチャ作成 完了");
+    Print(PrintInfoType::RTCAMP10, L"グローバルルートシグネチャ作成 完了");
 }
 
 /// <summary>
@@ -436,7 +436,7 @@ void Renderer::CreateLocalRootSignature()
     // ローカルルートシグネチャの作成
     m_pClosestHitLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"LocalRootSignature:ClosestHit", /*isLocal*/ true);
 
-    Print(PrintInfoType::RTCAMP10, "ローカルルートシグネチャ作成 完了");
+    Print(PrintInfoType::RTCAMP10, L"ローカルルートシグネチャ作成 完了");
 }
 
 /// <summary>
@@ -512,9 +512,10 @@ void Renderer::CreateStateObject()
     ); 
     if (FAILED(hr))
     {
-        Error(PrintInfoType::RTCAMP10, "ステートオブジェクトの構築に失敗しました: ", hr);
+        std::wstring err = L"ステートオブジェクトの構築に失敗しました: " + (int)hr;
+        Error(PrintInfoType::RTCAMP10, err);
     }
-    Print(PrintInfoType::RTCAMP10, "ステートオブジェクトの構築 完了");
+    Print(PrintInfoType::RTCAMP10, L"ステートオブジェクトの構築 完了");
 }
 
 /// <summary>
@@ -538,7 +539,7 @@ void Renderer::CreateOutputBuffer()
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     m_outputBufferDescHeap = m_pDevice->CreateUAV(m_pOutputBuffer.Get(), &uavDesc);
-    Print(PrintInfoType::RTCAMP10, "出力用バッファ(UAV)の作成 完了");
+    Print(PrintInfoType::RTCAMP10, L"出力用バッファ(UAV)の作成 完了");
 }
 
 /// <summary>
@@ -595,7 +596,7 @@ void Renderer::CreateShaderTable()
     ComPtr<ID3D12StateObjectProperties> pRTStateObjectProps;
     if (m_pRTStateObject == nullptr)
     {
-        Error(PrintInfoType::RTCAMP10, "ステートオブジェクトが存在しません");
+        Error(PrintInfoType::RTCAMP10, L"ステートオブジェクトが存在しません");
     }
     m_pRTStateObject.As(&pRTStateObjectProps);
 
@@ -640,7 +641,7 @@ void Renderer::CreateShaderTable()
         recordStart = m_pScene->WriteHitGroupShaderRecord(recordStart, hitGroupRecordSize, m_pRTStateObject);
     }
     m_pShaderTable->Unmap(0, nullptr);
-    Print(PrintInfoType::RTCAMP10, "シェーダーテーブル作成 完了");
+    Print(PrintInfoType::RTCAMP10, L"シェーダーテーブル作成 完了");
 
     // DispatchRays用の情報をセット
     auto& dispatchRayDesc = m_dispatchRayDesc;
@@ -665,7 +666,7 @@ void Renderer::CreateShaderTable()
     dispatchRayDesc.Width = GetWidth();
     dispatchRayDesc.Height = GetHeight();
     dispatchRayDesc.Depth = 1;
-    Print(PrintInfoType::RTCAMP10, "DispatchRayDesc設定 完了");
+    Print(PrintInfoType::RTCAMP10, L"DispatchRayDesc設定 完了");
 }
 
 void Renderer::OutputImage(ComPtr<ID3D12Resource> imageBuffer)

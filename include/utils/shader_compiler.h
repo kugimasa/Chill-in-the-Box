@@ -108,7 +108,8 @@ std::vector<char> inline LoadPreCompiledShaderLibrary(const fs::path& shaderLibP
     // シェーダーロード
     std::ifstream file(shaderLibPath, std::ios::binary);
     if (!file.is_open()) {
-        Error(PrintInfoType::RTCAMP10, "シェーダーライブラリの読み込みに失敗しました :", shaderLibPath);
+        std::wstring err = L"シェーダーライブラリの読み込みに失敗しました :" + StrToWStr(shaderLibPath.string());
+        Error(PrintInfoType::RTCAMP10, err);
         throw std::runtime_error("");
     }
     std::vector<char> shaderSource;

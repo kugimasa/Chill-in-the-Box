@@ -26,7 +26,7 @@ inline ASBuffers CreateASBuffers(std::unique_ptr<Device>& device, const D3D12_BU
 
     if (asBuffers.scratchBuffer == nullptr || asBuffers.asBuffer == nullptr)
     {
-        Error(PrintInfoType::D3D12, "AS‚Ì\’z‚ÉŽ¸”s‚µ‚Ü‚µ‚½ (Scratch/AS)");
+        Error(PrintInfoType::D3D12, L"AS‚Ì\’z‚ÉŽ¸”s‚µ‚Ü‚µ‚½ (Scratch/AS)");
     }
     std::wstring scratchName = name + L":scratch";
     asBuffers.scratchBuffer->SetName(scratchName.c_str());
@@ -43,7 +43,7 @@ inline ASBuffers CreateASBuffers(std::unique_ptr<Device>& device, const D3D12_BU
         );
         if (asBuffers.updateBuffer == nullptr)
         {
-            Error(PrintInfoType::D3D12, "AS‚Ì\’z‚ÉŽ¸”s‚µ‚Ü‚µ‚½ (Update)");
+            Error(PrintInfoType::D3D12, L"AS‚Ì\’z‚ÉŽ¸”s‚µ‚Ü‚µ‚½ (Update)");
         }
         std::wstring uploadName = name + L":upload";
         asBuffers.updateBuffer->SetName(uploadName.c_str());

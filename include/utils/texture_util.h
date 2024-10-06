@@ -25,7 +25,8 @@ inline TextureResource LoadTexture(const void* data, UINT64 size, std::unique_pt
     if (FAILED(hr)) {
         hr = LoadFromWICMemory(data, size, WIC_FLAGS_NONE/*WIC_FLAGS_FORCE_RGB*/, &metadata, image);
         if (FAILED(hr)) {
-            Error(PrintInfoType::D3D12, "テクスチャのロードに失敗しました: ", hr);
+            std::wstring err = L"テクスチャのロードに失敗しました: " + (int)hr;
+            Error(PrintInfoType::D3D12, err);
             return res;
         }
     }

@@ -82,7 +82,7 @@ bool Device::OnInit()
     hr = D3D12CreateDevice(hardwareAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_pD3D12Device5));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "D3D12デバイスの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"D3D12デバイスの作成に失敗しました");
         return false;
     }
     
@@ -91,7 +91,7 @@ bool Device::OnInit()
     hr = m_pD3D12Device5->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, UINT(sizeof(options5)));
     if (FAILED(hr) || options5.RaytracingTier == D3D12_RAYTRACING_TIER_NOT_SUPPORTED)
     {
-        Error(PrintInfoType::D3D12, "DirectX Raytracing がサポートされていません");
+        Error(PrintInfoType::D3D12, L"DirectX Raytracing がサポートされていません");
         return false;
     }
 
@@ -102,7 +102,7 @@ bool Device::OnInit()
     hr = m_pD3D12Device5->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_pCmdQueue));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "コマンドキューの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"コマンドキューの作成に失敗しました");
         return false;
     }
 
@@ -114,7 +114,7 @@ bool Device::OnInit()
     hr = m_pD3D12Device5->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pRtvHeap.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "ディスクリプタヒープ(RTV)の作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"ディスクリプタヒープ(RTV)の作成に失敗しました");
         return false;
     }
     m_rtvDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -123,7 +123,7 @@ bool Device::OnInit()
     hr = m_pD3D12Device5->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pDsvHeap.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "ディスクリプタヒープ(DSV)の作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"ディスクリプタヒープ(DSV)の作成に失敗しました");
         return false;
     }
     m_dsvDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -134,7 +134,7 @@ bool Device::OnInit()
     hr = m_pD3D12Device5->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pHeap.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "ディスクリプタヒープ(SRV/CBV/UAVなど)の作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"ディスクリプタヒープ(SRV/CBV/UAVなど)の作成に失敗しました");
         return false;
     }
     m_heapDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -144,7 +144,7 @@ bool Device::OnInit()
         hr = m_pD3D12Device5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCmdAllocatorArr[i].ReleaseAndGetAddressOf()));
         if (FAILED(hr))
         {
-            Error(PrintInfoType::D3D12, "コマンドアロケータの作成に失敗しました");
+            Error(PrintInfoType::D3D12, L"コマンドアロケータの作成に失敗しました");
             return false;
         }
     }
@@ -210,7 +210,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         );
         if (FAILED(hr))
         {
-            Error(PrintInfoType::D3D12, "スワップチェインの作成に失敗しました");
+            Error(PrintInfoType::D3D12, L"スワップチェインの作成に失敗しました");
             return false;
         }
         // スワップチェインの変換
@@ -227,7 +227,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
             );
             if (FAILED(hr))
             {
-                Error(PrintInfoType::D3D12, "フレームバッファのフェンス作成に失敗しました");
+                Error(PrintInfoType::D3D12, L"フレームバッファのフェンス作成に失敗しました");
                 return false;
             }
         }
@@ -243,7 +243,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
             hr = m_pSwapChain3->GetBuffer(i, IID_PPV_ARGS(m_pRenderTargets[i].ReleaseAndGetAddressOf()));
             if (FAILED(hr))
             {
-                Error(PrintInfoType::D3D12, "バックバッファの取得に失敗しました");
+                Error(PrintInfoType::D3D12, L"バックバッファの取得に失敗しました");
                 return false;
             }
             wchar_t name[25] = {};
@@ -291,7 +291,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         );
         if (FAILED(hr))
         {
-            Error(PrintInfoType::D3D12, "DSV用のリソース作成に失敗しました");
+            Error(PrintInfoType::D3D12, L"DSV用のリソース作成に失敗しました");
             return false;
         }
         m_pDepthStencil->SetName(L"Depth Stencil");
@@ -426,7 +426,7 @@ ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FOR
 
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "Texture2Dの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"Texture2Dの作成に失敗しました");
     }
     return resource;
 }
@@ -476,7 +476,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "画像バッファの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"画像バッファの作成に失敗しました");
     }
     if (imageBuffer != nullptr)
     {
@@ -491,7 +491,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "コマンドアロケータの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"コマンドアロケータの作成に失敗しました");
     }
     if (pCmdAllocator != nullptr)
     {
@@ -507,7 +507,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "コマンドリストの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"コマンドリストの作成に失敗しました");
     }
     if (pCmdList4 != nullptr)
     {
@@ -557,7 +557,8 @@ ComPtr<ID3D12Resource> Device::InitializeBuffer(size_t size, const void* initDat
 {
     if (size <= 0)
     {
-        Error(PrintInfoType::D3D12, "バッファサイズが無効です: ", size);
+        std::wstring err = L"バッファサイズが無効です: "+ size;
+        Error(PrintInfoType::D3D12, err);
     }
     auto initialState = D3D12_RESOURCE_STATE_COMMON;
     if (heapType == D3D12_HEAP_TYPE_UPLOAD)
@@ -671,7 +672,7 @@ void Device::WriteResource(ComPtr<ID3D12Resource> resource, const void* pData, s
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "ステージングバッファの作成に失敗しました");
+        Error(PrintInfoType::D3D12, L"ステージングバッファの作成に失敗しました");
     }
     if (stagingBuffer != nullptr)
     {
@@ -708,7 +709,7 @@ bool Device::CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources
         }
         else
         {
-            Error(PrintInfoType::D3D12, "定数バッファの作成に失敗しました");
+            Error(PrintInfoType::D3D12, L"定数バッファの作成に失敗しました");
             return false;
         }
     }

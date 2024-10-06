@@ -33,15 +33,18 @@ bool inline LoadGLTF(const std::wstring& fileName, tinygltf::Model& model)
     }
     else
     {
-        Error(PrintInfoType::RTCAMP10, "ファイル形式が対応していません：", gltfPath.extension());
+        std::wstring errWStr = L"ファイル形式が対応していません：" + std::wstring(gltfPath.extension().c_str());
+        Error(PrintInfoType::RTCAMP10, errWStr);
     }
     if (!warn.empty())
     {
-        Error(PrintInfoType::RTCAMP10, "GLTFファイルの読み込み中の警告 :", warn);
+        std::wstring errWStr = L"GLTFファイルの読み込み中の警告 :" + StrToWStr(warn);
+        Error(PrintInfoType::RTCAMP10, errWStr);
     }
     if (!err.empty())
     {
-        Error(PrintInfoType::RTCAMP10, "GLTFファイルの読み込み中のエラー :", err);
+        std::wstring errWStr = L"GLTFファイルの読み込み中のエラー :" + StrToWStr(err);
+        Error(PrintInfoType::RTCAMP10, errWStr);
     }
     return result;
 }

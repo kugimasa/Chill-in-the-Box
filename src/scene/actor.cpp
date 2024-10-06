@@ -203,7 +203,7 @@ uint8_t* Actor::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
             auto id = rtStateObjectProps->GetShaderIdentifier(shader.c_str());
             if (id == nullptr)
             {
-                Error(PrintInfoType::RTCAMP10, "ShaderIdが設定されていません");
+                Error(PrintInfoType::RTCAMP10, L"ShaderIdが設定されていません");
             }
             // MEMO: ローカルルートシグネチャの順番と合わせる
             auto recordStart = dst;
