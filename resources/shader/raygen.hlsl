@@ -50,7 +50,7 @@ void RayGen()
 
     // 乱数の初期化
     uint bufferOffset = launchIdx.x + launchIdx.y * dims.x;
-    uint seed = bufferOffset * gSceneParam.currenFrameNum;
+    uint seed = bufferOffset * (gSceneParam.currenFrameNum + 1);
     
     float3 col = 0;
     // パストレース

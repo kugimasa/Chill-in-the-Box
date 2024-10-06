@@ -60,6 +60,8 @@ private:
     std::shared_ptr<Actor> m_tableActor;
     std::unique_ptr<Device>& m_pDevice;
 
+    std::vector<std::shared_ptr<Actor>> m_actors;
+
     TextureResource m_bgTex;
 
     std::vector<ComPtr<ID3D12Resource>> m_pConstantBuffers;

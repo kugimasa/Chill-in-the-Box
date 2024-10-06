@@ -31,9 +31,6 @@ void Scene::OnInit(float aspect)
     // モデルの初期設定
     InitializeActors();
 
-    // HitGroup合計の設定
-    SetTotalHitGroupCount();
-
     // 背景テクスチャのロード
     m_bgTex = LoadHDRTexture(L"studio_small_09_4k.hdr", m_pDevice);
 
@@ -60,10 +57,10 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
 void Scene::OnDestroy()
 {
     m_camera.reset();
-    m_sphereLight1.reset();
-    m_planeBottom.reset();
-    m_tableActor.reset();
-    m_modelActor.reset();
+    for (auto& actor : m_actors)
+    {
+        actor.reset();
+    }
     for (auto& sceneCB : m_pConstantBuffers)
     {
         sceneCB.Reset();
@@ -153,9 +150,9 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 {
     ComPtr<ID3D12StateObjectProperties> rtStateObjectProps;
     rtStateObject.As(&rtStateObjectProps);
-    for (const auto& model : { m_sphereLight1, m_planeBottom, m_tableActor, m_modelActor } )
+    for (const auto& actor : m_actors)
     {
-        dst = model->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
+        dst = actor->WriteHitGroupShaderRecord(dst, hitGroupRecordSize, rtStateObjectProps);
     }
     return dst;
 }
@@ -166,11 +163,11 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 /// <param name="cmdList"></param>
 void Scene::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
 {
-    for (auto& model : { m_sphereLight1, m_planeBottom, m_tableActor, m_modelActor } )
+    for (auto& actor : m_actors )
     {
-        model->UpdateMatrices();
-        model->UpdateTransform();
-        model->UpdateBLAS(cmdList);
+        actor->UpdateMatrices();
+        actor->UpdateTransform();
+        actor->UpdateBLAS(cmdList);
     }
 }
 
@@ -191,12 +188,19 @@ void Scene::InitializeActors()
 {
     // 光源
     InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", Float3(-1, 6, 0));
+    m_actors.push_back(m_sphereLight1);
     // 背景
     InstantiateActor(m_planeBottom, L"plane.glb", L"Actor", Float3(0, 0, 0));
+    m_actors.push_back(m_planeBottom);
     // テーブル
     InstantiateActor(m_tableActor, L"round_table.glb", L"Actor", Float3(0, 0, 0));
+    m_actors.push_back(m_tableActor);
     // キャラクター
     InstantiateActor(m_modelActor, L"model.glb", L"Actor", Float3(0, 5, 0));
+    m_actors.push_back(m_modelActor);
+
+    // HitGroup合計の設定
+    SetTotalHitGroupCount();
 }
 
 /// <summary>
@@ -220,11 +224,11 @@ void Scene::InstantiateActor(std::shared_ptr<Actor>& actor, const std::wstring f
 void Scene::SetTotalHitGroupCount()
 {
     UINT hitGroupCount = 0;
-    for (const auto& model : { m_sphereLight1, m_planeBottom, m_tableActor, m_modelActor })
+    for (const auto& actor : m_actors )
     {
-        for (UINT groupIdx = 0; groupIdx < model->GetMeshGroupCount(); ++groupIdx)
+        for (UINT groupIdx = 0; groupIdx < actor->GetMeshGroupCount(); ++groupIdx)
         {
-            hitGroupCount += model->GetMeshCount(groupIdx);
+            hitGroupCount += actor->GetMeshCount(groupIdx);
         }
     }
     m_totalHitGroupCount = hitGroupCount;
