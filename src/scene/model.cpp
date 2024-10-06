@@ -95,7 +95,7 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
      // 行列バッファの確保
      actor->CreateMatrixBufferBLAS(UINT(m_meshes.size()));
 
-     // 頂点属性ごとのSRVえお生成
+     // 頂点属性ごとのSRVを生成
      for (UINT i = 0; i < UINT(m_meshes.size()); ++i)
      {
          actor->m_meshGroups.emplace_back(Actor::ActorMeshGroup());

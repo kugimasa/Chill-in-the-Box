@@ -566,8 +566,8 @@ void Renderer::CreateShaderTable()
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // VB(POS): t1
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // VB(NORM): t2
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // VB(TEXCOORD): t3
-    // hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // BLAS UpdateBuffer: t4 ... ??
-    // hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // MaterialDiffuse: t0 ... ??
+    hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // BLAS UpdateBuffer: t4
+    hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // MaterialDiffuse: t0
     hitGroupRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // CB: b0
     hitGroupRecordSize = ROUND_UP(hitGroupRecordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 
@@ -721,7 +721,7 @@ void Renderer::UpdateImGui()
 
     // SPP
     m_imGuiParam.maxSPP = m_pScene->GetMaxSPP();
-    ImGui::SliderInt("Max SPP", &m_imGuiParam.maxSPP, 1, 100);
+    ImGui::SliderInt("Max SPP", &m_imGuiParam.maxSPP, 1, 1000);
     ImGui::End();
 
     // çXêV

@@ -28,8 +28,7 @@ public:
     std::shared_ptr<Camera> GetCamera() { return m_camera; }
     ComPtr<ID3D12Resource> GetConstantBuffer();
     TextureResource GetBackgroundTex() { return m_bgTex; }
-    UINT GetTotalHitGroupCount();
-
+    UINT GetTotalHitGroupCount() { return m_totalHitGroupCount; }
 
     struct SceneParam
     {
@@ -46,15 +45,17 @@ public:
 private:
     void InitializeActors();
     void InstantiateActor(std::shared_ptr<Actor>& actor, const std::wstring name, const std::wstring hitGroup, Float3 pos);
+    void SetTotalHitGroupCount();
 
 private:
     SceneParam m_param;
     UINT m_maxPathDepth;
     UINT m_maxSPP;
+    UINT m_totalHitGroupCount;
 
     std::shared_ptr<Camera> m_camera;
-    // TODO: Ç‰Ç≠Ç‰Ç≠ÇÕï°êîåıåπÇ…ÇµÇΩÇ¢
-    std::shared_ptr<Actor> m_lightActor;
+    std::shared_ptr<Actor> m_sphereLight1;
+    std::shared_ptr<Actor> m_planeBottom;
     std::shared_ptr<Actor> m_modelActor;
     std::shared_ptr<Actor> m_tableActor;
     std::unique_ptr<Device>& m_pDevice;
