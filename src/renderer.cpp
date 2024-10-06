@@ -460,6 +460,7 @@ void Renderer::CreateStateObject()
     auto missDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
     missDXIL->SetDXILLibrary(&missShader);
     missDXIL->DefineExport(L"Miss");
+    missDXIL->DefineExport(L"ShadowMiss");
 
     auto closestHitBin = SetupShader(L"closesthit");
     D3D12_SHADER_BYTECODE closestHitShader{ closestHitBin.data(), closestHitBin.size() };
@@ -495,7 +496,7 @@ void Renderer::CreateStateObject()
     // common.hlsliと揃える
     const UINT MaxPayloadSize = sizeof(HitInfo);
     const UINT MaxAttributeSize = sizeof(XMFLOAT2);
-    const UINT MaxRecursionDepth = 1; // 最大再帰段数
+    const UINT MaxRecursionDepth = 2; // 最大再帰段数
 
     // シェーダー設定
     auto rtShaderConfig = stateObjDesc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
@@ -553,7 +554,6 @@ void Renderer::CreateShaderTable()
     rayGenRecordSize += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE); // OutputBuffer: u0
     rayGenRecordSize = ROUND_UP(rayGenRecordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 
-
     // Miss: ShaderId
     UINT missRecordSize = 0;
     missRecordSize += D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
@@ -575,7 +575,7 @@ void Renderer::CreateShaderTable()
 
     // シェーダーテーブルサイズを計算
     UINT rayGenSize = 1 * rayGenRecordSize;
-    UINT missSize = 1 * missRecordSize;
+    UINT missSize = 2 * missRecordSize;
     UINT hitGroupSize = hitGroupCount * hitGroupRecordSize;
 
     // 各テーブルでの開始位置のアライメント制約
@@ -626,6 +626,17 @@ void Renderer::CreateShaderTable()
         uint8_t* p = missShaderStart;
         std::wstring exportName = L"Miss";
         auto id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
+        if (id == nullptr)
+        {
+            auto message = L"シェーダーIDが見つかりません: " + exportName;
+            Error(PrintInfoType::RTCAMP10, message);
+        }
+        p += WriteShaderId(p, id);
+
+        // シャドウレイ用Missシェーダー
+        p = missShaderStart + missRecordSize;
+        exportName = L"ShadowMiss";
+        id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
         if (id == nullptr)
         {
             auto message = L"シェーダーIDが見つかりません: " + exportName;

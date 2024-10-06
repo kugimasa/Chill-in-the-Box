@@ -5,7 +5,7 @@ Scene::Scene(std::unique_ptr<Device>& device) :
     m_camera(),
     m_param(),
     m_maxPathDepth(10),
-    m_maxSPP(1),
+    m_maxSPP(50),
     m_totalHitGroupCount(0)
 {
 }
@@ -20,7 +20,7 @@ void Scene::OnInit(float aspect)
     float fovY = XM_PIDIV4;
     float nearZ = 0.1f;
     float farZ = 100.0f;
-    Float3 origin(0.0f, 5.0f, 10.0f);
+    Float3 origin(-5.0f, 5.0f, 7.0f); // お試し初期位置
     Float3 target(0.0f, 5.0f, 0.0f);
     m_camera = std::shared_ptr<Camera>(new Camera(fovY, aspect, nearZ, farZ, origin, target));
     if (m_pDevice->CreateConstantBuffer(m_pConstantBuffers, sizeof(SceneParam), L"SceneCB"))
@@ -85,7 +85,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
             auto mtxTrans = light->GetWorldMatrix();
             XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
             desc.InstanceID = lightInstanceID;
-            desc.InstanceMask = 0xFF;
+            desc.InstanceMask = 0x08; // ライト用のマスク
             desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
             desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
             desc.AccelerationStructure = light->GetBLAS()->GetGPUVirtualAddress();
@@ -208,22 +208,22 @@ void Scene::InitializeActors()
 {
     // ライト1 赤
     Float3 light1Pos = Float3(-2, 6, 0);
-    Float3 light1Color = Float3(1, 0, 0);
-    SphereLightParam light1Param(light1Pos, 0.2, light1Color, 10.0);
+    Float3 light1Color = Float3(1, 1, 1);
+    SphereLightParam light1Param(light1Pos, 0.2, light1Color, 50.0);
     m_param.light1 = light1Param;
     InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", light1Pos);
     m_actors.push_back(m_sphereLight1);
     // ライト2 青
     Float3 light2Pos = Float3(2, 6, 0);
-    Float3 light2Color = Float3(0, 1, 0);
-    SphereLightParam light2Param(light2Pos, 0.2, light2Color, 10.0);
+    Float3 light2Color = Float3(1, 1, 1);
+    SphereLightParam light2Param(light2Pos, 0.2, light2Color, 50.0);
     m_param.light2 = light2Param;
     InstantiateActor(m_sphereLight2, L"sphere.glb", L"Actor", light2Pos);
     m_actors.push_back(m_sphereLight2);
     // ライト3 緑
     Float3 light3Pos = Float3(0, 6, 3);
-    Float3 light3Color = Float3(0, 0, 1);
-    SphereLightParam light3Param(light3Pos, 0.2, light3Color, 10.0);
+    Float3 light3Color = Float3(1, 1, 1);
+    SphereLightParam light3Param(light3Pos, 0.2, light3Color, 50.0);
     m_param.light3 = light3Param;
     InstantiateActor(m_sphereLight3, L"sphere.glb", L"Actor", light3Pos);
     m_actors.push_back(m_sphereLight3);

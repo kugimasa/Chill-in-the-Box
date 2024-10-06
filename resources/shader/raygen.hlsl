@@ -10,16 +10,15 @@ float3 PathTrace(in float3 origin, in float3 direction, in uint seed)
     payload.color = float3(0.0, 0.0, 0.0);
     payload.pathDepth = 0u;
     payload.seed = seed;
-    
-    float3 radiance = 0.0f;
-    float3 attenuation = 1.0f;
-    
+    payload.color = 0.0f;
+    payload.attenuation = 1.0f;
+
     RayDesc ray;
     ray.Origin = origin;
     ray.Direction = normalize(direction);
-    ray.TMin = 0;
-    ray.TMax = 10000;
-    
+    ray.TMin = RAY_T_MIN;
+    ray.TMax = RAY_T_MAX;
+
     RAY_FLAG flags = RAY_FLAG_NONE;
     flags |= RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
     uint rayMask = 0xFF;
@@ -29,17 +28,22 @@ float3 PathTrace(in float3 origin, in float3 direction, in uint seed)
 
     while (payload.pathDepth < gSceneParam.maxPathDepth)
     {
+        float3 attenuation = payload.attenuation;
+        // ロシアンルーレット
+        float r = Rand(payload.seed);
+        float p = min(max(max(attenuation.x, attenuation.y), attenuation.z), 1.0f);
+        if (r > p)
+        {
+            payload.pathDepth = gSceneParam.maxPathDepth;
+        }
+        payload.attenuation /= p;
         TraceRay(gSceneBVH, flags, rayMask, rayIdx, geoMulVal, missIdx, ray, payload);
-        
-        radiance += attenuation * payload.color;
-        attenuation *= payload.attenuation;
-        
         // レイの更新
         payload.pathDepth++;
         ray.Origin = payload.hitPos;
         ray.Direction = payload.reflectDir;
     }
-    return radiance;
+    return payload.color;
 }
 
 [shader("raygeneration")]

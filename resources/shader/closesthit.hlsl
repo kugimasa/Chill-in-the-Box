@@ -84,6 +84,26 @@ VertexAttrib GetHitVertexAttrib(Attributes attrib)
     return v;
 }
 
+bool TraceShadowRay(in float3 origin, in float3 direction, in float lightDist, in uint seed)
+{
+    RayDesc ray;
+    ray.Origin = origin;
+    ray.Direction = normalize(direction);
+    ray.TMin = 0.001f;
+    ray.TMax = lightDist - 0.001f;
+    
+    RAY_FLAG flags = RAY_FLAG_NONE;
+    flags |= RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
+    uint rayMask = ~(0x08); // ライトは除外
+    uint rayIdx = 0;
+    uint geoMulVal = 1;
+    uint missIdx = 1;
+    ShadowRayHitInfo payload;
+    payload.occluded = true;
+    TraceRay(gSceneBVH, flags, rayMask, rayIdx, geoMulVal, missIdx, ray, payload);
+    return payload.occluded;
+}
+
 [shader("closesthit")]
 void ClosestHit(inout HitInfo payload, Attributes attrib)
 {
@@ -97,30 +117,52 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     float3 worldNorm = normalize(mul(vtx.normal, (float3x3) worldMtx));
     payload.hitPos = worldPos;
     
-    // TODO: テスト用ライト判定(ゆくゆくはMeshParamCBから取得)
-    // 光源にヒット、トレースを終了
     uint instanceID = InstanceID();
-    if (instanceID == 1)
+    // TODO: ゆくゆくはMeshParamCBから取得
+    // 初めに光源にヒット、トレースを終了
+    if (payload.pathDepth == 0)
     {
-        payload.color += gSceneParam.light1.color * gSceneParam.light1.intensity;
+        if (instanceID == 1)
+        {
+            payload.color += gSceneParam.light1.color * gSceneParam.light1.intensity * payload.attenuation;
+            payload.pathDepth = gSceneParam.maxPathDepth;
+        }
+        else if (instanceID == 2)
+        {
+            payload.color += gSceneParam.light2.color * gSceneParam.light2.intensity * payload.attenuation;
+            payload.pathDepth = gSceneParam.maxPathDepth;
+        }
+        else if (instanceID == 3)
+        {
+            payload.color += gSceneParam.light3.color * gSceneParam.light3.intensity * payload.attenuation;
+            payload.pathDepth = gSceneParam.maxPathDepth;
+        }
+    }
+    // 光源サンプリング
+    SampledLightInfo lightInfo = SampleLightInfo(payload.seed);
+    float3 lightDir = normalize(lightInfo.pos - worldPos);
+    float lightDist = length(worldPos - lightInfo.pos);
+    // 光源方向へレイトレースして、光源と接続できた場合
+    if (!TraceShadowRay(worldPos, lightDir, lightDist, payload.seed))
+    {
+        // 幾何項の計算
+        float cos1 = abs(dot(worldNorm, lightDir));
+        float cos2 = abs(dot(lightInfo.norm, -lightDir));
+        float G = (cos1 * cos2) / (lightDist * lightDist);
+        float3 wi = normalize(ApplyZToN(-WorldRayDirection(), worldNorm));
+        float3 wo = normalize(ApplyZToN(lightDir, worldNorm));
+        payload.color += (payload.attenuation * SampleBrdf(wi, wo) * G * lightInfo.intensity) / LightSamplingPdf();
         payload.pathDepth = gSceneParam.maxPathDepth;
     }
-    else if (instanceID == 2)
-    {
-        payload.color += gSceneParam.light2.color * gSceneParam.light2.intensity;
-        payload.pathDepth = gSceneParam.maxPathDepth;
-    }
-    else if (instanceID == 3)
-    {
-        payload.color += gSceneParam.light3.color * gSceneParam.light3.intensity;
-        payload.pathDepth = gSceneParam.maxPathDepth;
-    }
+    // 寄与の計算
     else
     {
+        // 方向をサンプリング
         float3 sampleDir = SampleHemisphereCos(payload.seed);
-        float3 reflectDir = normalize(ApplyZToN(sampleDir, worldNorm));
-        payload.reflectDir = reflectDir;
-        float3 reflectance = GetAlbedo(vtx.texcoord) * SampleBrdf(reflectDir, worldNorm);
-        payload.attenuation = reflectance / HemispherCosPdf(reflectDir, worldNorm);
+        float3 wi = normalize(ApplyZToN(-WorldRayDirection(), worldNorm));
+        float3 wo = normalize(ApplyZToN(sampleDir, worldNorm));
+        payload.reflectDir = wo;
+        float3 reflectance = GetAlbedo(vtx.texcoord) * SampleBrdf(wi, wo);
+        payload.attenuation *= (reflectance / HemispherCosPdf(wo, worldNorm));
     }
 }

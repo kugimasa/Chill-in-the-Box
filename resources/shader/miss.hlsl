@@ -4,7 +4,13 @@
 void Miss(inout HitInfo payload)
 {
     float2 uv = CalcSphereUV(WorldRayDirection());
-    // HDRÇ≈Ç†ÇÈÇ±Ç∆Ççló∂ÇµÇΩï˚Ç™ó«Ç≥ÇªÇ§
-    payload.color = gBgTex.SampleLevel(gSampler, uv, 0).rgb;
+    // TODO: IBLÇÃÇΩÇﬂÇÃNEEé¿ëï
+    payload.color = gBgTex.SampleLevel(gSampler, uv, 0).rgb * payload.attenuation;
     payload.pathDepth = gSceneParam.maxPathDepth;
+}
+
+[shader("miss")]
+void ShadowMiss(inout ShadowRayHitInfo payload)
+{
+    payload.occluded = false;
 }
