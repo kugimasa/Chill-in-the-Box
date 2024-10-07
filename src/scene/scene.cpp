@@ -1,4 +1,5 @@
 #include "scene/scene.hpp"
+#include "utils/color_util.h"
 
 Scene::Scene(std::unique_ptr<Device>& device) :
     m_pDevice(device),
@@ -20,7 +21,7 @@ void Scene::OnInit(float aspect)
     float fovY = XM_PIDIV4;
     float nearZ = 0.1f;
     float farZ = 100.0f;
-    Float3 origin(-5.0f, 5.0f, 7.0f); // お試し初期位置
+    Float3 origin(-5.0f, 5.0f, 7.0f);
     Float3 target(0.0f, 5.0f, 0.0f);
     m_camera = std::shared_ptr<Camera>(new Camera(fovY, aspect, nearZ, farZ, origin, target));
     if (m_pDevice->CreateConstantBuffer(m_pConstantBuffers, sizeof(SceneParam), L"SceneCB"))
@@ -32,18 +33,75 @@ void Scene::OnInit(float aspect)
     InitializeActors();
 
     // 背景テクスチャのロード
-    m_bgTex = LoadHDRTexture(L"studio_small_09_4k.hdr", m_pDevice);
+    m_bgTex = LoadHDRTexture(L"rural_asphalt_road_4k.hdr", m_pDevice);
 
     Print(PrintInfoType::RTCAMP10, L"シーン構築 完了");
 }
 
 void Scene::OnUpdate(int currentFrame, int maxFrame)
 {
+    // アニメーション処理はこちらで行う
+    // 本番提出想定設定
+    // MAX_FRAME: 600
+    // FPS: 60
+    // MAX_SEC: 10
+    // TODO: 後ほど削除
+    maxFrame = 600;
     int fps = 60;
+    float maxSec = 10;
     float deltaTime = float(currentFrame % fps) / float(fps);
+    float currentTime = float(currentFrame) * maxSec / float(maxFrame);
 
-    // カメラの更新
-    UpdateSceneParam(currentFrame);
+
+    float startTime = 0.0f;
+    float action1Time = 2.0f;
+    float action2Time = 2.5f;
+    float action3Time = 5.5f;
+    float action4Time = 8.0;
+    float action5Time = 10.0f;
+    Float3 camStartPos(-10.0, 0.36, 5.8);
+    Float3 camAction1Pos(3.0, 5.5, 3.1);
+    Float3 camAction2Pos(6.6, 9.5, 3.6);
+    Float3 camAction3Pos(8.0, 10.0, -6);
+    float camStartFovY = XM_PIDIV4;
+    float camAction3FovY = XM_PIDIV4 * 0.5;
+    Float3 modelStartPos(0, 5, 0);
+    Float3 modelAction4Pos(0, 50, 0);
+
+    ////// ACTION 1 //////
+    if (startTime <= currentTime && currentTime < action1Time)
+    {
+        // カメラ移動
+        m_camera->MoveAnimInCubic(currentTime, startTime, action1Time, camStartPos, camAction1Pos);
+    }
+    ////// ACTION 2 //////
+    else if (action1Time <= currentTime && currentTime < action2Time)
+    {
+        // カメラ移動
+        m_camera->MoveAnimOutCubic(currentTime, action1Time, action2Time, camAction1Pos, camAction2Pos);
+    }
+    ////// ACTION 3 //////
+    else if (action2Time <= currentTime && currentTime < action3Time)
+    {
+        // カメラ移動
+        m_camera->MoveAnimInCubic(currentTime, action2Time, action3Time, camAction2Pos, camAction3Pos);
+        // カメラ画角調整
+        m_camera->ChangeFovYInCubic(currentTime, action2Time, action3Time, camStartFovY, camAction3FovY);
+    }
+    ////// ACTION 4 - ROTATION //////
+    else if (action3Time <= currentTime && currentTime < action4Time)
+    {
+    }
+    ////// ACTION 5 - FLY //////
+    else if (action4Time <= currentTime && currentTime < action5Time)
+    {
+        // カメラ画角調整
+        m_camera->ChangeFovYInCubic(currentTime, action4Time, (action4Time + 0.5), camAction3FovY, camStartFovY);
+        // モデル移動
+        m_modelActor->MoveAnimInCubic(currentTime, action4Time, action5Time, modelStartPos, modelAction4Pos);
+        auto actorPos = m_modelActor->GetWorldPos();
+        m_camera->SetTarget(actorPos);
+    }
 
     // シーンバッファの書き込み
     UINT frameIndex = m_pDevice->GetCurrentFrameIndex();
@@ -52,6 +110,10 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
 
     // モデルの回転
     m_modelActor->Rotate(deltaTime, 2.0f, Float3(0, 1, 0));
+
+
+    // シーンパラメータの更新
+    UpdateSceneParam(currentFrame);
 }
 
 void Scene::OnDestroy()
@@ -206,23 +268,23 @@ ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
 /// </summary>
 void Scene::InitializeActors()
 {
-    // ライト1 赤
+    // ライト1
     Float3 light1Pos = Float3(-2, 6, 0);
-    Float3 light1Color = Float3(1, 1, 1);
+    Float3 light1Color = COL_LIGHT_SKY_BLUE;
     SphereLightParam light1Param(light1Pos, 0.2, light1Color, 50.0);
     m_param.light1 = light1Param;
     InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", light1Pos);
     m_actors.push_back(m_sphereLight1);
-    // ライト2 青
+    // ライト2
     Float3 light2Pos = Float3(2, 6, 0);
-    Float3 light2Color = Float3(1, 1, 1);
+    Float3 light2Color = COL_MEDIUM_ORCHID;
     SphereLightParam light2Param(light2Pos, 0.2, light2Color, 50.0);
     m_param.light2 = light2Param;
     InstantiateActor(m_sphereLight2, L"sphere.glb", L"Actor", light2Pos);
     m_actors.push_back(m_sphereLight2);
-    // ライト3 緑
+    // ライト3 青
     Float3 light3Pos = Float3(0, 6, 3);
-    Float3 light3Color = Float3(1, 1, 1);
+    Float3 light3Color = COL_ROYAL_BLUE;
     SphereLightParam light3Param(light3Pos, 0.2, light3Color, 50.0);
     m_param.light3 = light3Param;
     InstantiateActor(m_sphereLight3, L"sphere.glb", L"Actor", light3Pos);

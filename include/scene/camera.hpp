@@ -21,8 +21,14 @@ public:
     ~Camera();
 
     void SetPosition(Float3 origin);
+    void SetTarget(Float3 target);
+    void SetFovY(float fovY);
     void Rotate(float deltaTime);
-    void Translate(float deltaTime);
+    // FIXME: èÁí∑ÉRÅ[Éh
+    void MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
+    void MoveAnimInOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
+    void MoveAnimOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
+    void ChangeFovYInCubic(float currentTime, float startTime, float endTime, float startFovY, float endFovY);
 
     Float3 GetPosition() const { return m_param.Origin; }
     Matrix GetViewMatrix() const { return m_viewMtx; }

@@ -5,7 +5,10 @@ void Miss(inout HitInfo payload)
 {
     float2 uv = CalcSphereUV(WorldRayDirection());
     // TODO: IBL‚Ì‚½‚ß‚ÌNEEŽÀ‘•
-    payload.color = gBgTex.SampleLevel(gSampler, uv, 0).rgb * payload.attenuation;
+    float3 bgCol = gBgTex.SampleLevel(gSampler, uv, 0).rgb;
+    bgCol /= (bgCol + 1.0f);
+    bgCol = pow(bgCol, 1.0f / 2.2f);
+    payload.color =  bgCol * payload.attenuation;
     payload.pathDepth = gSceneParam.maxPathDepth;
 }
 

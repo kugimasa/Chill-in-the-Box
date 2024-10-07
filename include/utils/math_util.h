@@ -55,3 +55,30 @@ static Matrix IdentityMtx()
 #ifndef ROUND_UP
 #define ROUND_UP(size, align) (((size) + (align) - 1) & ~((align) - 1))
 #endif
+
+// https://easings.net/#easeInCubic
+inline float EaseInOutCubic(float t)
+{
+    return t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0;
+}
+
+// https://easings.net/#easeInOutCubic
+inline float EaseInCubic(float t)
+{
+    return t * t * t;
+}
+
+//https://easings.net/#easeOutCubic
+inline float EaseOutCubic(float t)
+{
+    return 1.0 - pow(1.0 - t, 3.0);
+}
+
+inline Float3 Lerp(Float3 a, Float3 b, float t)
+{
+    XMVECTOR v = XMVectorLerp(XMLoadFloat3(&a), XMLoadFloat3(&b), t);
+    Float3 ret;
+    XMStoreFloat3(&ret, v);
+    return ret;
+}
+

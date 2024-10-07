@@ -100,6 +100,7 @@ void Renderer::OnRender()
         Print(PrintInfoType::RTCAMP10, timeWSS.str());
         // 終了処理
         Print(PrintInfoType::RTCAMP10, L"======================");
+        OnDestroy();
 #ifdef _DEBUG
         auto hwnd = Window::GetHWND();
         PostMessage(hwnd, WM_QUIT, 0, 0);
@@ -198,7 +199,8 @@ void Renderer::OnRender()
     m_pDevice->ExecuteCommandList(m_pCmdList);
     m_pDevice->Present(1);
 
-    // 最大フレーム指定がある場合にのみ画像出力
+    // Release版ビルドかつ、最大フレーム指定がある場合にのみ画像出力
+#ifndef _DEBUG
     if (m_maxFrame > 0)
     {
         // 画像用のバッファを作成
@@ -210,6 +212,7 @@ void Renderer::OnRender()
         // 画像の出力
         OutputImage(imageBuffer);
     }
+#endif
     // 時間計測終了
     end = std::chrono::system_clock::now();
     // 経過時間の算出

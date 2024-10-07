@@ -68,9 +68,9 @@ void RayGen()
         float3 origin = mul(invViewMtx, float4(0, 0, 0, 1)).xyz;
         float3 target = mul(invProjMtx, float4(d.x, -d.y, 1, 1)).xyz;
         float3 direction = mul(invViewMtx, float4(target, 0)).xyz;
-        col += PathTrace(origin, direction, seed);
+        col += max(PathTrace(origin, direction, seed), 0);
     }
     col /= float(gSceneParam.maxSPP);
 
-    gOutput[launchIdx] = float4(col, 1.0);
+    gOutput[launchIdx] = float4(pow(col, 2.2f), 1.0);
 }

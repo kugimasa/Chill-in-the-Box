@@ -108,6 +108,14 @@ void Actor::Rotate(float deltaTime, float speed, Float3 up)
     m_worldMtx = rotMtx * transMtx;
 }
 
+void Actor::MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
+{
+    float t = (currentTime - startTime) / (endTime - startTime);
+    float s = EaseInCubic(t);
+    Float3 pos = Lerp(startPos, endPos, t);
+    SetWorldPos(pos);
+}
+
 void Actor::SetRotaion(float degree, Float3 up)
 {
     float radian = XMConvertToRadians(degree);

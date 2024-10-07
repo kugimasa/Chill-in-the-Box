@@ -51,6 +51,7 @@ struct SampledLightInfo
 {
     float3 pos;
     float3 norm;
+    float radius;
     float3 intensity;
 };
 
@@ -134,18 +135,21 @@ inline SampledLightInfo SampleLightInfo(in uint seed)
     {
         lightInfo.pos = SampleSphere(seed, gSceneParam.light1.center, gSceneParam.light1.radius);
         lightInfo.norm = normalize(lightInfo.pos - gSceneParam.light1.center);
+        lightInfo.radius = gSceneParam.light1.radius;
         lightInfo.intensity = gSceneParam.light1.color * gSceneParam.light1.intensity;
     }
     else if (0.3333333 <= r && r < 0.6666666)
     {
         lightInfo.pos = SampleSphere(seed, gSceneParam.light2.center, gSceneParam.light2.radius);
         lightInfo.norm = normalize(lightInfo.pos - gSceneParam.light2.center);
+        lightInfo.radius = gSceneParam.light2.radius;
         lightInfo.intensity = gSceneParam.light2.color * gSceneParam.light2.intensity;
     }
     else
     {
         lightInfo.pos = SampleSphere(seed, gSceneParam.light3.center, gSceneParam.light3.radius);
         lightInfo.norm = normalize(lightInfo.pos - gSceneParam.light3.center);
+        lightInfo.radius = gSceneParam.light3.radius;
         lightInfo.intensity = gSceneParam.light3.color * gSceneParam.light3.intensity;
     }
     return lightInfo;
@@ -169,10 +173,9 @@ inline float AreaSpherePdf(float radius)
     return INV_PI / (4 * radius * radius);
 }
 
-inline float LightSamplingPdf()
+inline float LightSamplingPdf(float radius)
 {
-    float light1Pdf = AreaSpherePdf(gSceneParam.light1.radius);
-    float light2Pdf = AreaSpherePdf(gSceneParam.light2.radius);
-    float light3Pdf = AreaSpherePdf(gSceneParam.light3.radius);
-    return (light1Pdf + light2Pdf + light3Pdf) / 3.0f;
+    float lightPdf = AreaSpherePdf(radius);
+    float lightNum = 3.0;
+    return (lightPdf) / lightNum;
 }

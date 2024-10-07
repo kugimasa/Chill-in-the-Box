@@ -26,11 +26,44 @@ void Camera::Rotate(float deltaTime)
 }
 
 /// <summary>
-/// 移動処理
+/// 移動アニメーション処理 (InCubic)
 /// </summary>
-/// <param name="deltaTime"></param>
-void Camera::Translate(float deltaTime)
+void Camera::MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
 {
+    float t = (currentTime - startTime) / (endTime - startTime);
+    float s = EaseInCubic(t);
+    Float3 pos = Lerp(startPos, endPos, t);
+    SetPosition(pos);
+}
+
+/// <summary>
+/// 移動アニメーション処理 (InOutCubic)
+/// </summary>
+void Camera::MoveAnimInOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
+{
+    float t = (currentTime - startTime) / (endTime - startTime);
+    float s = EaseInOutCubic(t);
+    Float3 pos = Lerp(startPos, endPos, t);
+    SetPosition(pos);
+}
+
+/// <summary>
+/// 移動アニメーション処理 (OutCubic)
+/// </summary>
+void Camera::MoveAnimOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
+{
+    float t = (currentTime - startTime) / (endTime - startTime);
+    float s = EaseOutCubic(t);
+    Float3 pos = Lerp(startPos, endPos, t);
+    SetPosition(pos);
+}
+
+void Camera::ChangeFovYInCubic(float currentTime, float startTime, float endTime, float startFovY, float endFovY)
+{
+    float t = (currentTime - startTime) / (endTime - startTime);
+    float s = EaseInCubic(t);
+    float fovY = std::lerp(startFovY, endFovY, t);
+    SetFovY(fovY);
 }
 
 void Camera::SetPosition(Float3 origin)
@@ -41,6 +74,21 @@ void Camera::SetPosition(Float3 origin)
         XMLoadFloat3(&m_param.Target),
         XMLoadFloat3(&m_param.Up)
     );
+}
+
+void Camera::SetTarget(Float3 target)
+{
+    m_param.Target = target;
+    m_viewMtx = XMMatrixLookAtRH(
+        XMLoadFloat3(&m_param.Origin),
+        XMLoadFloat3(&target),
+        XMLoadFloat3(&m_param.Up)
+    );
+}
+
+void Camera::SetFovY(float fovY)
+{
+    UpdateSetting(fovY, m_param.Aspect, m_param.NearZ, m_param.FarZ);
 }
 
 /// <summary>

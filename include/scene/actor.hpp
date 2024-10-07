@@ -127,6 +127,9 @@ public:
         friend class Actor;
     };
     void Rotate(float deltaTime, float speed, Float3 up);
+
+    void MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
+
     void SetRotaion(float degree, Float3 up);
     void SetWorldPos(Float3 worldPos);
     void SetWorldMatrix(Matrix worldMtx) { m_worldMtx = worldMtx; }
@@ -138,6 +141,7 @@ public:
     uint8_t* WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize, ComPtr<ID3D12StateObjectProperties> rtStateObjectProps);
 
     Matrix GetWorldMatrix()const { return m_worldMtx; }
+    Float3 GetWorldPos() const { return m_worldPos; }
     const Model* GetModel() { return m_modelRef; }
     UINT GetMeshGroupCount() const; 
     UINT GetMeshCount(int groupIndex) const;

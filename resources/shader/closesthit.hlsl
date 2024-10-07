@@ -89,8 +89,8 @@ bool TraceShadowRay(in float3 origin, in float3 direction, in float lightDist, i
     RayDesc ray;
     ray.Origin = origin;
     ray.Direction = normalize(direction);
-    ray.TMin = 0.001f;
-    ray.TMax = lightDist - 0.001f;
+    ray.TMin = 0.00001f;
+    ray.TMax = lightDist - 0.00001f;
     
     RAY_FLAG flags = RAY_FLAG_NONE;
     flags |= RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
@@ -119,24 +119,35 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     
     uint instanceID = InstanceID();
     // TODO: ゆくゆくはMeshParamCBから取得
-    // 初めに光源にヒット、トレースを終了
-    if (payload.pathDepth == 0)
+    // 光源にヒットした場合はトレースを終了
+    if (instanceID == 1)
     {
-        if (instanceID == 1)
+        if (payload.pathDepth == 0)
         {
-            payload.color += gSceneParam.light1.color * gSceneParam.light1.intensity * payload.attenuation;
-            payload.pathDepth = gSceneParam.maxPathDepth;
+            // TODO: 光源の表現をシェーダー芸するならここ
+            // カメラ方向が必要かも
+            payload.color = gSceneParam.light1.color;
         }
-        else if (instanceID == 2)
+        payload.pathDepth = gSceneParam.maxPathDepth;
+        return;
+    }
+    else if (instanceID == 2)
+    {
+        if (payload.pathDepth == 0)
         {
-            payload.color += gSceneParam.light2.color * gSceneParam.light2.intensity * payload.attenuation;
-            payload.pathDepth = gSceneParam.maxPathDepth;
+            payload.color += gSceneParam.light2.color;
         }
-        else if (instanceID == 3)
+        payload.pathDepth = gSceneParam.maxPathDepth;
+        return;
+    }
+    else if (instanceID == 3)
+    {
+        if (payload.pathDepth == 0)
         {
-            payload.color += gSceneParam.light3.color * gSceneParam.light3.intensity * payload.attenuation;
-            payload.pathDepth = gSceneParam.maxPathDepth;
+            payload.color += gSceneParam.light3.color;
         }
+        payload.pathDepth = gSceneParam.maxPathDepth;
+        return;
     }
     // 光源サンプリング
     SampledLightInfo lightInfo = SampleLightInfo(payload.seed);
@@ -151,16 +162,12 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         float G = (cos1 * cos2) / (lightDist * lightDist);
         float3 wi = normalize(ApplyZToN(-WorldRayDirection(), worldNorm));
         float3 wo = normalize(ApplyZToN(lightDir, worldNorm));
-        payload.color += (payload.attenuation * CalcCos(wi, wo) * G / LightSamplingPdf()) * lightInfo.intensity;
-        payload.pathDepth = gSceneParam.maxPathDepth;
+        payload.color += (payload.attenuation * CalcCos(wi, wo) * G / LightSamplingPdf(lightInfo.radius)) * lightInfo.intensity;
     }
-    else
-    {
-        // 方向をサンプリング
-        float3 sampleDir = SampleHemisphereCos(payload.seed);
-        float3 reflectDir= normalize(ApplyZToN(sampleDir, worldNorm));
-        payload.reflectDir = reflectDir;
-        float3 reflectance = GetAlbedo(vtx.texcoord) * CalcCos(worldNorm, reflectDir);
-        payload.attenuation *= (reflectance / HemisphereCosPdf(worldNorm, reflectDir));
-    }
+    // 方向をサンプリング
+    float3 sampleDir = SampleHemisphereCos(payload.seed);
+    float3 reflectDir = normalize(ApplyZToN(sampleDir, worldNorm));
+    payload.reflectDir = reflectDir;
+    float3 reflectance = GetAlbedo(vtx.texcoord) * CalcCos(worldNorm, reflectDir);
+    payload.attenuation *= (reflectance / HemisphereCosPdf(worldNorm, reflectDir));
 }
