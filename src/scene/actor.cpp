@@ -97,16 +97,35 @@ Actor::~Actor()
     m_nodes.clear();
 }
 
+void Actor::Translate(Float3 trans)
+{
+    auto transMtx = XMMatrixTranslation(trans.x, trans.y, trans.z);
+    m_worldMtx *= transMtx;
+}
+
 /// <summary>
 /// âÒì]èàóù
 /// </summary>
-void Actor::Rotate(float deltaTime, float speed, Float3 up)
+void Actor::Rotate(float angle, float startDeg, Float3 up)
 {
-    float theta = deltaTime * speed * XM_2PI;
+    float theta = angle * XM_2PI + XMConvertToDegrees(startDeg);
     auto rotMtx = XMMatrixRotationAxis(XMLoadFloat3(&up), theta);
     auto transMtx = XMMatrixTranslation(m_worldPos.x, m_worldPos.y, m_worldPos.z);
     m_worldMtx = rotMtx * transMtx;
 }
+
+//void Actor::RotateAroundAxis(float degree, Float3 center, Float3 axis, float raduis)
+//{
+//    float theta = XMConvertToRadians(degree);
+//    float length = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+//    Vector posVec = XMLoadFloat3(&m_worldPos);
+//    Vector axisVec = XMLoadFloat3(&axis);
+//    Vector centerVec = XMLoadFloat3(&center);
+//    auto k = axisVec / length;
+//    Vector dir = posVec - centerVec;
+//    float cos = std::cos(theta);
+//    float sin = std::sin(theta);
+//}
 
 void Actor::MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
 {
@@ -116,7 +135,7 @@ void Actor::MoveAnimInCubic(float currentTime, float startTime, float endTime, F
     SetWorldPos(pos);
 }
 
-void Actor::SetRotaion(float degree, Float3 up)
+void Actor::SetRotation(float degree, Float3 up)
 {
     float radian = XMConvertToRadians(degree);
     auto rotMtx = XMMatrixRotationAxis(XMLoadFloat3(&up), radian);

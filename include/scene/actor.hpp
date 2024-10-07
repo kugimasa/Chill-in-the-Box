@@ -126,11 +126,13 @@ public:
         friend class Model;
         friend class Actor;
     };
-    void Rotate(float deltaTime, float speed, Float3 up);
 
+    void Translate(Float3 trans);
+    void Rotate(float speed, float startDeg, Float3 up);
+    // void RotateAroundAxis(float degree, Float3 center, Float3 axis, float raduis);
     void MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
 
-    void SetRotaion(float degree, Float3 up);
+    void SetRotation(float degree, Float3 up);
     void SetWorldPos(Float3 worldPos);
     void SetWorldMatrix(Matrix worldMtx) { m_worldMtx = worldMtx; }
     void SetMaterialHitGroup(const std::wstring& hitGroupName);
