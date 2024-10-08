@@ -135,7 +135,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     {
         if (payload.pathDepth == 0)
         {
-            payload.color += gSceneParam.light2.color;
+            payload.color = gSceneParam.light2.color;
         }
         payload.pathDepth = gSceneParam.maxPathDepth;
         return;
@@ -144,7 +144,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     {
         if (payload.pathDepth == 0)
         {
-            payload.color += gSceneParam.light3.color;
+            payload.color = gSceneParam.light3.color;
         }
         payload.pathDepth = gSceneParam.maxPathDepth;
         return;

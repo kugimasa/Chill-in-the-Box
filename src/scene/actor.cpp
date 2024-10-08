@@ -114,19 +114,6 @@ void Actor::Rotate(float angle, float startDeg, Float3 up)
     m_worldMtx = rotMtx * transMtx;
 }
 
-//void Actor::RotateAroundAxis(float degree, Float3 center, Float3 axis, float raduis)
-//{
-//    float theta = XMConvertToRadians(degree);
-//    float length = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
-//    Vector posVec = XMLoadFloat3(&m_worldPos);
-//    Vector axisVec = XMLoadFloat3(&axis);
-//    Vector centerVec = XMLoadFloat3(&center);
-//    auto k = axisVec / length;
-//    Vector dir = posVec - centerVec;
-//    float cos = std::cos(theta);
-//    float sin = std::sin(theta);
-//}
-
 void Actor::MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
 {
     float t = (currentTime - startTime) / (endTime - startTime);

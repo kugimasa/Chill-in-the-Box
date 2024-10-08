@@ -5,8 +5,8 @@ Scene::Scene(std::unique_ptr<Device>& device) :
     m_pDevice(device),
     m_camera(),
     m_param(),
-    m_maxPathDepth(10),
-    m_maxSPP(50),
+    m_maxPathDepth(8),
+    m_maxSPP(80),
     m_totalHitGroupCount(0)
 {
 }
@@ -21,7 +21,7 @@ void Scene::OnInit(float aspect)
     float fovY = XM_PIDIV4;
     float nearZ = 0.1f;
     float farZ = 100.0f;
-    Float3 startPos(-10.0, 0.36, 5.8);
+    Float3 startPos(-9.0, 0.36, 5.8);
     Float3 target(0.0f, 5.0f, 0.0f);
     m_camera = std::shared_ptr<Camera>(new Camera(fovY, aspect, nearZ, farZ, startPos, target));
     if (m_pDevice->CreateConstantBuffer(m_pConstantBuffers, sizeof(SceneParam), L"SceneCB"))
@@ -33,7 +33,7 @@ void Scene::OnInit(float aspect)
     InitializeActors();
 
     // 背景テクスチャのロード
-    m_bgTex = LoadHDRTexture(L"rural_asphalt_road_4k.hdr", m_pDevice);
+    m_bgTex = LoadHDRTexture(L"rogland_clear_night_4k.hdr", m_pDevice);
 
     Print(PrintInfoType::RTCAMP10, L"シーン構築 完了");
 }
@@ -60,7 +60,7 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
         float action3Time = 5.5f;
         float action4Time = 8.0;
         float action5Time = 10.0f;
-        Float3 camStartPos(-10.0, 0.36, 5.8);
+        Float3 camStartPos(-9.0, 0.36, 5.8);
         Float3 camAction1Pos(3.0, 5.5, 3.1);
         Float3 camAction2Pos(6.6, 9.5, 3.6);
         Float3 camAction3Pos(8.0, 10.0, -6);
@@ -192,24 +192,72 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
 
     /// ライト演出
     {
-        // 上昇挙動
-        float startTime = 0;
-        float endTime = 0.5f;
-        if (startTime <= currentTime && currentTime < endTime)
+        float lightEnd = 5.7f;
+        float boxOpenTime = 6.7f;
+        if (currentTime <= lightEnd)
         {
-            Float3 startPos1 = Float3(0, 1, 2);
-            Float3 endPos1 = Float3(0, 5, 2);
-            m_sphereLight1->MoveAnimInCubic(currentTime, startTime, endTime, startPos1, endPos1);
-            Float3 startPos2 = Float3(sqrt(3), 1, -1);
-            Float3 endPos2 = Float3(sqrt(3), 5, -1);
-            m_sphereLight2->MoveAnimInCubic(currentTime, startTime, endTime, startPos2, endPos2);
-            Float3 startPos3 = Float3(-sqrt(3), 1, -1);
-            Float3 endPos3 = Float3(-sqrt(3), 5, -1);
-            m_sphereLight3->MoveAnimInCubic(currentTime, startTime, endTime, startPos3, endPos3);
-        }
-        // TODO: 旋回挙動
+            float a = 3.5f;
+            float b = 3.5f / 3.0f;
+            int cycleFrame = (int)(lightEnd * 60);
+            float deltaTime = float(currentFrame % cycleFrame) / float(cycleFrame);
+            // 移動挙動
+            float theta = XM_2PI * deltaTime;
+            Float2 pos = Hypocycloid(a, b, theta);
+            m_sphereLight1->SetWorldPos(Float3(pos.x, 7, pos.y));
+            theta += (2.0f * XM_PI) / 3.0f;
+            theta += XM_2PI * deltaTime;
+            pos = Hypocycloid(a, b, theta);
+            m_sphereLight2->SetWorldPos(Float3(pos.x, 7, pos.y));
+            theta += (2.0f * XM_PI) / 3.0f;
+            pos = Hypocycloid(a, b, theta);
+            m_sphereLight3->SetWorldPos(Float3(pos.x, 7, pos.y));
 
-        // TODO: 強度の変化
+            float t = EaseInOutQuad(deltaTime);
+
+            // 強度の変化
+            float initialIntensity = 50;
+            float additionalIntensity = 5;
+            m_param.light1.intensity = initialIntensity + (t * additionalIntensity);
+            m_param.light2.intensity = initialIntensity + (t * additionalIntensity);
+            m_param.light3.intensity = initialIntensity + (t * additionalIntensity);
+
+            // カラー変化
+            if (0 <= currentFrame && currentFrame < (int)(cycleFrame / 3))
+            {
+                float s = ((float)currentFrame) / ((float)cycleFrame / 3.0f);
+                float t = EaseInOutQuad(s);
+                m_param.light1.color = Lerp(COL_LIGHT_SKY_BLUE, COL_MEDIUM_ORCHID, t);
+                m_param.light2.color = Lerp(COL_MEDIUM_ORCHID, COL_ROYAL_BLUE, t);
+                m_param.light3.color = Lerp(COL_ROYAL_BLUE, COL_LIGHT_SKY_BLUE, t);
+            }
+            else if ((int)(cycleFrame / 3) <= currentFrame && currentFrame < (int)(2 * cycleFrame / 3))
+            {
+                float s = (((float)currentFrame) - ((float)cycleFrame / 3.0f)) / ((float)cycleFrame / 3.0f);
+                float t = EaseInOutQuad(s);
+                m_param.light1.color = Lerp(COL_MEDIUM_ORCHID, COL_ROYAL_BLUE, t);
+                m_param.light2.color = Lerp(COL_ROYAL_BLUE, COL_LIGHT_SKY_BLUE, t);
+                m_param.light3.color = Lerp(COL_LIGHT_SKY_BLUE, COL_MEDIUM_ORCHID, t);
+            }
+            else if ((int)(2 * cycleFrame / 3) <= currentFrame)
+            {
+                float s = (((float)currentFrame) - ((float)2.0f * cycleFrame / 3.0f)) / ((float)cycleFrame / 3.0f);
+                float t = EaseInOutQuad(s);
+                m_param.light1.color = Lerp(COL_ROYAL_BLUE, COL_LIGHT_SKY_BLUE, t);
+                m_param.light2.color = Lerp(COL_LIGHT_SKY_BLUE, COL_MEDIUM_ORCHID, t);
+                m_param.light3.color = Lerp(COL_MEDIUM_ORCHID, COL_ROYAL_BLUE, t);
+            }
+        }
+        else if (lightEnd < currentTime && currentTime <= boxOpenTime)
+        {
+            float s = (currentTime - lightEnd) / (boxOpenTime - lightEnd);
+            float t = EaseInCubic(s);
+            m_param.light1.color = Lerp(COL_LIGHT_SKY_BLUE, COL_VIOLET, t);
+            m_param.light2.color = Lerp(COL_MEDIUM_ORCHID, COL_VIOLET, t);
+            m_param.light3.color = Lerp(COL_ROYAL_BLUE, COL_VIOLET, t);
+            m_param.light1.intensity = std::lerp(50, 65, t);
+            m_param.light2.intensity = std::lerp(50, 65, t);
+            m_param.light3.intensity = std::lerp(50, 65, t);
+        }
 
         // ライトパラメータの更新
         m_param.light1.center = m_sphereLight1->GetWorldPos();
@@ -378,24 +426,25 @@ ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
 /// </summary>
 void Scene::InitializeActors()
 {
+    float initialIntensity = 50.0;
     // ライト1
     Float3 light1Pos = Float3(0, 1, 2);
     Float3 light1Color = COL_LIGHT_SKY_BLUE;
-    SphereLightParam light1Param(light1Pos, 0.2, light1Color, 50.0);
+    SphereLightParam light1Param(light1Pos, 0.2, light1Color, initialIntensity);
     m_param.light1 = light1Param;
     InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", light1Pos);
     m_actors.push_back(m_sphereLight1);
     // ライト2
     Float3 light2Pos = Float3(sqrt(3), 1, -1);
     Float3 light2Color = COL_MEDIUM_ORCHID;
-    SphereLightParam light2Param(light2Pos, 0.2, light2Color, 50.0);
+    SphereLightParam light2Param(light2Pos, 0.2, light2Color, initialIntensity);
     m_param.light2 = light2Param;
     InstantiateActor(m_sphereLight2, L"sphere.glb", L"Actor", light2Pos);
     m_actors.push_back(m_sphereLight2);
     // ライト3
     Float3 light3Pos = Float3(-sqrt(3), 1, -1);
     Float3 light3Color = COL_ROYAL_BLUE;
-    SphereLightParam light3Param(light3Pos, 0.2, light3Color, 50.0);
+    SphereLightParam light3Param(light3Pos, 0.2, light3Color, initialIntensity);
     m_param.light3 = light3Param;
     InstantiateActor(m_sphereLight3, L"sphere.glb", L"Actor", light3Pos);
     m_actors.push_back(m_sphereLight3);
