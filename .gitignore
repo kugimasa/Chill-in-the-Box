@@ -375,3 +375,6 @@ external/libs
 # Scene Resources
 resources/scene
 resources/texture/*.hdr
+
+# JetBrains Related
+.idea/
