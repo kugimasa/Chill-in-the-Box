@@ -21,7 +21,7 @@ public:
 
     std::wstring GetName() const { return m_name; }
 
-    // ƒm[ƒhî•ñ
+    // ãƒãƒ¼ãƒ‰æƒ…å ±
     class Node
     {
     public:
@@ -40,7 +40,7 @@ public:
         friend class Model;
     };
 
-    // ƒ|ƒŠƒSƒ“î•ñ
+    // ãƒãƒªã‚´ãƒ³æƒ…å ±
     class Primitive
     {
     private:
@@ -52,7 +52,7 @@ public:
         friend class Model;
     };
 
-    // ƒ|ƒŠƒSƒ“ƒƒbƒVƒ…‚ÌƒOƒ‹[ƒv
+    // ãƒãƒªã‚´ãƒ³ãƒ¡ãƒƒã‚·ãƒ¥ã®ã‚°ãƒ«ãƒ¼ãƒ—
     class Mesh
     {
     private:
@@ -61,7 +61,7 @@ public:
         friend class Model;
     };
 
-    // ƒ}ƒeƒŠƒAƒ‹î•ñ
+    // ãƒãƒ†ãƒªã‚¢ãƒ«æƒ…å ±
     class Material
     {
     public:
@@ -72,7 +72,7 @@ public:
     private:
         std::wstring m_name;
         int m_textureIndex;
-        // TODO: BRDF—p‚Ìî•ñ‚ğƒZƒbƒg
+        // TODO: BRDFç”¨ã®æƒ…å ±ã‚’ã‚»ãƒƒãƒˆ
         Float3 m_diffuseColor;
         friend class Model;
     };

@@ -16,17 +16,17 @@ namespace fs = std::filesystem;
 
 #ifdef _DEBUG
 /// <summary>
-///  ƒVƒF[ƒ_[ƒRƒ“ƒpƒCƒ‹
+///  ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«
 /// </summary>
-/// <param name="hlslFilePath">HLSL‚Ìƒtƒ@ƒCƒ‹ƒpƒX</param>
-/// <returns>ƒRƒ“ƒpƒCƒ‹Œ‹‰Ê</returns>
+/// <param name="hlslFilePath">HLSLã®ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹</param>
+/// <returns>ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«çµæœ</returns>
 std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
 {
-    Print(PrintInfoType::RTCAMP10, "ƒVƒF[ƒ_[ƒRƒ“ƒpƒCƒ‹ ŠJn");
-    // ƒVƒF[ƒ_[ƒ[ƒh
+    Print(PrintInfoType::RTCAMP10, "ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ³ãƒ‘ã‚¤ãƒ« é–‹å§‹");
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ­ãƒ¼ãƒ‰
     std::ifstream file(hlslFilePath, std::ifstream::binary);
     if (!file.is_open()) {
-        Error(PrintInfoType::RTCAMP10, "ƒVƒF[ƒ_[‚Ì“Ç‚İ‚İ‚É¸”s‚µ‚Ü‚µ‚½ :", hlslFilePath);
+        Error(PrintInfoType::RTCAMP10, "ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ã¾ã—ãŸ :", hlslFilePath);
     }
 
     std::wstring fileName = hlslFilePath.filename().wstring();
@@ -46,12 +46,12 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
     ComPtr<IDxcIncludeHandler> pIncludeHandler;
     pDxcLibrary->CreateIncludeHandler(&pIncludeHandler);
 
-    // ƒRƒ“ƒpƒCƒ‹ˆø”
+    // ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«æ™‚å¼•æ•°
     std::vector<LPCWSTR> args;
     args.emplace_back(L"/0d");
     args.emplace_back(L"-I");
     args.emplace_back(RESOURCE_DIR L"/shader/");
-    // ƒVƒF[ƒ_[ƒRƒ“ƒpƒCƒ‹
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«
     const auto entryPoint = L"";
     const auto target = L"lib_6_4";
     ComPtr<IDxcOperationResult> pDxcResult;
@@ -65,7 +65,7 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::RTCAMP10, "ƒRƒ“ƒpƒCƒ‹‚ÌÀs‚É¸”s‚µ‚Ü‚µ‚½ :", hlslFilePath);
+        Error(PrintInfoType::RTCAMP10, "ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã®å®Ÿè¡Œã«å¤±æ•—ã—ã¾ã—ãŸ :", hlslFilePath);
     }
     pDxcResult->GetStatus(&hr);
     if (FAILED(hr))
@@ -74,21 +74,21 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
         hr = pDxcResult->GetErrorBuffer(&pErrBlob);
         if (FAILED(hr))
         {
-            Error(PrintInfoType::RTCAMP10, "ƒRƒ“ƒpƒCƒ‹ƒGƒ‰[‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½ :", hlslFilePath);
+            Error(PrintInfoType::RTCAMP10, "ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã‚¨ãƒ©ãƒ¼ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ :", hlslFilePath);
         }
-        // ƒRƒ“ƒpƒCƒ‹ƒGƒ‰[‚Ìo—Í
+        // ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã‚¨ãƒ©ãƒ¼ã®å‡ºåŠ›
         auto size = pErrBlob->GetBufferSize();
         std::vector<char> infoLog(size + 1);
         memcpy(infoLog.data(), pErrBlob->GetBufferPointer(), size);
         infoLog.back() = 0;
         OutputDebugStringA(infoLog.data());
-        Error(PrintInfoType::RTCAMP10, "ƒVƒF[ƒ_[ƒRƒ“ƒpƒCƒ‹‚É¸”s‚µ‚Ü‚µ‚½ :", hlslFilePath);
+        Error(PrintInfoType::RTCAMP10, "ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã«å¤±æ•—ã—ã¾ã—ãŸ :", hlslFilePath);
     }
 
     ComPtr<IDxcBlob> pBlob;
     hr = pDxcResult->GetResult(&pBlob);
     if (FAILED(hr)) {
-        Error(PrintInfoType::RTCAMP10, "ƒVƒF[ƒ_[ƒRƒ“ƒpƒCƒ‹‚ÌŒ‹‰Ê‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½", hlslFilePath);
+        Error(PrintInfoType::RTCAMP10, "ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã®çµæœã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ", hlslFilePath);
     }
     std::vector<char> result;
     auto blobSize = pBlob->GetBufferSize();
@@ -99,16 +99,16 @@ std::vector<char> inline CompileShaderLibrary(const fs::path& hlslFilePath)
 #endif // _DEBUG
 
 /// <summary>
-/// ƒRƒ“ƒpƒCƒ‹Ï‚İ‚ÌƒVƒF[ƒ_[ƒ‰ƒCƒuƒ‰ƒŠ‚ğƒ[ƒh
+/// ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«æ¸ˆã¿ã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã‚’ãƒ­ãƒ¼ãƒ‰
 /// </summary>
-/// <param name="shaderLibPath">ƒVƒF[ƒ_[ƒ‰ƒCƒuƒ‰ƒŠ‚Ö‚ÌƒpƒX</param>
-/// <returns>ƒVƒF[ƒ_[ƒ‰ƒCƒuƒ‰ƒŠ</returns>
+/// <param name="shaderLibPath">ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã¸ã®ãƒ‘ã‚¹</param>
+/// <returns>ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ©ã‚¤ãƒ–ãƒ©ãƒª</returns>
 std::vector<char> inline LoadPreCompiledShaderLibrary(const fs::path& shaderLibPath)
 {
-    // ƒVƒF[ƒ_[ƒ[ƒh
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ­ãƒ¼ãƒ‰
     std::ifstream file(shaderLibPath, std::ios::binary);
     if (!file.is_open()) {
-        std::wstring err = L"ƒVƒF[ƒ_[ƒ‰ƒCƒuƒ‰ƒŠ‚Ì“Ç‚İ‚İ‚É¸”s‚µ‚Ü‚µ‚½ :" + StrToWStr(shaderLibPath.string());
+        std::wstring err = L"ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ã¾ã—ãŸ :" + StrToWStr(shaderLibPath.string());
         Error(PrintInfoType::RTCAMP10, err);
         throw std::runtime_error("");
     }
@@ -119,17 +119,17 @@ std::vector<char> inline LoadPreCompiledShaderLibrary(const fs::path& shaderLibP
 }
 
 /// <summary>
-/// ƒVƒF[ƒ_[ƒZƒbƒgƒAƒbƒv
+/// ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
 /// </summary>
-/// <param name="shaderName">ƒVƒF[ƒ_[–¼</param>
+/// <param name="shaderName">ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼å</param>
 /// <returns></returns>
 std::vector<char> inline SetupShader(const std::wstring& shaderName)
 {
     std::vector<char> shaderBin;
-    // ƒVƒF[ƒ_[ƒ[ƒh
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ­ãƒ¼ãƒ‰
 #if _DEBUG
     const fs::path shaderPath{ RESOURCE_DIR L"/shader/" + shaderName + L".hlsl" };
-    // ƒVƒF[ƒ_[‚Ìƒ‰ƒ“ƒ^ƒCƒ€ƒRƒ“ƒpƒCƒ‹
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã®ãƒ©ãƒ³ã‚¿ã‚¤ãƒ ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«
     shaderBin = CompileShaderLibrary(shaderPath);
 #else
     const fs::path shaderPath{ RESOURCE_DIR L"/shader/" + shaderName + L".dxlib" };

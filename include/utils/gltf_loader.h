@@ -33,17 +33,17 @@ bool inline LoadGLTF(const std::wstring& fileName, tinygltf::Model& model)
     }
     else
     {
-        std::wstring errWStr = L"ƒtƒ@ƒCƒ‹Œ`®‚ª‘Î‰‚µ‚Ä‚¢‚Ü‚¹‚ñF" + std::wstring(gltfPath.extension().c_str());
+        std::wstring errWStr = L"ãƒ•ã‚¡ã‚¤ãƒ«å½¢å¼ãŒå¯¾å¿œã—ã¦ã„ã¾ã›ã‚“ï¼š" + std::wstring(gltfPath.extension().c_str());
         Error(PrintInfoType::RTCAMP10, errWStr);
     }
     if (!warn.empty())
     {
-        std::wstring errWStr = L"GLTFƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ’†‚ÌŒx :" + StrToWStr(warn);
+        std::wstring errWStr = L"GLTFãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ä¸­ã®è­¦å‘Š :" + StrToWStr(warn);
         Error(PrintInfoType::RTCAMP10, errWStr);
     }
     if (!err.empty())
     {
-        std::wstring errWStr = L"GLTFƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ’†‚ÌƒGƒ‰[ :" + StrToWStr(err);
+        std::wstring errWStr = L"GLTFãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ä¸­ã®ã‚¨ãƒ©ãƒ¼ :" + StrToWStr(err);
         Error(PrintInfoType::RTCAMP10, errWStr);
     }
     return result;

@@ -17,7 +17,7 @@ Scene::~Scene()
 
 void Scene::OnInit(float aspect)
 {
-    // ƒJƒƒ‰‚Ì‰Šúİ’è
+    // ã‚«ãƒ¡ãƒ©ã®åˆæœŸè¨­å®š
     float fovY = XM_PIDIV4;
     float nearZ = 0.1f;
     float farZ = 100.0f;
@@ -29,30 +29,30 @@ void Scene::OnInit(float aspect)
         UpdateSceneParam(0);
     }
 
-    // ƒ‚ƒfƒ‹‚Ì‰Šúİ’è
+    // ãƒ¢ãƒ‡ãƒ«ã®åˆæœŸè¨­å®š
     InitializeActors();
 
-    // ”wŒiƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh
+    // èƒŒæ™¯ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰
     m_bgTex = LoadHDRTexture(L"rogland_clear_night_4k.hdr", m_pDevice);
 
-    Print(PrintInfoType::RTCAMP10, L"ƒV[ƒ“\’z Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"ã‚·ãƒ¼ãƒ³æ§‹ç¯‰ å®Œäº†");
 }
 
 void Scene::OnUpdate(int currentFrame, int maxFrame)
 {
-    // ƒAƒjƒ[ƒVƒ‡ƒ“ˆ—‚Í‚±‚¿‚ç‚Ås‚¤
-    // –{”Ô’ño‘z’èİ’è
+    // ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å‡¦ç†ã¯ã“ã¡ã‚‰ã§è¡Œã†
+    // æœ¬ç•ªæå‡ºæƒ³å®šè¨­å®š
     // MAX_FRAME: 600
     // FPS: 60
     // MAX_SEC: 10
-    // TODO: Œã‚Ù‚Çíœ
+    // TODO: å¾Œã»ã©å‰Šé™¤
     maxFrame = 600;
     int fps = 60;
     float maxSec = 10;
     float deltaTime = float(currentFrame % fps) / float(fps);
     float currentTime = float(currentFrame) * maxSec / float(maxFrame);
 
-    /// ƒJƒƒ‰‰‰o
+    /// ã‚«ãƒ¡ãƒ©æ¼”å‡º
     {
         float startTime = 0.0f;
         float action1Time = 2.0f;
@@ -71,23 +71,23 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
         // TIME: 0.0 - 2.0 (sec)
         if (startTime <= currentTime && currentTime < action1Time)
         {
-            // ƒJƒƒ‰ˆÚ“®
+            // ã‚«ãƒ¡ãƒ©ç§»å‹•
             m_camera->MoveAnimInCubic(currentTime, startTime, action1Time, camStartPos, camAction1Pos);
         }
         ////// ACTION 2 //////
         // TIME: 2.0 - 2.5 (sec)
         else if (action1Time <= currentTime && currentTime < action2Time)
         {
-            // ƒJƒƒ‰ˆÚ“®
+            // ã‚«ãƒ¡ãƒ©ç§»å‹•
             m_camera->MoveAnimOutCubic(currentTime, action1Time, action2Time, camAction1Pos, camAction2Pos);
         }
         ////// ACTION 3 - READY //////
         // TIME: 2.5 - 5.5 (sec)
         else if (action2Time <= currentTime && currentTime < action3Time)
         {
-            // ƒJƒƒ‰ˆÚ“®
+            // ã‚«ãƒ¡ãƒ©ç§»å‹•
             m_camera->MoveAnimInCubic(currentTime, action2Time, action3Time, camAction2Pos, camAction3Pos);
-            // ƒJƒƒ‰‰æŠp’²®
+            // ã‚«ãƒ¡ãƒ©ç”»è§’èª¿æ•´
             m_camera->ChangeFovYInCubic(currentTime, action2Time, action3Time, camStartFovY, camAction3FovY);
         }
         ////// ACTION 4 - STAY //////
@@ -96,101 +96,101 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
         // TIME: 8.0 - 10.0 (sec)
         else if (action4Time <= currentTime && currentTime < action5Time)
         {
-            // ƒJƒƒ‰‰æŠp’²®
+            // ã‚«ãƒ¡ãƒ©ç”»è§’èª¿æ•´
             m_camera->ChangeFovYInCubic(currentTime, action4Time, (action4Time + 0.5f), camAction3FovY, camStartFovY);
-            // ƒJƒƒ‰’Ç]
+            // ã‚«ãƒ¡ãƒ©è¿½å¾“
             if (currentTime < (action4Time + 1.2f))
             {
                 auto actorPos = m_modelActor->GetWorldPos();
                 m_camera->SetTarget(actorPos);
             }
-            // ƒ‚ƒfƒ‹ˆÚ“®
+            // ãƒ¢ãƒ‡ãƒ«ç§»å‹•
             Float3 modelStartPos(0, 5, 0);
             Float3 modelEndPos(0, 100, 0);
             m_modelActor->MoveAnimInCubic(currentTime, action4Time, action5Time, modelStartPos, modelEndPos);
         }
     }
 
-    /// ”wŒi“WŠJ
+    /// èƒŒæ™¯å±•é–‹
     {
         float startTime = 7.9f;
         float endTime = 8.1f;
         if (startTime <= currentTime && currentTime < endTime)
         {
-            // ƒnƒbƒ`ƒI[ƒvƒ“
-            // “V”ÂˆÚ“®
+            // ãƒãƒƒãƒã‚ªãƒ¼ãƒ—ãƒ³
+            // å¤©æ¿ç§»å‹•
             Float3 topStartPos(0, 10, 0);
             Float3 topEndPos(0, 10, -10);
             m_planeTop->MoveAnimInCubic(currentTime, startTime, endTime, topStartPos, topEndPos);
             m_planeTop->SetRotation(180, Float3(1, 0, 0));
-            // Œã•Ç
+            // å¾Œå£
             float t = (currentTime - startTime) / (endTime - startTime);
             float startDeg = -90;
             float endDeg = 0;
             float degree = std::lerp(startDeg, endDeg, t);
             m_planeBack->SetRotation(degree, Float3(1, 0, 0));
             m_planeBack->Translate(Float3(0, -5, 0));
-            // ¶•Ç
+            // å·¦å£
             m_planeLeft->SetRotation(degree, Float3(0, 0, 1));
             m_planeLeft->Translate(Float3(0, -5, 0));
         }
     }
 
-    /// ƒ‚ƒfƒ‹‰ñ“]‹““®
+    /// ãƒ¢ãƒ‡ãƒ«å›è»¢æŒ™å‹•
     {
-        float rotTime1 = 2.0f; // —\”õ“®ì (‰E‰ñ“])
-        float rotTime2 = 5.0f; // —\”õ“®ì (¶‰ñ“])
-        float rotTime3 = 5.5f; // ’â~ŠJn
-        float rotTime4 = 6.0f; // ’â~‰ğœ
-        float rotTime5 = 8.0f; // ƒtƒ‹ƒXƒƒbƒgƒ‹
+        float rotTime1 = 2.0f; // äºˆå‚™å‹•ä½œ (å³å›è»¢)
+        float rotTime2 = 5.0f; // äºˆå‚™å‹•ä½œ (å·¦å›è»¢)
+        float rotTime3 = 5.5f; // åœæ­¢é–‹å§‹
+        float rotTime4 = 6.0f; // åœæ­¢è§£é™¤
+        float rotTime5 = 8.0f; // ãƒ•ãƒ«ã‚¹ãƒ­ãƒƒãƒˆãƒ«
         float modelReadyDeg1 = -60.0f;
         float modelReadyDeg2 = 130.0f;
         float modelSpeedUpDeg = 2000.0f;
         float modelFinalDeg = 0.0f;
         float modelFinalRot = 10.0f;
-        // ‰ñ“]‚Ì—\”õ“®ì1
+        // å›è»¢ã®äºˆå‚™å‹•ä½œ1
         // TIME: 2.0 - 5.0
         if (rotTime1 <= currentTime && currentTime < rotTime2)
         {
-            // ƒ‚ƒfƒ‹‚Ì‰ñ“]
+            // ãƒ¢ãƒ‡ãƒ«ã®å›è»¢
             float t = (currentTime - rotTime1) / (rotTime2 - rotTime1);
             float s = EaseInCubic(t);
             float degree = std::lerp(0.0, modelReadyDeg1, s);
             m_modelActor->SetRotation(degree, Float3(0, 1, 0));
         }
-        // ‰ñ“]‚Ì—\”õ“®ì2
+        // å›è»¢ã®äºˆå‚™å‹•ä½œ2
         // TIME: 5.0 - 5.5
         else if (rotTime2 <= currentTime && currentTime < rotTime3)
         {
-            // ƒ‚ƒfƒ‹‚Ì‰ñ“]
+            // ãƒ¢ãƒ‡ãƒ«ã®å›è»¢
             float t = (currentTime - rotTime2) / (rotTime3 - rotTime2);
             float s = EaseOutCubic(t);
             float degree = std::lerp(modelReadyDeg1, modelReadyDeg2, s);
             m_modelActor->SetRotation(degree, Float3(0, 1, 0));
         }
-        // ˆê’â~
+        // ä¸€æ™‚åœæ­¢
         // TIME: 5.5 - 6.0
-        // ‰ñ“]‚Ì—\”õ“®ì2
+        // å›è»¢ã®äºˆå‚™å‹•ä½œ2
         // TIME: 6.0 - 8.0
         else if (rotTime4 <= currentTime && currentTime < rotTime5)
         {
-            // ƒ‚ƒfƒ‹‚Ì‰ñ“]
+            // ãƒ¢ãƒ‡ãƒ«ã®å›è»¢
             float t = (currentTime - rotTime4) / (rotTime5 - rotTime4);
             float s = EaseInCubic(t);
             float degree = std::lerp(modelReadyDeg2, modelSpeedUpDeg, s);
-            // ƒ‚ƒfƒ‹‚Ì‰ñ“]
+            // ãƒ¢ãƒ‡ãƒ«ã®å›è»¢
             m_modelActor->SetRotation(degree, Float3(0, 1, 0));
         }
-        // ÅI‰ñ“]“®ì
+        // æœ€çµ‚å›è»¢å‹•ä½œ
         // TIME: 8.0 - 10.0
         else if (rotTime5 <= currentTime)
         {
-            // ƒ‚ƒfƒ‹‚Ì‰ñ“]
+            // ãƒ¢ãƒ‡ãƒ«ã®å›è»¢
             m_modelActor->Rotate(modelFinalRot * deltaTime, modelSpeedUpDeg, Float3(0, 1, 0));
         }
     }
 
-    /// ƒ‰ƒCƒg‰‰o
+    /// ãƒ©ã‚¤ãƒˆæ¼”å‡º
     {
         float lightEnd = 5.7f;
         float boxOpenTime = 6.7f;
@@ -200,7 +200,7 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
             float b = 3.5f / 3.0f;
             int cycleFrame = (int)(lightEnd * 60);
             float deltaTime = float(currentFrame % cycleFrame) / float(cycleFrame);
-            // ˆÚ“®‹““®
+            // ç§»å‹•æŒ™å‹•
             float theta = XM_2PI * deltaTime;
             Float2 pos = Hypocycloid(a, b, theta);
             m_sphereLight1->SetWorldPos(Float3(pos.x, 7, pos.y));
@@ -214,14 +214,14 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
 
             float t = EaseInOutQuad(deltaTime);
 
-            // ‹­“x‚Ì•Ï‰»
+            // å¼·åº¦ã®å¤‰åŒ–
             float initialIntensity = 50;
             float additionalIntensity = 5;
             m_param.light1.intensity = initialIntensity + (t * additionalIntensity);
             m_param.light2.intensity = initialIntensity + (t * additionalIntensity);
             m_param.light3.intensity = initialIntensity + (t * additionalIntensity);
 
-            // ƒJƒ‰[•Ï‰»
+            // ã‚«ãƒ©ãƒ¼å¤‰åŒ–
             if (0 <= currentFrame && currentFrame < (int)(cycleFrame / 3))
             {
                 float s = ((float)currentFrame) / ((float)cycleFrame / 3.0f);
@@ -259,18 +259,18 @@ void Scene::OnUpdate(int currentFrame, int maxFrame)
             m_param.light3.intensity = std::lerp(50, 65, t);
         }
 
-        // ƒ‰ƒCƒgƒpƒ‰ƒ[ƒ^‚ÌXV
+        // ãƒ©ã‚¤ãƒˆãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®æ›´æ–°
         m_param.light1.center = m_sphereLight1->GetWorldPos();
         m_param.light2.center = m_sphereLight2->GetWorldPos();
         m_param.light3.center = m_sphereLight3->GetWorldPos();
     }
 
-    // ƒV[ƒ“ƒoƒbƒtƒ@‚Ì‘‚«‚İ
+    // ã‚·ãƒ¼ãƒ³ãƒãƒƒãƒ•ã‚¡ã®æ›¸ãè¾¼ã¿
     UINT frameIndex = m_pDevice->GetCurrentFrameIndex();
     auto cb = m_pConstantBuffers[frameIndex];
     m_pDevice->WriteBuffer(cb, &m_param, sizeof(SceneParam));
 
-    // ƒV[ƒ“ƒpƒ‰ƒ[ƒ^‚ÌXV
+    // ã‚·ãƒ¼ãƒ³ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®æ›´æ–°
     UpdateSceneParam(currentFrame);
 }
 
@@ -290,7 +290,7 @@ void Scene::OnDestroy()
 void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& instanceDescs)
 {
     UINT instanceHitGroupOffset = 0;
-    // ƒ‰ƒCƒg
+    // ãƒ©ã‚¤ãƒˆ
     {
         auto lights =
         {
@@ -305,7 +305,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
             auto mtxTrans = light->GetWorldMatrix();
             XMStoreFloat3x4(reinterpret_cast<Mtx3x4*>(&desc.Transform), mtxTrans);
             desc.InstanceID = lightInstanceID;
-            desc.InstanceMask = 0x08; // ƒ‰ƒCƒg—p‚Ìƒ}ƒXƒN
+            desc.InstanceMask = 0x08; // ãƒ©ã‚¤ãƒˆç”¨ã®ãƒã‚¹ã‚¯
             desc.InstanceContributionToHitGroupIndex = instanceHitGroupOffset;
             desc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
             desc.AccelerationStructure = light->GetBLAS()->GetGPUVirtualAddress();
@@ -314,7 +314,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
             lightInstanceID++;
         }
     }
-    // ”wŒi
+    // èƒŒæ™¯
     {
         auto planes =
         { 
@@ -336,7 +336,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
             instanceHitGroupOffset += plane->GetTotalMeshCount();
         }
     }
-    // ƒe[ƒuƒ‹
+    // ãƒ†ãƒ¼ãƒ–ãƒ«
     {
         D3D12_RAYTRACING_INSTANCE_DESC desc{};
         auto mtxTrans = m_tableActor->GetWorldMatrix();
@@ -349,7 +349,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
         instanceDescs.push_back(desc);
         instanceHitGroupOffset += m_tableActor->GetTotalMeshCount();
     }
-    // ƒIƒuƒWƒFƒNƒg
+    // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
     {
         D3D12_RAYTRACING_INSTANCE_DESC desc{};
         auto mtxTrans = m_modelActor->GetWorldMatrix();
@@ -365,7 +365,7 @@ void Scene::CreateRTInstanceDesc(std::vector<D3D12_RAYTRACING_INSTANCE_DESC>& in
 }
 
 /// <summary>
-/// ƒV[ƒ“ƒpƒ‰ƒ[ƒ^‚ÌXV
+/// ã‚·ãƒ¼ãƒ³ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®æ›´æ–°
 /// </summary>
 void Scene::UpdateSceneParam(UINT currentFrame)
 {
@@ -380,7 +380,7 @@ void Scene::UpdateSceneParam(UINT currentFrame)
 }
 
 /// <summary>
-/// HitGroup—p‚ÌƒVƒF[ƒ_[ƒŒƒR[ƒh‚Ì‘‚«‚İ
+/// HitGroupç”¨ã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ¬ã‚³ãƒ¼ãƒ‰ã®æ›¸ãè¾¼ã¿
 /// </summary>
 /// <param name="dst"></param>
 /// <param name="hitGroupRecordSize"></param>
@@ -398,7 +398,7 @@ uint8_t* Scene::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
 }
 
 /// <summary>
-/// BLAS‚ÌXV
+/// BLASã®æ›´æ–°
 /// </summary>
 /// <param name="cmdList"></param>
 void Scene::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
@@ -412,7 +412,7 @@ void Scene::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
 }
 
 /// <summary>
-/// ƒV[ƒ“—p’è”ƒoƒbƒtƒ@‚Ìæ“¾
+/// ã‚·ãƒ¼ãƒ³ç”¨å®šæ•°ãƒãƒƒãƒ•ã‚¡ã®å–å¾—
 /// </summary>
 /// <returns></returns>
 ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
@@ -422,26 +422,26 @@ ComPtr<ID3D12Resource> Scene::GetConstantBuffer()
 }
 
 /// <summary>
-/// ƒIƒuƒWƒFƒNƒg‚ÌƒZƒbƒgƒAƒbƒv
+/// ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
 /// </summary>
 void Scene::InitializeActors()
 {
     float initialIntensity = 50.0;
-    // ƒ‰ƒCƒg1
+    // ãƒ©ã‚¤ãƒˆ1
     Float3 light1Pos = Float3(0, 1, 2);
     Float3 light1Color = COL_LIGHT_SKY_BLUE;
     SphereLightParam light1Param(light1Pos, 0.2, light1Color, initialIntensity);
     m_param.light1 = light1Param;
     InstantiateActor(m_sphereLight1, L"sphere.glb", L"Actor", light1Pos);
     m_actors.push_back(m_sphereLight1);
-    // ƒ‰ƒCƒg2
+    // ãƒ©ã‚¤ãƒˆ2
     Float3 light2Pos = Float3(sqrt(3), 1, -1);
     Float3 light2Color = COL_MEDIUM_ORCHID;
     SphereLightParam light2Param(light2Pos, 0.2, light2Color, initialIntensity);
     m_param.light2 = light2Param;
     InstantiateActor(m_sphereLight2, L"sphere.glb", L"Actor", light2Pos);
     m_actors.push_back(m_sphereLight2);
-    // ƒ‰ƒCƒg3
+    // ãƒ©ã‚¤ãƒˆ3
     Float3 light3Pos = Float3(-sqrt(3), 1, -1);
     Float3 light3Color = COL_ROYAL_BLUE;
     SphereLightParam light3Param(light3Pos, 0.2, light3Color, initialIntensity);
@@ -449,7 +449,7 @@ void Scene::InitializeActors()
     InstantiateActor(m_sphereLight3, L"sphere.glb", L"Actor", light3Pos);
     m_actors.push_back(m_sphereLight3);
 
-    // ”wŒi
+    // èƒŒæ™¯
     InstantiateActor(m_planeBottom, L"plane.glb", L"Actor", Float3(0, 0, 0));
     m_actors.push_back(m_planeBottom);
     InstantiateActor(m_planeTop, L"plane.glb", L"Actor", Float3(0, 10, 0));
@@ -468,19 +468,19 @@ void Scene::InitializeActors()
     m_planeBack->SetRotation(-90, Float3(1, 0, 0));
     m_actors.push_back(m_planeBack);
 
-    // ƒe[ƒuƒ‹
+    // ãƒ†ãƒ¼ãƒ–ãƒ«
     InstantiateActor(m_tableActor, L"round_table.glb", L"Actor", Float3(0, 0, 0));
     m_actors.push_back(m_tableActor);
-    // ƒLƒƒƒ‰ƒNƒ^[
+    // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼
     InstantiateActor(m_modelActor, L"model.glb", L"Actor", Float3(0, 5, 0));
     m_actors.push_back(m_modelActor);
 
-    // HitGroup‡Œv‚Ìİ’è
+    // HitGroupåˆè¨ˆã®è¨­å®š
     SetTotalHitGroupCount();
 }
 
 /// <summary>
-/// ƒIƒuƒWƒFƒNƒg‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‰»
+/// ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹åŒ–
 /// </summary>
 /// <param name="actor"></param>
 /// <param name="fileName"></param>
@@ -488,11 +488,11 @@ void Scene::InitializeActors()
 /// <param name="pos"></param>
 void Scene::InstantiateActor(std::shared_ptr<Actor>& actor, const std::wstring fileName, const std::wstring hitGroup, Float3 pos)
 {
-    // ƒ‚ƒfƒ‹‚Ìƒ[ƒh
+    // ãƒ¢ãƒ‡ãƒ«ã®ãƒ­ãƒ¼ãƒ‰
     auto model = new Model(fileName, m_pDevice);
     actor = model->InstantiateActor(m_pDevice);
     actor->SetMaterialHitGroup(hitGroup);
-    // ‰ŠúˆÊ’uİ’è
+    // åˆæœŸä½ç½®è¨­å®š
     actor->SetWorldPos(pos);
     actor->UpdateMatrices();
 }

@@ -19,7 +19,7 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
 
     try
     {
-        // ÉEÉBÉìÉhÉEèÓïÒÇÃÉZÉbÉg
+        // „Ç¶„Ç£„É≥„Éâ„Ç¶ÊÉÖÂ†±„ÅÆ„Çª„ÉÉ„Éà
         WNDCLASSEXW windowClass{};
         windowClass.cbSize = sizeof(WNDCLASSEXW);
         windowClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -29,13 +29,13 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
         windowClass.lpszClassName = L"Renderer";
         RegisterClassExW(&windowClass);
 
-        // ÉEÉBÉìÉhÉEÉTÉCÉYÇÃê›íË
+        // „Ç¶„Ç£„É≥„Éâ„Ç¶„Çµ„Ç§„Ç∫„ÅÆË®≠ÂÆö
         RECT lpRect = {0, 0, LONG(renderer->GetWidth()), LONG(renderer->GetHeight())};
         DWORD dwStyle = WS_OVERLAPPEDWINDOW;
         dwStyle &= ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX);
         AdjustWindowRect(&lpRect, dwStyle, FALSE);
 
-        // ÉEÉBÉìÉhÉEê∂ê¨
+        // „Ç¶„Ç£„É≥„Éâ„Ç¶ÁîüÊàê
         m_hWnd = CreateWindowW(
             windowClass.lpszClassName,
             renderer->GetTitle(),
@@ -52,19 +52,19 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
         ImGui_ImplWin32_Init(m_hWnd);
 #endif // _DEBUG
 
-        // ÉåÉìÉ_ÉâÅ[ÇÃèâä˙âª
+        // „É¨„É≥„ÉÄ„É©„Éº„ÅÆÂàùÊúüÂåñ
         renderer->OnInit();
 
 #ifdef _DEBUG
         int nCmdShow = SW_SHOWNORMAL;
 #else // _DEBUG
-        // Releaseî≈Ç≈ÇÕÉEÉBÉìÉhÉEÇèoÇ≥Ç»Ç¢
+        // ReleaseÁâà„Åß„ÅØ„Ç¶„Ç£„É≥„Éâ„Ç¶„ÇíÂá∫„Åï„Å™„ÅÑ
         int nCmdShow = SW_HIDE;
 #endif
         
         ShowWindow(m_hWnd, nCmdShow);
 
-        // ÉÅÉCÉìÉãÅ[Év
+        // „É°„Ç§„É≥„É´„Éº„Éó
         MSG msg{};
         while (msg.message != WM_QUIT) {
             if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -74,7 +74,7 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
             }
             else
             {
-                // Releaseî≈Ç≈ÇÕÇ±Ç±Ç≈ï`âÊé¿çs
+                // ReleaseÁâà„Åß„ÅØ„Åì„Åì„ÅßÊèèÁîªÂÆüË°å
                 renderer->OnUpdate();
                 renderer->OnRender();
             }
@@ -92,7 +92,7 @@ int Window::Run(Renderer* renderer, HINSTANCE hInstance)
     catch (std::exception& e)
     {
         renderer->OnDestroy();
-        std::wstring err = L"ÉGÉâÅ[èIóπ: " + StrToWStr(std::string(e.what()));
+        std::wstring err = L"„Ç®„É©„ÉºÁµÇ‰∫Ü: " + StrToWStr(std::string(e.what()));
         Error(PrintInfoType::RTCAMP10, err);
         return EXIT_FAILURE;
     }

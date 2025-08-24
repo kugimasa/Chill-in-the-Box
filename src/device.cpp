@@ -19,17 +19,17 @@ bool Device::OnInit()
 {
     HRESULT hr;
 
-    // COM‚Ì‰Šú‰»
+    // COMã®åˆæœŸåŒ–
     hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, "COM‚Ì‰Šú‰»‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, "COMã®åˆæœŸåŒ–ã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
 
     UINT dxgiFlags = 0;
 
-    // ƒfƒoƒbƒOƒŒƒCƒ„[‚Ì‰Šú‰»
+    // ãƒ‡ãƒãƒƒã‚°ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®åˆæœŸåŒ–
 #ifdef _DEBUG
     ComPtr<ID3D12Debug> debug;
     if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug))))
@@ -39,7 +39,7 @@ bool Device::OnInit()
     }
 #endif
 
-    // DXGIFactory‚Ì¶¬
+    // DXGIFactoryã®ç”Ÿæˆ
     ComPtr<IDXGIFactory3> factory3;
     hr = CreateDXGIFactory2(dxgiFlags, IID_PPV_ARGS(&factory3));
     if (FAILED(hr))
@@ -47,7 +47,7 @@ bool Device::OnInit()
         return false;
     }
 
-    // ƒn[ƒhƒEƒFƒAƒAƒ_ƒvƒ^‚ÌŒŸõ
+    // ãƒãƒ¼ãƒ‰ã‚¦ã‚§ã‚¢ã‚¢ãƒ€ãƒ—ã‚¿ã®æ¤œç´¢
     ComPtr<IDXGIAdapter1> hardwareAdapter1;
     {
         UINT adapterIndex = 0;
@@ -57,13 +57,13 @@ bool Device::OnInit()
             DXGI_ADAPTER_DESC1 desc1{};
             adapter1->GetDesc1(&desc1);
             ++adapterIndex;
-            // ƒ\ƒtƒgƒEƒFƒAƒAƒ_ƒvƒ^‚Íg—p‚µ‚È‚¢
+            // ã‚½ãƒ•ãƒˆã‚¦ã‚§ã‚¢ã‚¢ãƒ€ãƒ—ã‚¿ã¯ä½¿ç”¨ã—ãªã„
             if (desc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
             {
                 continue;
             }
-            // D3D12‚ğƒTƒ|[ƒg‚µ‚Ä‚¢‚é‚©‚Ìƒ`ƒFƒbƒN‚·‚é
-            // ÀÛ‚É‚ÍƒfƒoƒCƒX‚ğì¬‚µ‚È‚¢
+            // D3D12ã‚’ã‚µãƒãƒ¼ãƒˆã—ã¦ã„ã‚‹ã‹ã®ãƒã‚§ãƒƒã‚¯ã™ã‚‹
+            // å®Ÿéš›ã«ã¯ãƒ‡ãƒã‚¤ã‚¹ã‚’ä½œæˆã—ãªã„
             hr = D3D12CreateDevice(
                 adapter1.Get(),
                 D3D_FEATURE_LEVEL_12_0,
@@ -78,35 +78,35 @@ bool Device::OnInit()
         adapter1.As(&hardwareAdapter1);
     }
 
-    // D3D12ƒfƒoƒCƒX‚Ìì¬
+    // D3D12ãƒ‡ãƒã‚¤ã‚¹ã®ä½œæˆ
     hr = D3D12CreateDevice(hardwareAdapter1.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_pD3D12Device5));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"D3D12ƒfƒoƒCƒX‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"D3D12ãƒ‡ãƒã‚¤ã‚¹ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
     
-    // DXR‚É‘Î‰‚µ‚Ä‚¢‚é‚©‚ÌŠm”F
+    // DXRã«å¯¾å¿œã—ã¦ã„ã‚‹ã‹ã®ç¢ºèª
     D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5{};
     hr = m_pD3D12Device5->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, UINT(sizeof(options5)));
     if (FAILED(hr) || options5.RaytracingTier == D3D12_RAYTRACING_TIER_NOT_SUPPORTED)
     {
-        Error(PrintInfoType::D3D12, L"DirectX Raytracing ‚ªƒTƒ|[ƒg‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+        Error(PrintInfoType::D3D12, L"DirectX Raytracing ãŒã‚µãƒãƒ¼ãƒˆã•ã‚Œã¦ã„ã¾ã›ã‚“");
         return false;
     }
 
-    // ƒRƒ}ƒ“ƒhƒLƒ…[‚Ìì¬
+    // ã‚³ãƒãƒ³ãƒ‰ã‚­ãƒ¥ãƒ¼ã®ä½œæˆ
     D3D12_COMMAND_QUEUE_DESC queueDesc{};
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
     hr = m_pD3D12Device5->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_pCmdQueue));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒRƒ}ƒ“ƒhƒLƒ…[‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ã‚³ãƒãƒ³ãƒ‰ã‚­ãƒ¥ãƒ¼ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
 
-    // ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚Ìì¬(RTV)
+    // ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã®ä½œæˆ(RTV)
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     heapDesc.NumDescriptors = BackBufferCount;
@@ -114,46 +114,46 @@ bool Device::OnInit()
     hr = m_pD3D12Device5->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pRtvHeap.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv(RTV)‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—(RTV)ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
     m_rtvDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    // ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚Ìì¬(DSV);
+    // ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã®ä½œæˆ(DSV);
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
     hr = m_pD3D12Device5->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pDsvHeap.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv(DSV)‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—(DSV)ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
     m_dsvDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    // ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv‚Ìì¬(SRV/CBV/UAV‚È‚Ç)
+    // ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—ã®ä½œæˆ(SRV/CBV/UAVãªã©)
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     heapDesc.NumDescriptors = ShaderResourceViewMax;
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     hr = m_pD3D12Device5->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(m_pHeap.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒfƒBƒXƒNƒŠƒvƒ^ƒq[ƒv(SRV/CBV/UAV‚È‚Ç)‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ãƒ‡ã‚£ã‚¹ã‚¯ãƒªãƒ—ã‚¿ãƒ’ãƒ¼ãƒ—(SRV/CBV/UAVãªã©)ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
     m_heapDescSize = m_pD3D12Device5->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    // ƒRƒ}ƒ“ƒhƒAƒƒP[ƒ^[‚Ì€”õ
+    // ã‚³ãƒãƒ³ãƒ‰ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ãƒ¼ã®æº–å‚™
     for (UINT i = 0; i < BackBufferCount; ++i)
     {
         hr = m_pD3D12Device5->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_pCmdAllocatorArr[i].ReleaseAndGetAddressOf()));
         if (FAILED(hr))
         {
-            Error(PrintInfoType::D3D12, L"ƒRƒ}ƒ“ƒhƒAƒƒP[ƒ^‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+            Error(PrintInfoType::D3D12, L"ã‚³ãƒãƒ³ãƒ‰ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
             return false;
         }
     }
 
-    // ƒRƒ}ƒ“ƒhƒŠƒXƒg‚Ìì¬
+    // ã‚³ãƒãƒ³ãƒ‰ãƒªã‚¹ãƒˆã®ä½œæˆ
     auto cmd = CreateCommandList();
     cmd->Close();
 
-    // ƒtƒFƒ“ƒX‚Ìì¬
+    // ãƒ•ã‚§ãƒ³ã‚¹ã®ä½œæˆ
     CreateFence();
 
     m_fenceEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
@@ -188,7 +188,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
             return false;
         }
 
-        // ƒXƒƒbƒvƒ`ƒFƒCƒ“‚Ìİ’è
+        // ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ã‚¤ãƒ³ã®è¨­å®š
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc1{};
         swapChainDesc1.BufferCount = BackBufferCount;
         swapChainDesc1.Width = width;
@@ -198,7 +198,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         swapChainDesc1.SampleDesc.Count = 1;
 
-        // ƒXƒƒbƒvƒ`ƒFƒCƒ“‚Ìì¬
+        // ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ã‚¤ãƒ³ã®ä½œæˆ
         ComPtr<IDXGISwapChain1> swapChain;
         hr = factory->CreateSwapChainForHwnd(
             m_pCmdQueue.Get(),
@@ -210,13 +210,13 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         );
         if (FAILED(hr))
         {
-            Error(PrintInfoType::D3D12, L"ƒXƒƒbƒvƒ`ƒFƒCƒ“‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+            Error(PrintInfoType::D3D12, L"ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ã‚¤ãƒ³ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
             return false;
         }
-        // ƒXƒƒbƒvƒ`ƒFƒCƒ“‚Ì•ÏŠ·
+        // ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ã‚¤ãƒ³ã®å¤‰æ›
         swapChain.As(&m_pSwapChain3);
 
-        // ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚Ì”‚¾‚¯ƒtƒFƒ“ƒX‚ğì¬
+        // ãƒ•ãƒ¬ãƒ¼ãƒ ãƒãƒƒãƒ•ã‚¡ã®æ•°ã ã‘ãƒ•ã‚§ãƒ³ã‚¹ã‚’ä½œæˆ
         for (UINT i = 0; i < BackBufferCount; ++i)
         {
             m_fenceValueArr[i] = 0;
@@ -227,13 +227,13 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
             );
             if (FAILED(hr))
             {
-                Error(PrintInfoType::D3D12, L"ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚ÌƒtƒFƒ“ƒXì¬‚É¸”s‚µ‚Ü‚µ‚½");
+                Error(PrintInfoType::D3D12, L"ãƒ•ãƒ¬ãƒ¼ãƒ ãƒãƒƒãƒ•ã‚¡ã®ãƒ•ã‚§ãƒ³ã‚¹ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
                 return false;
             }
         }
     }
     
-    // RTV‚Ìì¬
+    // RTVã®ä½œæˆ
     {
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
         rtvDesc.Format = m_backBufferFormat;
@@ -243,7 +243,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
             hr = m_pSwapChain3->GetBuffer(i, IID_PPV_ARGS(m_pRenderTargets[i].ReleaseAndGetAddressOf()));
             if (FAILED(hr))
             {
-                Error(PrintInfoType::D3D12, L"ƒoƒbƒNƒoƒbƒtƒ@‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½");
+                Error(PrintInfoType::D3D12, L"ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸ");
                 return false;
             }
             wchar_t name[25] = {};
@@ -255,9 +255,9 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         }
     }
 
-    // DSV‚Ìì¬
+    // DSVã®ä½œæˆ
     {
-        // ƒq[ƒvƒvƒƒpƒeƒB‚Ìİ’è
+        // ãƒ’ãƒ¼ãƒ—ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®è¨­å®š
         D3D12_HEAP_PROPERTIES heapProps{};
         heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
         heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -265,7 +265,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         heapProps.CreationNodeMask = 1;
         heapProps.VisibleNodeMask = 1;
 
-        // ƒŠƒ\[ƒX‚Ìİ’è
+        // ãƒªã‚½ãƒ¼ã‚¹ã®è¨­å®š
         D3D12_RESOURCE_DESC depthDesc{};
         depthDesc.Format = m_depthFormat;
         depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -275,12 +275,12 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         depthDesc.MipLevels = 1;
         depthDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         depthDesc.SampleDesc.Count = 1;
-        // ƒNƒŠƒA’l‚Ìİ’è
+        // ã‚¯ãƒªã‚¢å€¤ã®è¨­å®š
         D3D12_CLEAR_VALUE clearValue{};
         clearValue.Format = m_depthFormat;
         clearValue.DepthStencil.Depth = 1.0f;
 
-        // ƒŠƒ\[ƒX‚Ìì¬
+        // ãƒªã‚½ãƒ¼ã‚¹ã®ä½œæˆ
         hr = m_pD3D12Device5->CreateCommittedResource(
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
@@ -291,15 +291,15 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
         );
         if (FAILED(hr))
         {
-            Error(PrintInfoType::D3D12, L"DSV—p‚ÌƒŠƒ\[ƒXì¬‚É¸”s‚µ‚Ü‚µ‚½");
+            Error(PrintInfoType::D3D12, L"DSVç”¨ã®ãƒªã‚½ãƒ¼ã‚¹ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
             return false;
         }
         m_pDepthStencil->SetName(L"Depth Stencil");
     }
-    // ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚ÌƒCƒ“ƒfƒbƒNƒX‚ğXV
+    // ãƒ•ãƒ¬ãƒ¼ãƒ ãƒãƒƒãƒ•ã‚¡ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ›´æ–°
     m_frameIndex = m_pSwapChain3->GetCurrentBackBufferIndex();
 
-    // ƒrƒ…[ƒ|[ƒg‚Ì‰Šú‰»
+    // ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã®åˆæœŸåŒ–
     m_viewport.TopLeftX = 0.0f;
     m_viewport.TopLeftY = 0.0f;
     m_viewport.Width = float(width);
@@ -307,7 +307,7 @@ bool Device::CreateSwapChain(UINT width, UINT height, HWND hwnd)
     m_viewport.MinDepth = 0.0f;
     m_viewport.MaxDepth = 1.0f;
 
-    // ƒVƒU[‹éŒ`‚Ì‰Šú‰»
+    // ã‚·ã‚¶ãƒ¼çŸ©å½¢ã®åˆæœŸåŒ–
     m_scissorRect.top = 0;
     m_scissorRect.bottom = height;
     m_scissorRect.left = 0;
@@ -343,7 +343,7 @@ ComPtr<ID3D12Fence1> Device::CreateFence()
 
 ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType, const wchar_t* name)
 {
-    // ƒq[ƒvƒvƒƒpƒeƒB‚Ìİ’è
+    // ãƒ’ãƒ¼ãƒ—ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®è¨­å®š
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = heapType;
     heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -351,7 +351,7 @@ ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS fl
     heapProps.CreationNodeMask = 1;
     heapProps.VisibleNodeMask = 1;
 
-    // ƒŠƒ\[ƒX‚Ìİ’è
+    // ãƒªã‚½ãƒ¼ã‚¹ã®è¨­å®š
     D3D12_RESOURCE_DESC resDesc{};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resDesc.Alignment = 0;
@@ -364,7 +364,7 @@ ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS fl
     resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     resDesc.Flags = flags;
 
-    // ƒŠƒ\[ƒX‚Ì¶¬
+    // ãƒªã‚½ãƒ¼ã‚¹ã®ç”Ÿæˆ
     HRESULT hr;
     ComPtr<ID3D12Resource> resource;
     hr = m_pD3D12Device5->CreateCommittedResource(
@@ -378,7 +378,7 @@ ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS fl
 
     if (FAILED(hr))
     {
-        std::wstring errWstr = L"ƒoƒbƒtƒ@‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½: " + std::wstring(name);
+        std::wstring errWstr = L"ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ: " + std::wstring(name);
         Error(PrintInfoType::D3D12, errWstr);
     }
     if (resource != nullptr && name != nullptr)
@@ -388,10 +388,10 @@ ComPtr<ID3D12Resource> Device::CreateBuffer(size_t size, D3D12_RESOURCE_FLAGS fl
     return resource;
 }
 
-// FIXME: CreateBuffer‚Æˆ—‚ğ‚Ü‚Æ‚ß‚ê‚»‚¤
+// FIXME: CreateBufferã¨å‡¦ç†ã‚’ã¾ã¨ã‚ã‚Œãã†
 ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags, D3D12_RESOURCE_STATES initialState, D3D12_HEAP_TYPE heapType)
 {
-    // ƒq[ƒvƒvƒƒpƒeƒB‚Ìİ’è
+    // ãƒ’ãƒ¼ãƒ—ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®è¨­å®š
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = heapType;
     heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -399,7 +399,7 @@ ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FOR
     heapProps.CreationNodeMask = 1;
     heapProps.VisibleNodeMask = 1;
 
-    // ƒŠƒ\[ƒX‚Ìİ’è
+    // ãƒªã‚½ãƒ¼ã‚¹ã®è¨­å®š
     D3D12_RESOURCE_DESC resDesc{};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     resDesc.Alignment = 0;
@@ -412,7 +412,7 @@ ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FOR
     resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     resDesc.Flags = flags;
 
-    // ƒŠƒ\[ƒX‚Ì¶¬
+    // ãƒªã‚½ãƒ¼ã‚¹ã®ç”Ÿæˆ
     HRESULT hr;
     ComPtr<ID3D12Resource> resource;
     hr = m_pD3D12Device5->CreateCommittedResource(
@@ -426,7 +426,7 @@ ComPtr<ID3D12Resource> Device::CreateTexture2D(UINT width, UINT height, DXGI_FOR
 
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"Texture2D‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"Texture2Dã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
     }
     return resource;
 }
@@ -449,7 +449,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     UINT64 srcPitch = (rowSizeInBytes + 255) & ~0xFFu;
 
-    // Readback—pƒoƒbƒtƒ@‚Ìİ’è
+    // Readbackç”¨ãƒãƒƒãƒ•ã‚¡ã®è¨­å®š
     const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
     D3D12_RESOURCE_DESC bufferDesc = {};
     bufferDesc.DepthOrArraySize = 1;
@@ -463,7 +463,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     bufferDesc.SampleDesc.Count = 1;
 
 
-    // Readback—pƒoƒbƒtƒ@‚Ìì¬
+    // Readbackç”¨ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆ
     ComPtr<ID3D12Resource> imageBuffer;
     HRESULT hr;
     hr = m_pD3D12Device5->CreateCommittedResource(
@@ -476,14 +476,14 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"‰æ‘œƒoƒbƒtƒ@‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ç”»åƒãƒãƒƒãƒ•ã‚¡ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
     }
     if (imageBuffer != nullptr)
     {
         imageBuffer->SetName(L"Image Buffer");
     }
 
-    // ƒRƒ}ƒ“ƒhƒŠƒXƒg‚Ìì¬
+    // ã‚³ãƒãƒ³ãƒ‰ãƒªã‚¹ãƒˆã®ä½œæˆ
     ComPtr<ID3D12CommandAllocator> pCmdAllocator;
     hr = m_pD3D12Device5->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT, 
@@ -491,7 +491,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒRƒ}ƒ“ƒhƒAƒƒP[ƒ^‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ã‚³ãƒãƒ³ãƒ‰ã‚¢ãƒ­ã‚±ãƒ¼ã‚¿ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
     }
     if (pCmdAllocator != nullptr)
     {
@@ -507,7 +507,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒRƒ}ƒ“ƒhƒŠƒXƒg‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ã‚³ãƒãƒ³ãƒ‰ãƒªã‚¹ãƒˆã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
     }
     if (pCmdList4 != nullptr)
     {
@@ -527,7 +527,7 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
     bufferFootprint.Footprint.RowPitch = static_cast<UINT>(srcPitch);
     bufferFootprint.Footprint.Format = srcDesc.Format;
 
-    // ‰æ‘œƒoƒbƒtƒ@‚ÉƒeƒNƒXƒ`ƒƒƒRƒs[
+    // ç”»åƒãƒãƒƒãƒ•ã‚¡ã«ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚³ãƒ”ãƒ¼
     const CD3DX12_TEXTURE_COPY_LOCATION copyDest(imageBuffer.Get(), bufferFootprint);
     const CD3DX12_TEXTURE_COPY_LOCATION copySrc(pSource.Get(), 0);
     pCmdList4->CopyTextureRegion(&copyDest, 0, 0, 0, &copySrc, nullptr);
@@ -538,12 +538,12 @@ ComPtr<ID3D12Resource> Device::CreateImageBuffer(ComPtr<ID3D12Resource> pSource,
         afterState
     );
     pCmdList4->ResourceBarrier(1, &barrierToAfterState);
-    // ƒRƒ}ƒ“ƒhI—¹
+    // ã‚³ãƒãƒ³ãƒ‰çµ‚äº†
     pCmdList4->Close();
-    // ƒRƒ}ƒ“ƒhÀs
+    // ã‚³ãƒãƒ³ãƒ‰å®Ÿè¡Œ
     ExecuteCommandList(pCmdList4);
 
-    // GPU‘Ò‹@
+    // GPUå¾…æ©Ÿ
     auto waitFence = CreateFence();
     UINT64 fenceValue = 1;
     waitFence->SetEventOnCompletion(fenceValue, m_waitEvent);
@@ -557,7 +557,7 @@ ComPtr<ID3D12Resource> Device::InitializeBuffer(size_t size, const void* initDat
 {
     if (size <= 0)
     {
-        std::wstring err = L"ƒoƒbƒtƒ@ƒTƒCƒY‚ª–³Œø‚Å‚·: "+ size;
+        std::wstring err = L"ãƒãƒƒãƒ•ã‚¡ã‚µã‚¤ã‚ºãŒç„¡åŠ¹ã§ã™: "+ size;
         Error(PrintInfoType::D3D12, err);
     }
     auto initialState = D3D12_RESOURCE_STATE_COMMON;
@@ -610,7 +610,7 @@ ComPtr<ID3D12RootSignature> Device::CreateRootSignature(const std::vector<D3D12_
     hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pSigBlob, &pErrBlob);
     if (FAILED(hr))
     {
-        std::wstring errStr = L"ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚ÌƒVƒŠƒAƒ‰ƒCƒY‚É¸”s‚µ‚Ü‚µ‚½: " + std::wstring(name);
+        std::wstring errStr = L"ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ã‚·ãƒªã‚¢ãƒ©ã‚¤ã‚ºã«å¤±æ•—ã—ã¾ã—ãŸ: " + std::wstring(name);
         Error(PrintInfoType::RTCAMP10, errStr);
     }
     m_pD3D12Device5->CreateRootSignature(
@@ -621,7 +621,7 @@ ComPtr<ID3D12RootSignature> Device::CreateRootSignature(const std::vector<D3D12_
     );
     if (FAILED(hr))
     {
-        std::wstring errStr = L"ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½: " + std::wstring(name);
+        std::wstring errStr = L"ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ: " + std::wstring(name);
         Error(PrintInfoType::RTCAMP10, errStr);
     }
     pRootSig->SetName(name);
@@ -653,7 +653,7 @@ void Device::WriteResource(ComPtr<ID3D12Resource> resource, const void* pData, s
     ComPtr<ID3D12Resource> stagingBuffer;
     HRESULT hr;
     const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
-    // ƒŠƒ\[ƒX‚Ìİ’è
+    // ãƒªã‚½ãƒ¼ã‚¹ã®è¨­å®š
     D3D12_RESOURCE_DESC resDesc{};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resDesc.Width = dataSize;
@@ -672,16 +672,16 @@ void Device::WriteResource(ComPtr<ID3D12Resource> resource, const void* pData, s
     );
     if (FAILED(hr))
     {
-        Error(PrintInfoType::D3D12, L"ƒXƒe[ƒWƒ“ƒOƒoƒbƒtƒ@‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::D3D12, L"ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ³ã‚°ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
     }
     if (stagingBuffer != nullptr)
     {
         stagingBuffer->SetName(L"Staging Buffer");
     }
-    // ƒf[ƒ^‚ğƒXƒe[ƒWƒ“ƒOƒoƒbƒtƒ@‚ÖƒRƒs[
+    // ãƒ‡ãƒ¼ã‚¿ã‚’ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ³ã‚°ãƒãƒƒãƒ•ã‚¡ã¸ã‚³ãƒ”ãƒ¼
     WriteBuffer(stagingBuffer, pData, dataSize);
 
-    // ƒXƒe[ƒWƒ“ƒOƒoƒbƒtƒ@‚Ì“à—e‚ğƒŠƒ\[ƒX‚ÉƒRƒs[
+    // ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ³ã‚°ãƒãƒƒãƒ•ã‚¡ã®å†…å®¹ã‚’ãƒªã‚½ãƒ¼ã‚¹ã«ã‚³ãƒ”ãƒ¼
     auto cmd = CreateCommandList();
     ComPtr<ID3D12Fence> fence = CreateFence();
     cmd->CopyResource(resource.Get(), stagingBuffer.Get());
@@ -709,7 +709,7 @@ bool Device::CreateConstantBuffer(std::vector<ComPtr<ID3D12Resource>>& resources
         }
         else
         {
-            Error(PrintInfoType::D3D12, L"’è”ƒoƒbƒtƒ@‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+            Error(PrintInfoType::D3D12, L"å®šæ•°ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
             return false;
         }
     }
@@ -840,7 +840,7 @@ void Device::Present(UINT syncInterval)
 }
 
 /// <summary>
-/// ƒRƒ}ƒ“ƒh‚ÌI—¹‚ğ‘Ò‹@
+/// ã‚³ãƒãƒ³ãƒ‰ã®çµ‚äº†ã‚’å¾…æ©Ÿ
 /// </summary>
 void Device::WaitForGpu() noexcept
 {

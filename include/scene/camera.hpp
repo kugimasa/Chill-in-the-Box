@@ -24,7 +24,7 @@ public:
     void SetTarget(Float3 target);
     void SetFovY(float fovY);
     void Rotate(float deltaTime);
-    // FIXME: ç’·ƒR[ƒh
+    // FIXME: å†—é•·ã‚³ãƒ¼ãƒ‰
     void MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
     void MoveAnimInOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);
     void MoveAnimOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos);

@@ -6,7 +6,7 @@
 class Renderer
 {
 public:
-    // maxFrame‚ğw’è‚µ‚È‚¢ŒÀ‚è‚Í•`‰æ‚µ‘±‚¯‚é
+    // maxFrameã‚’æŒ‡å®šã—ãªã„é™ã‚Šã¯æç”»ã—ç¶šã‘ã‚‹
     Renderer(UINT width, UINT height, const std::wstring& title, int maxFrame = -1);
 
     void OnInit();
@@ -21,31 +21,31 @@ public:
     const wchar_t* GetTitle() const { return m_title.c_str(); }
 
 private:
-    // ƒfƒoƒCƒX‚Ì‰Šú‰»ŠÖ”
+    // ãƒ‡ãƒã‚¤ã‚¹ã®åˆæœŸåŒ–é–¢æ•°
     bool InitGraphicDevice(HWND hwnd);
 
-    // TLAS‚Ì\’z
+    // TLASã®æ§‹ç¯‰
     void BuildTLAS();
 
-    // BLAS‚ÌXV
+    // BLASã®æ›´æ–°
     void UpdateTLAS();
 
-    // ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ¶¬
+    // ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ç”Ÿæˆ
     void CreateGlobalRootSignature();
 
-    // ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ¶¬
+    // ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ç”Ÿæˆ
     void CreateLocalRootSignature();
 
-    // ƒŒƒCƒgƒŒ[ƒVƒ“ƒO—p‚ÌƒXƒe[ƒgƒIƒuƒWƒFƒNƒg‚Ì\’z
+    // ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚·ãƒ³ã‚°ç”¨ã®ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ§‹ç¯‰
     void CreateStateObject();
 
-    // ƒŒƒCƒgƒŒ[ƒVƒ“ƒOŒ‹‰Ê‚Ì‘‚«‚İ—pƒoƒbƒtƒ@‚Ì¶¬
+    // ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚·ãƒ³ã‚°çµæœã®æ›¸ãè¾¼ã¿ç”¨ãƒãƒƒãƒ•ã‚¡ã®ç”Ÿæˆ
     void CreateOutputBuffer();
 
-    // ƒVƒF[ƒ_[ƒe[ƒuƒ‹‚Ì\’z
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ã®æ§‹ç¯‰
     void CreateShaderTable();
 
-    // ‰æ‘œ‚Ìo—Í
+    // ç”»åƒã®å‡ºåŠ›
     void OutputImage(ComPtr<ID3D12Resource> imageBuffer);
 
 #ifdef _DEBUG

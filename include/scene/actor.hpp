@@ -13,7 +13,7 @@ public:
     class ActorNode;
     class ActorMaterial;
 
-    // ƒm[ƒhî•ñ
+    // ãƒŽãƒ¼ãƒ‰æƒ…å ±
     class ActorNode
     {
     public:
@@ -48,7 +48,7 @@ public:
         friend class Actor;
     };
 
-    // ƒ}ƒeƒŠƒAƒ‹î•ñ
+    // ãƒžãƒ†ãƒªã‚¢ãƒ«æƒ…å ±
     class ActorMaterial
     {
     public:
@@ -78,7 +78,7 @@ public:
         friend class Model;
     };
 
-    // ƒƒbƒVƒ…î•ñ
+    // ãƒ¡ãƒƒã‚·ãƒ¥æƒ…å ±
     class ActorMesh
     {
     public:
@@ -113,7 +113,7 @@ public:
         friend class Model;
     };
 
-    // ƒƒbƒVƒ…ƒOƒ‹[ƒvî•ñ
+    // ãƒ¡ãƒƒã‚·ãƒ¥ã‚°ãƒ«ãƒ¼ãƒ—æƒ…å ±
     class ActorMeshGroup
     {
     public:
@@ -136,7 +136,7 @@ public:
     void SetWorldPos(Float3 worldPos);
     void SetWorldMatrix(Matrix worldMtx) { m_worldMtx = worldMtx; }
     void SetMaterialHitGroup(const std::wstring& hitGroupName);
-    // Šeƒm[ƒh‚Ìs—ñ‚ðXV
+    // å„ãƒŽãƒ¼ãƒ‰ã®è¡Œåˆ—ã‚’æ›´æ–°
     void UpdateMatrices();
     void UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList);
     void UpdateTransform();

@@ -11,7 +11,7 @@ Camera::~Camera()
 }
 
 /// <summary>
-/// ù‰ñˆ—
+/// æ—‹å›žå‡¦ç†
 /// </summary>
 /// <param name="deltaTime"></param>
 void Camera::Rotate(float deltaTime)
@@ -26,7 +26,7 @@ void Camera::Rotate(float deltaTime)
 }
 
 /// <summary>
-/// ˆÚ“®ƒAƒjƒ[ƒVƒ‡ƒ“ˆ— (InCubic)
+/// ç§»å‹•ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å‡¦ç† (InCubic)
 /// </summary>
 void Camera::MoveAnimInCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
 {
@@ -37,7 +37,7 @@ void Camera::MoveAnimInCubic(float currentTime, float startTime, float endTime, 
 }
 
 /// <summary>
-/// ˆÚ“®ƒAƒjƒ[ƒVƒ‡ƒ“ˆ— (InOutCubic)
+/// ç§»å‹•ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å‡¦ç† (InOutCubic)
 /// </summary>
 void Camera::MoveAnimInOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
 {
@@ -48,7 +48,7 @@ void Camera::MoveAnimInOutCubic(float currentTime, float startTime, float endTim
 }
 
 /// <summary>
-/// ˆÚ“®ƒAƒjƒ[ƒVƒ‡ƒ“ˆ— (OutCubic)
+/// ç§»å‹•ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³å‡¦ç† (OutCubic)
 /// </summary>
 void Camera::MoveAnimOutCubic(float currentTime, float startTime, float endTime, Float3 startPos, Float3 endPos)
 {
@@ -92,7 +92,7 @@ void Camera::SetFovY(float fovY)
 }
 
 /// <summary>
-/// ƒJƒƒ‰•ûŒü‚ÌXV
+/// ã‚«ãƒ¡ãƒ©æ–¹å‘ã®æ›´æ–°
 /// </summary>
 /// <param name="origin"></param>
 /// <param name="target"></param>
@@ -110,7 +110,7 @@ void Camera::UpdateLookAt(Float3 origin, Float3 target, Float3 up)
 }
 
 /// <summary>
-/// ƒJƒƒ‰Ý’è‚ÌXV
+/// ã‚«ãƒ¡ãƒ©è¨­å®šã®æ›´æ–°
 /// </summary>
 /// <param name="fovY"></param>
 /// <param name="aspect"></param>

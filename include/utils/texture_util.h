@@ -25,7 +25,7 @@ inline TextureResource LoadTexture(const void* data, UINT64 size, std::unique_pt
     if (FAILED(hr)) {
         hr = LoadFromWICMemory(data, size, WIC_FLAGS_NONE/*WIC_FLAGS_FORCE_RGB*/, &metadata, image);
         if (FAILED(hr)) {
-            std::wstring err = L"ƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½: " + (int)hr;
+            std::wstring err = L"ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ: " + (int)hr;
             Error(PrintInfoType::D3D12, err);
             return res;
         }
@@ -54,10 +54,10 @@ inline TextureResource LoadTexture(const void* data, UINT64 size, std::unique_pt
     cmd->ResourceBarrier(1, &barrier);
     cmd->Close();
 
-    // “]‘—
+    // è»¢é€
     device->ExecuteCommandList(cmd);
 
-    // ƒVƒF[ƒ_[ƒŠƒ\[ƒXƒrƒ…[‚Ìì¬
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒªã‚½ãƒ¼ã‚¹ãƒ“ãƒ¥ãƒ¼ã®ä½œæˆ
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = metadata.format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -67,7 +67,7 @@ inline TextureResource LoadTexture(const void* data, UINT64 size, std::unique_pt
     srvDesc.Texture2D.ResourceMinLODClamp = 0;
     res.srv = device->CreateSRV(res.resource.Get(), &srvDesc);
 
-    // ‘Ò‹@
+    // å¾…æ©Ÿ
     device->WaitForGpu();
     return res;
 }
@@ -79,7 +79,7 @@ inline TextureResource LoadTexture(const std::wstring& fileName, std::unique_ptr
     std::ifstream srcFile(path, std::ios::binary);
     if (!srcFile)
     {
-        std::wstring err = L"ƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½: " + path.wstring();
+        std::wstring err = L"ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ: " + path.wstring();
         Error(PrintInfoType::D3D12, err);
         return TextureResource();
     }
@@ -96,7 +96,7 @@ inline TextureResource LoadHDRTexture(const std::wstring& fileName, std::unique_
     std::ifstream srcFile(path, std::ios::binary);
     if (!srcFile)
     {
-        std::wstring err = L"ƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½: " + path.wstring();
+        std::wstring err = L"ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ: " + path.wstring();
         Error(PrintInfoType::D3D12, err);
         return TextureResource();
     }
@@ -106,10 +106,10 @@ inline TextureResource LoadHDRTexture(const std::wstring& fileName, std::unique_
     HRESULT hr = LoadFromHDRFile(path.c_str(), &metadata, image);
     if (FAILED(hr))
     {
-        std::wstring err = L"HDRƒeƒNƒXƒ`ƒƒ‚Ìƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½: " + path.wstring();
+        std::wstring err = L"HDRãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ: " + path.wstring();
         Error(PrintInfoType::D3D12, err);
     }
-    // TODO: ‰º‹L‚Ìˆ—‚ÍLoadTexture‚Æ“¯—l‚È‚Ì‚Å‚Ü‚Æ‚ß‚½‚¢
+    // TODO: ä¸‹è¨˜ã®å‡¦ç†ã¯LoadTextureã¨åŒæ§˜ãªã®ã§ã¾ã¨ã‚ãŸã„
     DirectX::CreateTexture(device->GetDevice().Get(), metadata, &res.resource);
     ComPtr<ID3D12Resource> srcBuffer;
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
@@ -133,10 +133,10 @@ inline TextureResource LoadHDRTexture(const std::wstring& fileName, std::unique_
     cmd->ResourceBarrier(1, &barrier);
     cmd->Close();
 
-    // “]‘—
+    // è»¢é€
     device->ExecuteCommandList(cmd);
 
-    // ƒVƒF[ƒ_[ƒŠƒ\[ƒXƒrƒ…[‚Ìì¬
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒªã‚½ãƒ¼ã‚¹ãƒ“ãƒ¥ãƒ¼ã®ä½œæˆ
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = metadata.format;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -146,7 +146,7 @@ inline TextureResource LoadHDRTexture(const std::wstring& fileName, std::unique_
     srvDesc.Texture2D.ResourceMinLODClamp = 0;
     res.srv = device->CreateSRV(res.resource.Get(), &srvDesc);
 
-    // ‘Ò‹@
+    // å¾…æ©Ÿ
     device->WaitForGpu();
     return res;
 }

@@ -1,4 +1,4 @@
-﻿#include "renderer.hpp"
+#include "renderer.hpp"
 #include "window.hpp"
 
 int main(int argc, char *argv[])

@@ -31,12 +31,12 @@ Model::Model(const std::wstring& name, std::unique_ptr<Device>& device) :
     tinygltf::Model srcModel{};
     if (!LoadGLTF(name, srcModel))
     {
-        std::wstring err = L"glTFƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ‚É¸”s‚µ‚Ü‚µ‚½: " + name;
+        std::wstring err = L"glTFãƒ•ã‚¡ã‚¤ãƒ«ã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ã¾ã—ãŸ: " + name;
         Error(PrintInfoType::RTCAMP10, err);
     }
     if (!LoadModel(srcModel, device))
     {
-        std::wstring err = L"ƒ‚ƒfƒ‹‚Ìƒ[ƒh‚É¸”s‚µ‚Ü‚µ‚½: " + name;
+        std::wstring err = L"ãƒ¢ãƒ‡ãƒ«ã®ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ: " + name;
         Error(PrintInfoType::RTCAMP10, err);
     }
 }
@@ -47,7 +47,7 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
      std::vector<std::shared_ptr<Actor::ActorNode>> nodes;
      nodes.resize(m_nodes.size());
 
-     // ƒm[ƒhİ’è
+     // ãƒãƒ¼ãƒ‰è¨­å®š
      for (UINT i = 0; i < UINT(m_nodes.size()); ++i)
      {
          const auto srcNode = m_nodes[i];
@@ -58,7 +58,7 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
          node->m_scale = srcNode->m_scale;
          node->m_name = srcNode->m_name;
 
-         // eq‰ğŒˆ
+         // è¦ªå­è§£æ±º
          for (auto idx : srcNode->m_childIndices)
          {
              auto child = nodes[idx];
@@ -72,7 +72,7 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
          actor->m_nodes.push_back(rootNode);
      }
 
-     // ƒ}ƒeƒŠƒAƒ‹¶¬
+     // ãƒãƒ†ãƒªã‚¢ãƒ«ç”Ÿæˆ
      for (auto srcMat : m_materials)
      {
          actor->m_materials.emplace_back(new Actor::ActorMaterial(device, srcMat));
@@ -80,7 +80,7 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
          auto texIdx = srcMat.m_textureIndex;
          if (texIdx < 0)
          {
-             // ƒ_ƒ~[ƒeƒNƒXƒ`ƒƒ‚ğg—p
+             // ãƒ€ãƒŸãƒ¼ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ä½¿ç”¨
              mat->SetTexture(m_dummyTexture);
          }
          else
@@ -92,10 +92,10 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
      actor->SetWorldMatrix(IdentityMtx());
      actor->UpdateMatrices();
 
-     // s—ñƒoƒbƒtƒ@‚ÌŠm•Û
+     // è¡Œåˆ—ãƒãƒƒãƒ•ã‚¡ã®ç¢ºä¿
      actor->CreateMatrixBufferBLAS(UINT(m_meshes.size()));
 
-     // ’¸“_‘®«‚²‚Æ‚ÌSRV‚ğ¶¬
+     // é ‚ç‚¹å±æ€§ã”ã¨ã®SRVã‚’ç”Ÿæˆ
      for (UINT i = 0; i < UINT(m_meshes.size()); ++i)
      {
          actor->m_meshGroups.emplace_back(Actor::ActorMeshGroup());
@@ -137,10 +137,10 @@ std::shared_ptr<Actor> Model::InstantiateActor(std::unique_ptr<Device>& device)
          }
      }
 
-     // s—ñ—p‚Ìƒoƒbƒtƒ@‚ğXV
+     // è¡Œåˆ—ç”¨ã®ãƒãƒƒãƒ•ã‚¡ã‚’æ›´æ–°
      actor->UpdateTransform();
      
-     // BLAS\’z
+     // BLASæ§‹ç¯‰
      actor->CreateBLAS();
      return actor;
 }
@@ -168,7 +168,7 @@ bool Model::LoadModel(const tinygltf::Model& srcModel, std::unique_ptr<Device>& 
     auto flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     auto heapType = D3D12_HEAP_TYPE_DEFAULT;
 
-    // ’¸“_ƒoƒbƒtƒ@‚Ìì¬
+    // é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆ
     auto posSize = sizeof(Float3) * visitor.positionBuffer.size();
     auto normSize = sizeof(Float3) * visitor.normalBuffer.size();
     auto texSize = sizeof(Float2) * visitor.texcoordBuffer.size();
@@ -177,11 +177,11 @@ bool Model::LoadModel(const tinygltf::Model& srcModel, std::unique_ptr<Device>& 
     m_vertexAtrrib.texcoord = device->InitializeBuffer(texSize, visitor.texcoordBuffer.data(), flags, heapType, L"TexcoordBuffer");
 
 
-    // ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚Ìì¬
+    // ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆ
     auto idxSize = sizeof(UINT) * visitor.indexBuffer.size();
     m_pIndexBuffer = device->InitializeBuffer(idxSize, visitor.indexBuffer.data(), flags, heapType, L"IndexBuffer");
 
-    // ƒeƒNƒXƒ`ƒƒŠ„‚è“–‚Ä
+    // ãƒ†ã‚¯ã‚¹ãƒãƒ£å‰²ã‚Šå½“ã¦
     for (auto& texture : srcModel.textures)
     {
         auto image = srcModel.images[texture.source];
@@ -197,7 +197,7 @@ bool Model::LoadModel(const tinygltf::Model& srcModel, std::unique_ptr<Device>& 
         }
         else
         {
-            // FIXME: CreateDecoderFromStream ‚Å¸”s‚µ‚Ä‚¢‚é
+            // FIXME: CreateDecoderFromStream ã§å¤±æ•—ã—ã¦ã„ã‚‹
             tex = LoadTexture(image.image.data(), image.image.size(), device);
         }
 
@@ -255,7 +255,7 @@ void Model::LoadMesh(const tinygltf::Model& srcModel, VertexAttributeVisitor& vi
             UINT indexCount = 0;
             UINT vertexCount = 0;
 
-            // ’¸“_
+            // é ‚ç‚¹
             const auto& empty = srcPrimitive.attributes.end();
             if (auto attr = srcPrimitive.attributes.find("POSITION"); attr != empty) {
                 auto& acc = srcModel.accessors[attr->second];
@@ -268,7 +268,7 @@ void Model::LoadMesh(const tinygltf::Model& srcModel, VertexAttributeVisitor& vi
                 }
             }
 
-            // –@ü
+            // æ³•ç·š
             if (auto attr = srcPrimitive.attributes.find("NORMAL"); attr != empty) {
                 auto& acc = srcModel.accessors[attr->second];
                 auto& view = srcModel.bufferViews[acc.bufferView];
@@ -292,13 +292,13 @@ void Model::LoadMesh(const tinygltf::Model& srcModel, VertexAttributeVisitor& vi
             }
             else
             {
-                // UV‚ª‚È‚¢ê‡‚Ìƒ[ƒ–„‚ß
+                // UVãŒãªã„å ´åˆã®ã‚¼ãƒ­åŸ‹ã‚
                 for (UINT i = 0; i < vertexCount; ++i) {
                     texcoordBuffer.push_back(Float2(0.0f, 0.0f));
                 }
             }
 
-            // ƒCƒ“ƒfƒNƒXƒoƒbƒtƒ@
+            // ã‚¤ãƒ³ãƒ‡ã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡
             {
                 auto& acc = srcModel.accessors[srcPrimitive.indices];
                 const auto& view = srcModel.bufferViews[acc.bufferView];
@@ -350,7 +350,7 @@ void Model::LoadMaterial(const tinygltf::Model& srcModel)
         m_materials.emplace_back(Material());
         auto& mat = m_materials.back();
         mat.m_name = StrToWStr(srcMat.name);
-        // TODO: BRDF—p‚ÌƒZƒbƒgƒAƒbƒv
+        // TODO: BRDFç”¨ã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
         for (auto& value : srcMat.values)
         {
             auto valueName = value.first;

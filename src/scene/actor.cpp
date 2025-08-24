@@ -48,7 +48,7 @@ Actor::ActorMaterial::ActorMaterial(std::unique_ptr<Device>& device, const Model
     m_materialParam.diffuse.z = diffuse.z;
     m_materialParam.diffuse.w = 1.0f;
 
-    // ƒoƒbƒNƒoƒbƒtƒ@–‡”•ªì¬
+    // ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡æšæ•°åˆ†ä½œæˆ
     auto cbSize = UINT(ROUND_UP(sizeof(MaterialParam), 256));
     if (device->CreateConstantBuffer(m_pMatrialCB, cbSize, L"MaterialCB"))
     {
@@ -104,7 +104,7 @@ void Actor::Translate(Float3 trans)
 }
 
 /// <summary>
-/// ‰ñ“]ˆ—
+/// å›è»¢å‡¦ç†
 /// </summary>
 void Actor::Rotate(float angle, float startDeg, Float3 up)
 {
@@ -153,8 +153,8 @@ void Actor::UpdateMatrices()
     }
 }
 
-// BLAS‚ÌXV
-// ƒRƒ}ƒ“ƒh‚ğÏ‚Ş‚Ü‚Å
+// BLASã®æ›´æ–°
+// ã‚³ãƒãƒ³ãƒ‰ã‚’ç©ã‚€ã¾ã§
 void Actor::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
 {
     std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> rtGeoDesc;
@@ -166,19 +166,19 @@ void Actor::UpdateBLAS(ComPtr<ID3D12GraphicsCommandList4> cmdList)
     inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
     inputs.NumDescs = UINT(rtGeoDesc.size());
     inputs.pGeometryDescs = rtGeoDesc.data();
-    // BLASXV‚Ì‚½‚ßƒtƒ‰ƒO‚ğİ’è
+    // BLASæ›´æ–°ã®ãŸã‚ãƒ•ãƒ©ã‚°ã‚’è¨­å®š
     inputs.Flags =
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE |
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
 
     auto frameIndex = m_pDevice->GetCurrentFrameIndex();
-    // BLAS‚ğ’¼ÚXV
+    // BLASã‚’ç›´æ¥æ›´æ–°
     auto updateBuffer = m_pBLASUpdateBuffer;
     buildASDesc.DestAccelerationStructureData = m_pBLAS->GetGPUVirtualAddress();
     buildASDesc.SourceAccelerationStructureData = m_pBLAS->GetGPUVirtualAddress();
     buildASDesc.ScratchAccelerationStructureData = updateBuffer->GetGPUVirtualAddress();
 
-    // BLASÄ\’z
+    // BLASå†æ§‹ç¯‰
     cmdList->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
     auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_pBLAS.Get());
     cmdList->ResourceBarrier(1, &barrier);
@@ -191,7 +191,7 @@ void Actor::UpdateTransform()
     std::vector<Mtx3x4> blasMatrices;
     auto groupCount = UINT(m_meshGroups.size());
     blasMatrices.resize(groupCount);
-    // TLAS‚Åİ’è‚µ‚½s—ñ¬•ª‚Ì‘ÅÁ‚µ
+    // TLASã§è¨­å®šã—ãŸè¡Œåˆ—æˆåˆ†ã®æ‰“æ¶ˆã—
     for (UINT i = 0; i < groupCount; ++i)
     {
         auto node = m_meshGroups[i].m_node;
@@ -225,9 +225,9 @@ uint8_t* Actor::WriteHitGroupShaderRecord(uint8_t* dst, UINT hitGroupRecordSize,
             auto id = rtStateObjectProps->GetShaderIdentifier(shader.c_str());
             if (id == nullptr)
             {
-                Error(PrintInfoType::RTCAMP10, L"ShaderId‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+                Error(PrintInfoType::RTCAMP10, L"ShaderIdãŒè¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“");
             }
-            // MEMO: ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ì‡”Ô‚Æ‡‚í‚¹‚é
+            // MEMO: ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®é †ç•ªã¨åˆã‚ã›ã‚‹
             auto recordStart = dst;
             dst += WriteShaderId(dst, id);
             dst += WriteGPUDescriptorHeap(dst, mesh.GetIndexBuffer());
@@ -284,7 +284,7 @@ void Actor::CreateMatrixBufferBLAS(UINT mtxCount)
     const auto mtxCountAll = mtxCount * m_pDevice->BackBufferCount;
     auto buffSize = mtxStride * mtxCountAll;
 
-    // BLAS—p‚Ìs—ñƒoƒbƒtƒ@‚ğŠm•Û
+    // BLASç”¨ã®è¡Œåˆ—ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
     m_pBLASMatrices = m_pDevice->CreateBuffer(
         buffSize,
         D3D12_RESOURCE_FLAG_NONE,
@@ -294,7 +294,7 @@ void Actor::CreateMatrixBufferBLAS(UINT mtxCount)
     );
     
     auto numElements = mtxCountAll * 3;
-    // SRV‚Ìì¬
+    // SRVã®ä½œæˆ
     m_blasMatrixDescriptor = m_pDevice->CreateSRV(m_pBLASMatrices.Get(), numElements, 0, sizeof(Float4));
 }
 
@@ -303,7 +303,7 @@ void Actor::CreateBLAS()
     std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> rtGeoDesc;
     CreateRTGeoDesc(rtGeoDesc);
 
-    // “®“I‚ÉXV‚ğs‚¤BLAS
+    // å‹•çš„ã«æ›´æ–°ã‚’è¡Œã†BLAS
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc{};
     D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS& inputs = buildASDesc.Inputs;
     inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
@@ -314,7 +314,7 @@ void Actor::CreateBLAS()
 
     auto cmd = m_pDevice->CreateCommandList();
 
-    // BLASŠÖ˜A‚Ìƒoƒbƒtƒ@‚ğì¬
+    // BLASé–¢é€£ã®ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆ
     auto blas = CreateASBuffers(m_pDevice, buildASDesc, m_modelRef->GetName());
     m_pBLAS = blas.asBuffer;
     m_pBLASUpdateBuffer = blas.updateBuffer;
@@ -322,20 +322,20 @@ void Actor::CreateBLAS()
     buildASDesc.ScratchAccelerationStructureData = blas.scratchBuffer->GetGPUVirtualAddress();
     buildASDesc.DestAccelerationStructureData = blas.asBuffer->GetGPUVirtualAddress();
 
-    // BLAS\’z
+    // BLASæ§‹ç¯‰
     cmd->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
     auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_pBLAS.Get());
     cmd->ResourceBarrier(1, &barrier);
     cmd->Close();
     m_pDevice->ExecuteCommandList(cmd);
 
-    // \’z‚ÌŠ®—¹‚ğ‘Ò‹@
+    // æ§‹ç¯‰ã®å®Œäº†ã‚’å¾…æ©Ÿ
     m_pDevice->WaitForGpu();
 }
 
 void Actor::CreateRTGeoDesc(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& rtGeoDesc)
 {
-    // ‘‚«‚İŠJnˆÊ’u‚Ì’²®
+    // æ›¸ãè¾¼ã¿é–‹å§‹ä½ç½®ã®èª¿æ•´
     auto frameIndex = m_pDevice->GetCurrentFrameIndex();
     const auto mtxSize = sizeof(Mtx3x4);
     const auto mtxBuffSize = m_meshGroups.size() * mtxSize;
@@ -356,15 +356,15 @@ void Actor::CreateRTGeoDesc(std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>& rtGeoDe
             desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
             desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
             auto& triangles = desc.Triangles;
-            // ƒ}ƒgƒŠƒbƒNƒXî•ñ
+            // ãƒãƒˆãƒªãƒƒã‚¯ã‚¹æƒ…å ±
             triangles.Transform3x4 = addressBase + mtxIndex * mtxSize;
-            // ’¸“_î•ñ
+            // é ‚ç‚¹æƒ…å ±
             triangles.VertexBuffer.StrideInBytes = sizeof(Float3);
             triangles.VertexBuffer.StartAddress = posBuffer->GetGPUVirtualAddress();
             triangles.VertexBuffer.StartAddress += mesh.GetVertexStart() * sizeof(Float3);
             triangles.VertexCount = mesh.GetVertexCount();
             triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-            // ƒCƒ“ƒfƒbƒNƒXî•ñ
+            // ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹æƒ…å ±
             triangles.IndexBuffer = indexBuffer->GetGPUVirtualAddress();
             triangles.IndexBuffer += mesh.GetIndexStart() * sizeof(UINT);
             triangles.IndexCount = mesh.GetIndexCount();

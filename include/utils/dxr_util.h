@@ -8,7 +8,7 @@ inline ASBuffers CreateASBuffers(std::unique_ptr<Device>& device, const D3D12_BU
     D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO asPrebuild{};
     device->GetDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&asDesc.Inputs, &asPrebuild);
 
-    // ƒXƒNƒ‰ƒbƒ`ƒoƒbƒtƒ@‚ÌŠm•Û
+    // ã‚¹ã‚¯ãƒ©ãƒƒãƒãƒãƒƒãƒ•ã‚¡ã®ç¢ºä¿
     asBuffers.scratchBuffer = device->CreateBuffer(
         asPrebuild.ScratchDataSizeInBytes,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
@@ -16,7 +16,7 @@ inline ASBuffers CreateASBuffers(std::unique_ptr<Device>& device, const D3D12_BU
         D3D12_HEAP_TYPE_DEFAULT
     );
 
-    // ASƒoƒbƒtƒ@‚ÌŠm•Û
+    // ASãƒãƒƒãƒ•ã‚¡ã®ç¢ºä¿
     asBuffers.asBuffer = device->CreateBuffer(
         asPrebuild.ResultDataMaxSizeInBytes,
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
@@ -26,13 +26,13 @@ inline ASBuffers CreateASBuffers(std::unique_ptr<Device>& device, const D3D12_BU
 
     if (asBuffers.scratchBuffer == nullptr || asBuffers.asBuffer == nullptr)
     {
-        Error(PrintInfoType::D3D12, L"AS‚Ì\’z‚ÉŽ¸”s‚µ‚Ü‚µ‚½ (Scratch/AS)");
+        Error(PrintInfoType::D3D12, L"ASã®æ§‹ç¯‰ã«å¤±æ•—ã—ã¾ã—ãŸ (Scratch/AS)");
     }
     std::wstring scratchName = name + L":scratch";
     asBuffers.scratchBuffer->SetName(scratchName.c_str());
     asBuffers.scratchBuffer->SetName(name.c_str());
 
-    // XV—p‚Ìƒoƒbƒtƒ@‚ª•K—v‚Å‚ ‚ê‚ÎŠm•Û
+    // æ›´æ–°ç”¨ã®ãƒãƒƒãƒ•ã‚¡ãŒå¿…è¦ã§ã‚ã‚Œã°ç¢ºä¿
     if (asDesc.Inputs.Flags & D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE)
     {
         asBuffers.updateBuffer = device->CreateBuffer(
@@ -43,7 +43,7 @@ inline ASBuffers CreateASBuffers(std::unique_ptr<Device>& device, const D3D12_BU
         );
         if (asBuffers.updateBuffer == nullptr)
         {
-            Error(PrintInfoType::D3D12, L"AS‚Ì\’z‚ÉŽ¸”s‚µ‚Ü‚µ‚½ (Update)");
+            Error(PrintInfoType::D3D12, L"ASã®æ§‹ç¯‰ã«å¤±æ•—ã—ã¾ã—ãŸ (Update)");
         }
         std::wstring uploadName = name + L":upload";
         asBuffers.updateBuffer->SetName(uploadName.c_str());

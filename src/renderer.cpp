@@ -33,52 +33,52 @@ void Renderer::OnInit()
 {
     Print(PrintInfoType::RTCAMP10, L"=======RTCAMP10=======");
     m_isRunning = true;
-    // ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌŠÔŒv‘ªŠJn
+    // ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®æ™‚é–“è¨ˆæ¸¬é–‹å§‹
     m_startTime = std::chrono::system_clock::now();
 
-    // ƒOƒ‰ƒtƒBƒbƒNƒfƒoƒCƒX‚Ì‰Šú‰»
+    // ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ãƒ‡ãƒã‚¤ã‚¹ã®åˆæœŸåŒ–
     if (!InitGraphicDevice(Window::GetHWND())) return;
 
-    // ƒV[ƒ“‚Ì‰Šú‰»
-    // ‰Šú‰»ŠÖ”“à‚ÅBLAS‚Ì\’z
+    // ã‚·ãƒ¼ãƒ³ã®åˆæœŸåŒ–
+    // åˆæœŸåŒ–é–¢æ•°å†…ã§BLASã®æ§‹ç¯‰
     m_pScene = std::shared_ptr<Scene>(new Scene(m_pDevice));
     m_pScene->OnInit(GetAspect());
 
-    // TLAS‚Ì\’z
+    // TLASã®æ§‹ç¯‰
     BuildTLAS();
 
-    // ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ì—pˆÓ
+    // ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ç”¨æ„
     CreateGlobalRootSignature();
 
-    // ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ì—pˆÓ
+    // ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ç”¨æ„
     CreateLocalRootSignature();
 
-    // ƒXƒe[ƒgƒIƒuƒWƒFƒNƒg‚Ì\’z
+    // ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ§‹ç¯‰
     CreateStateObject();
 
-    // o—Íƒoƒbƒtƒ@‚Ìì¬
+    // å‡ºåŠ›ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆ
     CreateOutputBuffer();
 
-    // ƒVƒF[ƒ_[ƒe[ƒuƒ‹‚Ìì¬
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ã®ä½œæˆ
     CreateShaderTable();
 
-    // ƒRƒ}ƒ“ƒhƒŠƒXƒg‚Ì—pˆÓ
+    // ã‚³ãƒãƒ³ãƒ‰ãƒªã‚¹ãƒˆã®ç”¨æ„
     m_pCmdList = m_pDevice->CreateCommandList();
     m_pCmdList->Close();
 
 #ifdef _DEBUG
-    // ImGui‚Ì‰Šú‰»
+    // ImGuiã®åˆæœŸåŒ–
     InitImGui();
 #endif // _DEBUG
 
-    // fpng‚Ì‰Šú‰»
+    // fpngã®åˆæœŸåŒ–
     fpng_init();
 
 }
 
 void Renderer::OnUpdate()
 {
-    // ƒV[ƒ“‚ÌXVˆ—
+    // ã‚·ãƒ¼ãƒ³ã®æ›´æ–°å‡¦ç†
     m_pScene->OnUpdate(m_currentFrame, m_maxFrame);
 
 #ifdef _DEBUG
@@ -88,17 +88,17 @@ void Renderer::OnUpdate()
 
 void Renderer::OnRender()
 {
-    // ÅŒã‚ÌƒtƒŒ[ƒ€‚ª•`‰æ‚³‚ê‚½‚çI—¹
+    // æœ€å¾Œã®ãƒ•ãƒ¬ãƒ¼ãƒ ãŒæç”»ã•ã‚ŒãŸã‚‰çµ‚äº†
     if (m_maxFrame > 0 && m_currentFrame >= m_maxFrame)
     {
-        // ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌŠÔŒv‘ªŠJn
+        // ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®æ™‚é–“è¨ˆæ¸¬é–‹å§‹
         m_endTime = std::chrono::system_clock::now();
-        // Œo‰ßŠÔ‚ÌZo
+        // çµŒéæ™‚é–“ã®ç®—å‡º
         double elapsed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(m_endTime - m_startTime).count();
         std::wstringstream timeWSS;
         timeWSS << L"Total time: " << elapsed * 0.001 << L"(sec)";
         Print(PrintInfoType::RTCAMP10, timeWSS.str());
-        // I—¹ˆ—
+        // çµ‚äº†å‡¦ç†
         Print(PrintInfoType::RTCAMP10, L"======================");
         OnDestroy();
 #ifdef _DEBUG
@@ -109,9 +109,9 @@ void Renderer::OnRender()
 #endif
         return;
     }
-    // chrono•Ï”
+    // chronoå¤‰æ•°
     std::chrono::system_clock::time_point start, end;
-    // ŠÔŒv‘ªŠJn
+    // æ™‚é–“è¨ˆæ¸¬é–‹å§‹
     start = std::chrono::system_clock::now();
 
     auto d3d12Device = m_pDevice->GetDevice();
@@ -125,20 +125,20 @@ void Renderer::OnRender()
     };
     m_pCmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    // BLAS‚ÌXV
+    // BLASã®æ›´æ–°
     m_pScene->UpdateBLAS(m_pCmdList);
 
-    // TLAS‚ÌXV
+    // TLASã®æ›´æ–°
     UpdateTLAS();
 
     m_pCmdList->SetComputeRootSignature(m_pGlobalRootSignature.Get());
     m_pCmdList->SetComputeRootDescriptorTable(0, m_tlasDescHeap.gpuHandle);
-    // ”wŒiƒeƒNƒXƒ`ƒƒ
+    // èƒŒæ™¯ãƒ†ã‚¯ã‚¹ãƒãƒ£
     m_pCmdList->SetComputeRootDescriptorTable(1, m_pScene->GetBackgroundTex().srv.gpuHandle);
-    // ’è”ƒoƒbƒtƒ@‚Ìİ’è
+    // å®šæ•°ãƒãƒƒãƒ•ã‚¡ã®è¨­å®š
     m_pCmdList->SetComputeRootConstantBufferView(2, m_pScene->GetConstantBuffer()->GetGPUVirtualAddress());
 
-    // ƒŒƒCƒgƒŒ[ƒXŒ‹‰Ê‚ğUAV‚Ö
+    // ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚¹çµæœã‚’UAVã¸
     auto barrierToUAV = CD3DX12_RESOURCE_BARRIER::Transition(
         m_pOutputBuffer.Get(),
         D3D12_RESOURCE_STATE_COPY_SOURCE,
@@ -146,11 +146,11 @@ void Renderer::OnRender()
     );
     m_pCmdList->ResourceBarrier(1, &barrierToUAV);
 
-    // ƒŒƒCƒgƒŒ[ƒX
+    // ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚¹
     m_pCmdList->SetPipelineState1(m_pRTStateObject.Get());
     m_pCmdList->DispatchRays(&m_dispatchRayDesc);
 
-    // ƒŒƒCƒgƒŒ[ƒXŒ‹‰Ê‚ğƒoƒbƒNƒoƒbƒtƒ@‚ÖƒRƒs[
+    // ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚¹çµæœã‚’ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡ã¸ã‚³ãƒ”ãƒ¼
     D3D12_RESOURCE_BARRIER barriers[] = {
         CD3DX12_RESOURCE_BARRIER::Transition(
             m_pOutputBuffer.Get(),
@@ -167,7 +167,7 @@ void Renderer::OnRender()
     m_pCmdList->CopyResource(renderTarget.Get(), m_pOutputBuffer.Get());
 
 #ifdef _DEBUG
-    // ImGui•`‰æ—p‚Ìİ’è
+    // ImGuiæç”»ç”¨ã®è¨­å®š
     auto barrierToRT = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTarget.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
@@ -175,17 +175,17 @@ void Renderer::OnRender()
     );
     m_pCmdList->ResourceBarrier(1, &barrierToRT);
 
-    // ImGui‚Ì•`‰æ
+    // ImGuiã®æç”»
     RenderImGui();
 
-    // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚©‚çPresent‚·‚é
+    // ãƒ¬ãƒ³ãƒ€ãƒ¼ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‹ã‚‰Presentã™ã‚‹
     auto barrierToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTarget.Get(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT
     );
 #else // _DEBUG
-    // Present‰Â”\‚È‚æ‚¤‚ÉƒoƒŠƒA‚ğƒZƒbƒg
+    // Presentå¯èƒ½ãªã‚ˆã†ã«ãƒãƒªã‚¢ã‚’ã‚»ãƒƒãƒˆ
     auto barrierToPresent = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTarget.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
@@ -199,28 +199,28 @@ void Renderer::OnRender()
     m_pDevice->ExecuteCommandList(m_pCmdList);
     m_pDevice->Present(1);
 
-    // Release”Åƒrƒ‹ƒh‚©‚ÂAÅ‘åƒtƒŒ[ƒ€w’è‚ª‚ ‚éê‡‚É‚Ì‚İ‰æ‘œo—Í
+    // Releaseç‰ˆãƒ“ãƒ«ãƒ‰ã‹ã¤ã€æœ€å¤§ãƒ•ãƒ¬ãƒ¼ãƒ æŒ‡å®šãŒã‚ã‚‹å ´åˆã«ã®ã¿ç”»åƒå‡ºåŠ›
 #ifndef _DEBUG
     if (m_maxFrame > 0)
     {
-        // ‰æ‘œ—p‚Ìƒoƒbƒtƒ@‚ğì¬
+        // ç”»åƒç”¨ã®ãƒãƒƒãƒ•ã‚¡ã‚’ä½œæˆ
         auto imageBuffer = m_pDevice->CreateImageBuffer(
             renderTarget,
             D3D12_RESOURCE_STATE_PRESENT,
             D3D12_RESOURCE_STATE_PRESENT
         );
-        // ‰æ‘œ‚Ìo—Í
+        // ç”»åƒã®å‡ºåŠ›
         OutputImage(imageBuffer);
     }
 #endif
-    // ŠÔŒv‘ªI—¹
+    // æ™‚é–“è¨ˆæ¸¬çµ‚äº†
     end = std::chrono::system_clock::now();
-    // Œo‰ßŠÔ‚ÌZo
+    // çµŒéæ™‚é–“ã®ç®—å‡º
     double elapsed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::ostringstream timeOSS;
     timeOSS << "Frame: " << std::setw(3) << std::setfill('0') << m_currentFrame << " | " << elapsed * 0.001 << "(sec)";
     Print(PrintInfoType::RTCAMP10, StrToWStr(timeOSS.str()).c_str());
-    // ƒtƒŒ[ƒ€‚ÌXV
+    // ãƒ•ãƒ¬ãƒ¼ãƒ ã®æ›´æ–°
     m_currentFrame++;
 }
 
@@ -245,24 +245,24 @@ void Renderer::OnDestroy()
 bool Renderer::InitGraphicDevice(HWND hwnd)
 {
     m_pDevice = std::make_unique<Device>();
-    // ƒOƒ‰ƒtƒBƒbƒNƒfƒoƒCƒX‚Ì‰Šú‰»
+    // ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ãƒ‡ãƒã‚¤ã‚¹ã®åˆæœŸåŒ–
     if (!m_pDevice->OnInit())
     {
-        Error(PrintInfoType::RTCAMP10, L"ƒOƒ‰ƒtƒBƒbƒNƒfƒoƒCƒX‚Ì‰Šú‰»‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::RTCAMP10, L"ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ãƒ‡ãƒã‚¤ã‚¹ã®åˆæœŸåŒ–ã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
-    // ƒXƒƒbƒvƒ`ƒFƒCƒ“‚Ìì¬
+    // ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ã‚¤ãƒ³ã®ä½œæˆ
     if (!m_pDevice->CreateSwapChain(GetWidth(), GetHeight(), hwnd))
     {
-        Error(PrintInfoType::RTCAMP10, L"ƒXƒƒbƒvƒ`ƒFƒCƒ“‚Ìì¬‚É¸”s‚µ‚Ü‚µ‚½");
+        Error(PrintInfoType::RTCAMP10, L"ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ã‚¤ãƒ³ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ");
         return false;
     }
-    Print(PrintInfoType::RTCAMP10, L"ƒfƒoƒCƒX‚Ì‰Šú‰» Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"ãƒ‡ãƒã‚¤ã‚¹ã®åˆæœŸåŒ– å®Œäº†");
     return true;
 }
 
 /// <summary>
-/// TLAS‚Ì\’z
+/// TLASã®æ§‹ç¯‰
 /// </summary>
 void Renderer::BuildTLAS()
 {
@@ -271,7 +271,7 @@ void Renderer::BuildTLAS()
     std::vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDescs;
     m_pScene->CreateRTInstanceDesc(instanceDescs);
 
-    // ƒCƒ“ƒXƒ^ƒ“ƒXî•ñ—p‚Ìƒoƒbƒtƒ@‚ğŠm•Û
+    // ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹æƒ…å ±ç”¨ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
     m_pRTInstanceBuffers.resize(m_pDevice->BackBufferCount);
     auto instanceDescSize = UINT(ROUND_UP(instanceDescs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), 256));
     for (auto& rtInstanceBuff : m_pRTInstanceBuffers)
@@ -294,37 +294,37 @@ void Renderer::BuildTLAS()
     inputs.NumDescs = UINT(instanceDescs.size());
     inputs.InstanceDescs = m_pRTInstanceBuffers.front()->GetGPUVirtualAddress();
 
-    // TLASŠÖ˜A‚Ìƒoƒbƒtƒ@‚ğŠm•Û
+    // TLASé–¢é€£ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
     auto tlas = CreateASBuffers(m_pDevice, buildASDesc, L"TLAS");
     auto tlasScratch = tlas.scratchBuffer;
     m_pTLAS = tlas.asBuffer;
     m_pTLASUpdate = tlas.updateBuffer;
 
-    // SRV‚Ìì¬
+    // SRVã®ä½œæˆ
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.RaytracingAccelerationStructure.Location = m_pTLAS->GetGPUVirtualAddress();
     m_tlasDescHeap = m_pDevice->CreateSRV(nullptr, &srvDesc);
 
-    // Acceleration Structure \’z
+    // Acceleration Structure æ§‹ç¯‰
     buildASDesc.ScratchAccelerationStructureData = tlasScratch->GetGPUVirtualAddress();
     buildASDesc.DestAccelerationStructureData = m_pTLAS->GetGPUVirtualAddress();
 
-    // ƒRƒ}ƒ“ƒh‚ğ€”õ
+    // ã‚³ãƒãƒ³ãƒ‰ã‚’æº–å‚™
     auto cmdList = m_pDevice->CreateCommandList();
     cmdList->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
-    // ƒŠƒ\[ƒXƒoƒŠƒA‚Ìİ’è
+    // ãƒªã‚½ãƒ¼ã‚¹ãƒãƒªã‚¢ã®è¨­å®š
     auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_pTLAS.Get());
     cmdList->ResourceBarrier(1, &barrier);
     cmdList->Close();
-    // ƒRƒ}ƒ“ƒh‚ğÀs - TLAS\’z
+    // ã‚³ãƒãƒ³ãƒ‰ã‚’å®Ÿè¡Œ - TLASæ§‹ç¯‰
     m_pDevice->ExecuteCommandList(cmdList);
 
-    // ƒRƒ}ƒ“ƒh‚ÌŠ®—¹‚ğ‘Ò‹@
+    // ã‚³ãƒãƒ³ãƒ‰ã®å®Œäº†ã‚’å¾…æ©Ÿ
     m_pDevice->WaitForGpu();
 
-    Print(PrintInfoType::RTCAMP10, L"TLAS\’z Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"TLASæ§‹ç¯‰ å®Œäº†");
 }
 
 void Renderer::UpdateTLAS()
@@ -349,20 +349,20 @@ void Renderer::UpdateTLAS()
     inputs.NumDescs = UINT(instanceDescs.size());
     inputs.InstanceDescs = rtInstanceBuff->GetGPUVirtualAddress();
 
-    // TLAS‚ğ’¼ÚXV
+    // TLASã‚’ç›´æ¥æ›´æ–°
     updateASDesc.SourceAccelerationStructureData = m_pTLAS->GetGPUVirtualAddress();
     updateASDesc.DestAccelerationStructureData = m_pTLAS->GetGPUVirtualAddress();
     updateASDesc.ScratchAccelerationStructureData = m_pTLASUpdate->GetGPUVirtualAddress();
 
     m_pCmdList->BuildRaytracingAccelerationStructure(&updateASDesc, 0, nullptr);
-    // ƒŠƒ\[ƒXƒoƒŠƒA‚Ìİ’è
+    // ãƒªã‚½ãƒ¼ã‚¹ãƒãƒªã‚¢ã®è¨­å®š
     auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(m_pTLAS.Get());
     m_pCmdList->ResourceBarrier(1, &barrier);
-    // ƒRƒ}ƒ“ƒh‚ÌÀs‚ÍOnRenderŠÖ”“à‚ÅÀs
+    // ã‚³ãƒãƒ³ãƒ‰ã®å®Ÿè¡Œã¯OnRenderé–¢æ•°å†…ã§å®Ÿè¡Œ
 }
 
 /// <summary>
-/// ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ìì¬
+/// ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ä½œæˆ
 /// </summary>
 void Renderer::CreateGlobalRootSignature()
 {
@@ -384,13 +384,13 @@ void Renderer::CreateGlobalRootSignature()
     samplerDesc = CreateStaticSamplerDesc(D3D12_FILTER_MIN_MAG_MIP_LINEAR, 0);
     samplerDescs.push_back(samplerDesc);
 
-    // ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ìì¬
+    // ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ä½œæˆ
     m_pGlobalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"GlobalRootSignature");
-    Print(PrintInfoType::RTCAMP10, L"ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒì¬ Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ä½œæˆ å®Œäº†");
 }
 
 /// <summary>
-/// ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ìì¬
+/// ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ä½œæˆ
 /// </summary>
 void Renderer::CreateLocalRootSignature()
 {
@@ -398,17 +398,17 @@ void Renderer::CreateLocalRootSignature()
     D3D12_ROOT_PARAMETER rootParam{};
     std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescs{};
 
-    // RayGenƒVƒF[ƒ_[—p‚Ìƒ‹[ƒgƒVƒOƒlƒ`ƒƒ
+    // RayGenã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ç”¨ã®ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£
     rootParams = {};
     rootParam = {};
     samplerDescs = {};
     // OutputBuffer : u0
     rootParam = CreateRootParam(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0);
     rootParams.push_back(rootParam);
-    // ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ìì¬
+    // ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ä½œæˆ
     m_pRayGenLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"LocalRootSignature:RayGen", /*isLocal*/ true);
     
-    // ClosestHitƒVƒF[ƒ_[—p‚Ìƒ‹[ƒgƒVƒOƒlƒ`ƒƒ
+    // ClosestHitã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ç”¨ã®ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£
     rootParams = {};
     rootParam = {};
     samplerDescs = {};
@@ -436,22 +436,22 @@ void Renderer::CreateLocalRootSignature()
     // MeshParam: b0
     rootParam = CreateRootParam(D3D12_ROOT_PARAMETER_TYPE_CBV, 0, 2);
     rootParams.push_back(rootParam);
-    // ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ‚Ìì¬
+    // ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ã®ä½œæˆ
     m_pClosestHitLocalRootSignature = m_pDevice->CreateRootSignature(rootParams, samplerDescs, L"LocalRootSignature:ClosestHit", /*isLocal*/ true);
 
-    Print(PrintInfoType::RTCAMP10, L"ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒì¬ Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£ä½œæˆ å®Œäº†");
 }
 
 /// <summary>
-/// ƒXƒe[ƒgƒIƒuƒWƒFƒNƒg‚Ì\’z
+/// ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ§‹ç¯‰
 /// </summary>
 void Renderer::CreateStateObject()
 {
-    // ƒXƒe[ƒgƒIƒuƒWƒFƒNƒgİ’è
+    // ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆè¨­å®š
     CD3DX12_STATE_OBJECT_DESC stateObjDesc;
     stateObjDesc.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 
-    // ƒVƒF[ƒ_“o˜^
+    // ã‚·ã‚§ãƒ¼ãƒ€ç™»éŒ²
     auto rayGenBin = SetupShader(L"raygen");
     D3D12_SHADER_BYTECODE raygenShader{ rayGenBin.data(), rayGenBin.size() };
     auto rayGenDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
@@ -470,42 +470,42 @@ void Renderer::CreateStateObject()
     auto closestHitDXIL = stateObjDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
     closestHitDXIL->SetDXILLibrary(&closestHitShader);
     closestHitDXIL->DefineExport(L"ClosestHit");
-    // MEMO: ‘¼‚ÉClosestHitƒVƒF[ƒ_[‚ª‚ ‚éê‡‚Í‚±‚¿‚ç‚Å’Ç‰Á
+    // MEMO: ä»–ã«ClosestHitã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãŒã‚ã‚‹å ´åˆã¯ã“ã¡ã‚‰ã§è¿½åŠ 
 
-    // ƒqƒbƒgƒOƒ‹[ƒvİ’è (Actor)
+    // ãƒ’ãƒƒãƒˆã‚°ãƒ«ãƒ¼ãƒ—è¨­å®š (Actor)
     auto hitGroupModel = stateObjDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
     hitGroupModel->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
     hitGroupModel->SetClosestHitShaderImport(L"ClosestHit");
     hitGroupModel->SetHitGroupExport(L"Actor");
 
-    // ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒİ’è
+    // ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£è¨­å®š
     auto globalRootSig = stateObjDesc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
     globalRootSig->SetRootSignature(m_pGlobalRootSignature.Get());
 
-    // ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒİ’è: RayGen
+    // ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£è¨­å®š: RayGen
     auto rayGenLocalRootSig = stateObjDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
     rayGenLocalRootSig->SetRootSignature(m_pRayGenLocalRootSignature.Get());
     auto rgLocalRootSigExpAssoc = stateObjDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
     rgLocalRootSigExpAssoc->AddExport(L"RayGen");
     rgLocalRootSigExpAssoc->SetSubobjectToAssociate(*rayGenLocalRootSig);
-    // ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒİ’è: ClosestHit
+    // ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£è¨­å®š: ClosestHit
     auto closesHitLocalRootSig = stateObjDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
     closesHitLocalRootSig->SetRootSignature(m_pClosestHitLocalRootSignature.Get());
     auto chLocalRootSigExpAssoc = stateObjDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
     chLocalRootSigExpAssoc->AddExport(L"Actor");
     chLocalRootSigExpAssoc->SetSubobjectToAssociate(*closesHitLocalRootSig);
 
-    // ƒŒƒCƒgƒŒ[ƒVƒ“ƒOƒpƒCƒvƒ‰ƒCƒ“—pİ’è
-    // common.hlsli‚Æ‘µ‚¦‚é
+    // ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚·ãƒ³ã‚°ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³ç”¨è¨­å®š
+    // common.hlsliã¨æƒãˆã‚‹
     const UINT MaxPayloadSize = sizeof(HitInfo);
     const UINT MaxAttributeSize = sizeof(XMFLOAT2);
-    const UINT MaxRecursionDepth = 2; // Å‘åÄ‹A’i”
+    const UINT MaxRecursionDepth = 2; // æœ€å¤§å†å¸°æ®µæ•°
 
-    // ƒVƒF[ƒ_[İ’è
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼è¨­å®š
     auto rtShaderConfig = stateObjDesc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
     rtShaderConfig->Config(MaxPayloadSize, MaxAttributeSize);
 
-    // ƒpƒCƒvƒ‰ƒCƒ“İ’è
+    // ãƒ‘ã‚¤ãƒ—ãƒ©ã‚¤ãƒ³è¨­å®š
     auto rtPipelineConfig = stateObjDesc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
     rtPipelineConfig->Config(MaxRecursionDepth);
 
@@ -516,21 +516,21 @@ void Renderer::CreateStateObject()
     ); 
     if (FAILED(hr))
     {
-        std::wstring err = L"ƒXƒe[ƒgƒIƒuƒWƒFƒNƒg‚Ì\’z‚É¸”s‚µ‚Ü‚µ‚½: " + (int)hr;
+        std::wstring err = L"ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ§‹ç¯‰ã«å¤±æ•—ã—ã¾ã—ãŸ: " + (int)hr;
         Error(PrintInfoType::RTCAMP10, err);
     }
-    Print(PrintInfoType::RTCAMP10, L"ƒXƒe[ƒgƒIƒuƒWƒFƒNƒg‚Ì\’z Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æ§‹ç¯‰ å®Œäº†");
 }
 
 /// <summary>
-/// ƒŒƒCƒgƒŒ[ƒVƒ“ƒOŒ‹‰Ê‚Ì‘‚«‚İ—pƒoƒbƒtƒ@‚Ìì¬
+/// ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚·ãƒ³ã‚°çµæœã®æ›¸ãè¾¼ã¿ç”¨ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆ
 /// </summary>
 void Renderer::CreateOutputBuffer()
 {
     auto width = GetWidth();
     auto height = GetHeight();
 
-    // ‘‚«‚İ—pƒoƒbƒtƒ@‚Ìì¬
+    // æ›¸ãè¾¼ã¿ç”¨ãƒãƒƒãƒ•ã‚¡ã®ä½œæˆ
     m_pOutputBuffer = m_pDevice->CreateTexture2D(
         width, height,
         DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -539,15 +539,15 @@ void Renderer::CreateOutputBuffer()
         D3D12_HEAP_TYPE_DEFAULT
     );
 
-    // UAV‚Ìì¬(TLAS “Á—L)
+    // UAVã®ä½œæˆ(TLAS ç‰¹æœ‰)
     D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
     uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     m_outputBufferDescHeap = m_pDevice->CreateUAV(m_pOutputBuffer.Get(), &uavDesc);
-    Print(PrintInfoType::RTCAMP10, L"o—Í—pƒoƒbƒtƒ@(UAV)‚Ìì¬ Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"å‡ºåŠ›ç”¨ãƒãƒƒãƒ•ã‚¡(UAV)ã®ä½œæˆ å®Œäº†");
 }
 
 /// <summary>
-/// ƒVƒF[ƒ_[ƒe[ƒuƒ‹‚Ì\’z
+/// ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ã®æ§‹ç¯‰
 /// </summary>
 void Renderer::CreateShaderTable()
 {
@@ -576,18 +576,18 @@ void Renderer::CreateShaderTable()
 
     UINT hitGroupCount = m_pScene->GetTotalHitGroupCount();
 
-    // ƒVƒF[ƒ_[ƒe[ƒuƒ‹ƒTƒCƒY‚ğŒvZ
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ã‚µã‚¤ã‚ºã‚’è¨ˆç®—
     UINT rayGenSize = 1 * rayGenRecordSize;
     UINT missSize = 2 * missRecordSize;
     UINT hitGroupSize = hitGroupCount * hitGroupRecordSize;
 
-    // Šeƒe[ƒuƒ‹‚Å‚ÌŠJnˆÊ’u‚ÌƒAƒ‰ƒCƒƒ“ƒg§–ñ
+    // å„ãƒ†ãƒ¼ãƒ–ãƒ«ã§ã®é–‹å§‹ä½ç½®ã®ã‚¢ãƒ©ã‚¤ãƒ¡ãƒ³ãƒˆåˆ¶ç´„
     auto tableAlign = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
     UINT rayGenEntrySize = ROUND_UP(rayGenSize, tableAlign);
     UINT missEntrySize = ROUND_UP(missSize, tableAlign);
     UINT hitGroupEntrySize = ROUND_UP(hitGroupSize, tableAlign);
     
-    // ƒVƒF[ƒ_[ƒe[ƒuƒ‹‚ÌŠm•Û
+    // ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ã®ç¢ºä¿
     auto tableSize = rayGenEntrySize + missEntrySize + hitGroupEntrySize;
     m_pShaderTable = m_pDevice->CreateBuffer(
         tableSize,
@@ -599,15 +599,15 @@ void Renderer::CreateShaderTable()
     ComPtr<ID3D12StateObjectProperties> pRTStateObjectProps;
     if (m_pRTStateObject == nullptr)
     {
-        Error(PrintInfoType::RTCAMP10, L"ƒXƒe[ƒgƒIƒuƒWƒFƒNƒg‚ª‘¶İ‚µ‚Ü‚¹‚ñ");
+        Error(PrintInfoType::RTCAMP10, L"ã‚¹ãƒ†ãƒ¼ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãŒå­˜åœ¨ã—ã¾ã›ã‚“");
     }
     m_pRTStateObject.As(&pRTStateObjectProps);
 
-    // ŠeƒVƒF[ƒ_[ƒŒƒR[ƒh‚Ì‘‚«‚İ
+    // å„ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ¬ã‚³ãƒ¼ãƒ‰ã®æ›¸ãè¾¼ã¿
     void* mapped = nullptr;
     m_pShaderTable->Map(0, nullptr, &mapped);
     uint8_t* pStart = static_cast<uint8_t*>(mapped);
-    // RayGenƒVƒF[ƒ_[
+    // RayGenã‚·ã‚§ãƒ¼ãƒ€ãƒ¼
     auto rayGenShaderStart = pStart;
     {
         uint8_t* p = rayGenShaderStart;
@@ -615,7 +615,7 @@ void Renderer::CreateShaderTable()
         auto id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
         if (id == nullptr)
         {
-            auto message = L"ƒVƒF[ƒ_[ID‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: " + exportName;
+            auto message = L"ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼IDãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: " + exportName;
             Error(PrintInfoType::RTCAMP10, message);
         }
         p += WriteShaderId(p, id);
@@ -623,7 +623,7 @@ void Renderer::CreateShaderTable()
         p += WriteGPUDescriptorHeap(p, m_outputBufferDescHeap);
     }
 
-    // MissƒVƒF[ƒ_[
+    // Missã‚·ã‚§ãƒ¼ãƒ€ãƒ¼
     auto missShaderStart = pStart + rayGenEntrySize;
     {
         uint8_t* p = missShaderStart;
@@ -631,18 +631,18 @@ void Renderer::CreateShaderTable()
         auto id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
         if (id == nullptr)
         {
-            auto message = L"ƒVƒF[ƒ_[ID‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: " + exportName;
+            auto message = L"ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼IDãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: " + exportName;
             Error(PrintInfoType::RTCAMP10, message);
         }
         p += WriteShaderId(p, id);
 
-        // ƒVƒƒƒhƒEƒŒƒC—pMissƒVƒF[ƒ_[
+        // ã‚·ãƒ£ãƒ‰ã‚¦ãƒ¬ã‚¤ç”¨Missã‚·ã‚§ãƒ¼ãƒ€ãƒ¼
         p = missShaderStart + missRecordSize;
         exportName = L"ShadowMiss";
         id = pRTStateObjectProps->GetShaderIdentifier(exportName.c_str());
         if (id == nullptr)
         {
-            auto message = L"ƒVƒF[ƒ_[ID‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: " + exportName;
+            auto message = L"ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼IDãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: " + exportName;
             Error(PrintInfoType::RTCAMP10, message);
         }
         p += WriteShaderId(p, id);
@@ -655,9 +655,9 @@ void Renderer::CreateShaderTable()
         recordStart = m_pScene->WriteHitGroupShaderRecord(recordStart, hitGroupRecordSize, m_pRTStateObject);
     }
     m_pShaderTable->Unmap(0, nullptr);
-    Print(PrintInfoType::RTCAMP10, L"ƒVƒF[ƒ_[ƒe[ƒuƒ‹ì¬ Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«ä½œæˆ å®Œäº†");
 
-    // DispatchRays—p‚Ìî•ñ‚ğƒZƒbƒg
+    // DispatchRaysç”¨ã®æƒ…å ±ã‚’ã‚»ãƒƒãƒˆ
     auto& dispatchRayDesc = m_dispatchRayDesc;
     auto startAddress = m_pShaderTable->GetGPUVirtualAddress();
     auto& rayGenShaderRecord = dispatchRayDesc.RayGenerationShaderRecord;
@@ -680,12 +680,12 @@ void Renderer::CreateShaderTable()
     dispatchRayDesc.Width = GetWidth();
     dispatchRayDesc.Height = GetHeight();
     dispatchRayDesc.Depth = 1;
-    Print(PrintInfoType::RTCAMP10, L"DispatchRayDescİ’è Š®—¹");
+    Print(PrintInfoType::RTCAMP10, L"DispatchRayDescè¨­å®š å®Œäº†");
 }
 
 void Renderer::OutputImage(ComPtr<ID3D12Resource> imageBuffer)
 {
-    // CPU‘¤‚Å‰æ‘œ‚Ìo—Í
+    // CPUå´ã§ç”»åƒã®å‡ºåŠ›
     std::ostringstream sout;
     sout << std::setw(3) << std::setfill('0') << m_currentFrame;
     std::string filename = OUTPUT_DIR + sout.str() + ".png";
@@ -724,12 +724,12 @@ void Renderer::UpdateImGui()
     ImGui::Begin("Info");
     ImGui::Text("Framerate %.3f ms", 1000.0f / frameRate);
 
-    // ƒJƒƒ‰ƒpƒ‰ƒ[ƒ^
+    // ã‚«ãƒ¡ãƒ©ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
     std::shared_ptr<Camera> pCamera = m_pScene->GetCamera();
     m_imGuiParam.cameraPos = pCamera->GetPosition();
     ImGui::SliderFloat3("CameraPos Z", &m_imGuiParam.cameraPos.x, -10.0, 10.0);
 
-    // ”½Ë‰ñ”
+    // åå°„å›æ•°
     m_imGuiParam.maxPathDepth = m_pScene->GetMaxPathDepth();
     ImGui::SliderInt("Max Path Depth", &m_imGuiParam.maxPathDepth, 1, 32);
 
@@ -738,7 +738,7 @@ void Renderer::UpdateImGui()
     ImGui::SliderInt("Max SPP", &m_imGuiParam.maxSPP, 1, 1000);
     ImGui::End();
 
-    // XV
+    // æ›´æ–°
     pCamera->SetPosition(m_imGuiParam.cameraPos);
     m_pScene->SetMaxPathDepth(m_imGuiParam.maxPathDepth);
     m_pScene->SetMaxSPP(m_imGuiParam.maxSPP);
