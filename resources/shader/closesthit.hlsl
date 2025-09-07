@@ -14,7 +14,7 @@ struct MeshParam
     int meshGroupIndex;
 };
 
-// ƒ[ƒJƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ
+// ãƒ­ãƒ¼ã‚«ãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£
 StructuredBuffer<uint> m_pIndexBuffer : register(t0, space1);
 StructuredBuffer<float3> m_vertexAttribPosition : register(t1, space1);
 StructuredBuffer<float3> m_vertexAtrribNormal : register(t2, space1);
@@ -94,7 +94,7 @@ bool TraceShadowRay(in float3 origin, in float3 direction, in float lightDist, i
     
     RAY_FLAG flags = RAY_FLAG_NONE;
     flags |= RAY_FLAG_SKIP_CLOSEST_HIT_SHADER;
-    uint rayMask = ~(0x08); // ƒ‰ƒCƒg‚ÍœŠO
+    uint rayMask = ~(0x08); // ãƒ©ã‚¤ãƒˆã¯é™¤å¤–
     uint rayIdx = 0;
     uint geoMulVal = 1;
     uint missIdx = 1;
@@ -118,14 +118,14 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
     payload.hitPos = worldPos;
     
     uint instanceID = InstanceID();
-    // TODO: ‚ä‚­‚ä‚­‚ÍMeshParamCB‚©‚çæ“¾
-    // ŒõŒ¹‚Éƒqƒbƒg‚µ‚½ê‡‚ÍƒgƒŒ[ƒX‚ğI—¹
+    // TODO: ã‚†ãã‚†ãã¯MeshParamCBã‹ã‚‰å–å¾—
+    // å…‰æºã«ãƒ’ãƒƒãƒˆã—ãŸå ´åˆã¯ãƒˆãƒ¬ãƒ¼ã‚¹ã‚’çµ‚äº†
     if (instanceID == 1)
     {
         if (payload.pathDepth == 0)
         {
-            // TODO: ŒõŒ¹‚Ì•\Œ»‚ğƒVƒF[ƒ_[Œ|‚·‚é‚È‚ç‚±‚±
-            // ƒJƒƒ‰•ûŒü‚ª•K—v‚©‚à
+            // TODO: å…‰æºã®è¡¨ç¾ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼èŠ¸ã™ã‚‹ãªã‚‰ã“ã“
+            // ã‚«ãƒ¡ãƒ©æ–¹å‘ãŒå¿…è¦ã‹ã‚‚
             payload.color = gSceneParam.light1.color;
         }
         payload.pathDepth = gSceneParam.maxPathDepth;
@@ -149,14 +149,14 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         payload.pathDepth = gSceneParam.maxPathDepth;
         return;
     }
-    // ŒõŒ¹ƒTƒ“ƒvƒŠƒ“ƒO
+    // å…‰æºã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
     SampledLightInfo lightInfo = SampleLightInfo(payload.seed);
     float3 lightDir = normalize(lightInfo.pos - worldPos);
     float lightDist = length(lightInfo.pos - worldPos);
-    // ŒõŒ¹•ûŒü‚ÖƒŒƒCƒgƒŒ[ƒX‚µ‚ÄAŒõŒ¹‚ÆÚ‘±‚Å‚«‚½ê‡‚ÉŠñ—^‚ÌŒvZ
+    // å…‰æºæ–¹å‘ã¸ãƒ¬ã‚¤ãƒˆãƒ¬ãƒ¼ã‚¹ã—ã¦ã€å…‰æºã¨æ¥ç¶šã§ããŸå ´åˆã«å¯„ä¸ã®è¨ˆç®—
     if (!TraceShadowRay(worldPos, lightDir, lightDist, payload.seed))
     {
-        // Šô‰½€‚ÌŒvZ
+        // å¹¾ä½•é …ã®è¨ˆç®—
         float cos1 = abs(dot(worldNorm, lightDir));
         float cos2 = abs(dot(lightInfo.norm, -lightDir));
         float G = (cos1 * cos2) / (lightDist * lightDist);
@@ -164,7 +164,7 @@ void ClosestHit(inout HitInfo payload, Attributes attrib)
         float3 wo = normalize(ApplyZToN(lightDir, worldNorm));
         payload.color += (payload.attenuation * CalcCos(wi, wo) * G / LightSamplingPdf(lightInfo.radius)) * lightInfo.intensity;
     }
-    // •ûŒü‚ğƒTƒ“ƒvƒŠƒ“ƒO
+    // æ–¹å‘ã‚’ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
     float3 sampleDir = SampleHemisphereCos(payload.seed);
     float3 reflectDir = normalize(ApplyZToN(sampleDir, worldNorm));
     payload.reflectDir = reflectDir;

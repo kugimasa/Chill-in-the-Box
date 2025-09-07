@@ -1,4 +1,4 @@
-// ƒpƒXƒgƒŒ[ƒX—pƒyƒCƒ[ƒh
+// ãƒ‘ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¹ç”¨ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰
 struct HitInfo
 {
     float3 hitPos;
@@ -9,19 +9,19 @@ struct HitInfo
     uint seed;
 };
 
-// ƒVƒƒƒhƒEƒŒƒC—pƒyƒCƒ[ƒh
+// ã‚·ãƒ£ãƒ‰ã‚¦ãƒ¬ã‚¤ç”¨ãƒšã‚¤ãƒ­ãƒ¼ãƒ‰
 struct ShadowRayHitInfo
 {
     bool occluded;
 };
 
-// ƒŒƒCƒqƒbƒg‚ÌƒAƒgƒŠƒrƒ…[ƒg
+// ãƒ¬ã‚¤ãƒ’ãƒƒãƒˆæ™‚ã®ã‚¢ãƒˆãƒªãƒ“ãƒ¥ãƒ¼ãƒˆ
 struct Attributes
 {
     float2 bary;
 };
 
-// ƒ‰ƒCƒg—p‚Ìƒpƒ‰ƒ[ƒ^
+// ãƒ©ã‚¤ãƒˆç”¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 struct SphereLightParam
 {
     float3 center;
@@ -30,23 +30,23 @@ struct SphereLightParam
     float intensity;
 };
 
-// ƒV[ƒ“ƒpƒ‰ƒ[ƒ^[
+// ã‚·ãƒ¼ãƒ³ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼
 struct SceneParam
 {
-    matrix viewMtx;      // ƒrƒ…[s—ñ
-    matrix projMtx;      // ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñ
-    matrix invViewMtx;   // ƒrƒ…[‹ts—ñ
-    matrix invProjMtx;   // ƒvƒƒWƒFƒNƒVƒ‡ƒ“‹ts—ñ
-    uint frameIndex;     // •`‰æ’†‚ÌƒtƒŒ[ƒ€ƒCƒ“ƒfƒbƒNƒX
-    uint currenFrameNum; // Œ»İ‚ÌƒtƒŒ[ƒ€
-    uint maxPathDepth;   // Å‘å”½Ë‰ñ”
+    matrix viewMtx;      // ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—
+    matrix projMtx;      // ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—
+    matrix invViewMtx;   // ãƒ“ãƒ¥ãƒ¼é€†è¡Œåˆ—
+    matrix invProjMtx;   // ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³é€†è¡Œåˆ—
+    uint frameIndex;     // æç”»ä¸­ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+    uint currenFrameNum; // ç¾åœ¨ã®ãƒ•ãƒ¬ãƒ¼ãƒ 
+    uint maxPathDepth;   // æœ€å¤§åå°„å›æ•°
     uint maxSPP;         // Sample Per Pixel
-    SphereLightParam light1; // Light1‚Ìƒpƒ‰ƒ[ƒ^
-    SphereLightParam light2; // Light2‚Ìƒpƒ‰ƒ[ƒ^
-    SphereLightParam light3; // Light3‚Ìƒpƒ‰ƒ[ƒ^
+    SphereLightParam light1; // Light1ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+    SphereLightParam light2; // Light2ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+    SphereLightParam light3; // Light3ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 };
 
-// ƒTƒ“ƒvƒŠƒ“ƒO‚³‚ê‚½ƒ‰ƒCƒg‚Ìî•ñ
+// ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã•ã‚ŒãŸãƒ©ã‚¤ãƒˆã®æƒ…å ±
 struct SampledLightInfo
 {
     float3 pos;
@@ -55,7 +55,7 @@ struct SampledLightInfo
     float3 intensity;
 };
 
-// ƒOƒ[ƒoƒ‹ƒ‹[ƒgƒVƒOƒlƒ`ƒƒ
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒ«ãƒ¼ãƒˆã‚·ã‚°ãƒãƒãƒ£
 RaytracingAccelerationStructure gSceneBVH : register(t0);
 Texture2D<float4> gBgTex : register(t1);
 ConstantBuffer<SceneParam> gSceneParam : register(b0);
@@ -155,7 +155,7 @@ inline SampledLightInfo SampleLightInfo(in uint seed)
     return lightInfo;
 }
 
-// TODO: ƒ}ƒeƒŠƒAƒ‹‚ÌÀ‘•
+// TODO: ãƒãƒ†ãƒªã‚¢ãƒ«ã®å®Ÿè£…
 inline float CalcCos(float3 inDir, float3 outDir)
 {
     float cos = dot(inDir, outDir);

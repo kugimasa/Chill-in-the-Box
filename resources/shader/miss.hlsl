@@ -4,7 +4,7 @@
 void Miss(inout HitInfo payload)
 {
     float2 uv = CalcSphereUV(WorldRayDirection());
-    // TODO: IBLÇÃÇΩÇﬂÇÃNEEé¿ëï
+    // TODO: IBL„ÅÆ„Åü„ÇÅ„ÅÆNEEÂÆüË£Ö
     float3 bgCol = gBgTex.SampleLevel(gSampler, uv, 0).rgb;
     bgCol /= (bgCol + 1.0f);
     bgCol = pow(bgCol, 1.0f / 2.2f);

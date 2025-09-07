@@ -54,7 +54,7 @@ void inline Error(const PrintInfoType info_type, const char* message) {
     throw std::runtime_error("Error");
 }
 
-void inline Error(const PrintInfoType info_type, const std::wstring message) {
+void inline Error(const PrintInfoType info_type, const std::wstring& message) {
     std::cerr << "[" << GetInfoTypeStr(info_type) << "] " << WStrToStr(message) << std::endl;
     throw std::runtime_error("Error");
 }
@@ -62,5 +62,11 @@ void inline Error(const PrintInfoType info_type, const std::wstring message) {
 template<typename Any>
 void inline Error(const PrintInfoType info_type, const char* message, Any any ) {
     std::cerr << "[" << GetInfoTypeStr(info_type) << "] " << message << any << std::endl;
+    throw std::runtime_error("Error");
+}
+
+template<typename Any>
+void inline Error(const PrintInfoType info_type, const std::wstring& message, Any any ) {
+    std::cerr << "[" << GetInfoTypeStr(info_type) << "] "  << WStrToStr(message) << any << std::endl;
     throw std::runtime_error("Error");
 }

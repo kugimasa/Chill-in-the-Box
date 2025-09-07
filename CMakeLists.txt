@@ -55,8 +55,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE
                                RESOURCE_DIR="${CMAKE_SOURCE_DIR}/resources"
                                )
-    # シェーダーコンパイルのためのDLLへのパス
-    set(DXCOMPILER_LIB_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.lib")
 
     # 実行時にライブラリをコピーする
     set(DXCOMPILER_DLL_DIR "${CMAKE_SOURCE_DIR}/external/libs/dxcompiler.dll")
@@ -71,7 +69,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     # 外部ライブラリをリンク
     target_link_libraries(${PROJECT_NAME} PRIVATE
-                          ${DXCOMPILER_LIB_DIR}
+                          dxcompiler
                           DirectXTex
                           d3d12
                           dxgi
@@ -129,3 +127,10 @@ else()
                           dxguid
     )
 endif()
+
+# コンパイル警告設定
+if (MSVC)
+    target_compile_options(${PROJECT_NAME}  PRIVATE /utf-8)
+else ()
+    target_compile_options(${PROJECT_NAME}  PRIVATE -Wall -Wextra -pedantic)
+endif ()
