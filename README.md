@@ -3,6 +3,8 @@ A DXR path tracer for Ray Tracing Camp 10 (2024)
 
 [レイトレ合宿10](https://sites.google.com/view/rtcamp10)で実装したDXRを用いたレンダラーです。
 
+![Chill_in_the_Box_kugi_GPU](Chill_in_the_Box__kugi__GPU.mp4)
+
 スライド: https://speakerdeck.com/kugimasa/raytracingcamp10
 
 # Externals
